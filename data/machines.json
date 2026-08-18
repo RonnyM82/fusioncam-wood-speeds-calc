@@ -1,0 +1,191 @@
+{
+ "schema_version": "1.0",
+ "acceleration_tiers_m_s2": {
+  "hobby": [
+   0.4,
+   1
+  ],
+  "light_industrial": [
+   1,
+   3
+  ],
+  "heavy_nesting": [
+   2,
+   4
+  ],
+  "heavy_nesting_default": 3,
+  "linear_motor": [
+   5,
+   10
+  ],
+  "data_class": "derived - no OEM spec-sheet m/s2 published for Biesse/Homag/SCM; velocity only"
+ },
+ "machines": [
+  {
+   "make": "Biesse",
+   "model": "Rover B/S",
+   "spindle_kw": [
+    12,
+    13.2
+   ],
+   "rapid_xy_m_min": 85,
+   "rapid_z_m_min": 30,
+   "holder": "HSK-F63",
+   "rpm_max": 24000,
+   "vacuum": "2x 360 m3/h typical",
+   "data_class": "vendor/listing"
+  },
+  {
+   "make": "SCM",
+   "model": "Morbidelli X50",
+   "spindle_kw": 9.5,
+   "holder": "HSK-F63",
+   "rpm": [
+    1500,
+    24000
+   ],
+   "data_class": "vendor"
+  },
+  {
+   "make": "SCM",
+   "model": "Morbidelli M100/X100",
+   "spindle_kw": 10,
+   "holder": "HSK-F63",
+   "rpm": [
+    1800,
+    24000
+   ],
+   "data_class": "vendor"
+  },
+  {
+   "make": "SCM",
+   "model": "Morbidelli M200/X200",
+   "spindle_kw": 14,
+   "cut_feed_m_min": 50,
+   "holder": "HSK-F63",
+   "rpm": [
+    1500,
+    24000
+   ],
+   "vacuum": "2-3x 360 m3/h",
+   "data_class": "vendor"
+  },
+  {
+   "make": "SCM",
+   "model": "Morbidelli M600/800",
+   "routing_kw": 12,
+   "vacuum": "up to 1000 m3/h",
+   "data_class": "vendor"
+  },
+  {
+   "make": "Homag",
+   "model": "Centateq N-500",
+   "spindle_kw": [
+    10,
+    13.2
+   ],
+   "vector_xy_m_min": 96,
+   "vector_z_m_min": 25,
+   "data_class": "vendor"
+  },
+  {
+   "make": "Anderson",
+   "model": "Stratos Pro",
+   "rapid_m_min": 100,
+   "cut_m_min": 50,
+   "data_class": "vendor"
+  }
+ ],
+ "spindles_hsd": [
+  {
+   "model": "ES915",
+   "s1_kw": 3.8,
+   "s6_kw": 4.6,
+   "torque": "3.0 Nm @12k -> 1.5 Nm @24k",
+   "rpm": [
+    12000,
+    28000
+   ],
+   "cooling": "fan"
+  },
+  {
+   "model": "ES919",
+   "s1_kw": 6.6,
+   "rpm_rated": 24000,
+   "cooling": "fan"
+  },
+  {
+   "model": "ES929",
+   "s1_kw": 10,
+   "rpm": [
+    12000,
+    24000
+   ],
+   "holder": "HSK-F63",
+   "cooling": "fan"
+  },
+  {
+   "model": "ES988",
+   "s1_kw": 11,
+   "rpm": [
+    12000,
+    24000
+   ],
+   "holder": "HSK-F63"
+  },
+  {
+   "model": "ES951",
+   "s1_kw": 8,
+   "s6_kw": 9.6,
+   "torque_nm": [
+    6.4,
+    7.6
+   ],
+   "rpm_rated": 24000,
+   "holder": "HSK-F63"
+  },
+  {
+   "model": "ES884",
+   "s1_kw": 16,
+   "s6_kw": 18,
+   "torque": "19/21.5 Nm @8000",
+   "rpm": [
+    8000,
+    18000
+   ],
+   "cooling": "liquid"
+  },
+  {
+   "model": "ES888",
+   "s1_kw": 16,
+   "rpm": [
+    8000,
+    24000
+   ],
+   "cooling": "liquid"
+  }
+ ],
+ "spindle_model": "constant torque below breakpoint (P = T*n*2pi/60000, power ~ rpm), constant power above; derate linearly below breakpoint",
+ "vacuum": {
+  "theoretical_max_kpa": 101,
+  "practical_pump_kpa": 83,
+  "achieved_nested_flow_through_kpa": [
+   2.4,
+   7
+  ],
+  "default_kpa": 5,
+  "mu_default": 0.4,
+  "mu_range": {
+   "board_on_mdf_spoilboard": [
+    0.3,
+    0.5
+   ],
+   "melamine_faces": [
+    0.25,
+    0.35
+   ]
+  },
+  "lateral_grip": "mu * dP_achieved * sealed_area",
+  "pump_sizing": "360 m3/h units, 2-3 per 4x8 zone; up to 1000 m3/h large SCM"
+ }
+}

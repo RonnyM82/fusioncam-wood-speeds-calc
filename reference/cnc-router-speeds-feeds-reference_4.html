@@ -1,0 +1,2088 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speeds and Feeds for Nested-Base CNC Routing: Solid Carbide in Wood Panels and Timber</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   SPOILBOARD — machine-cabinet palette
+   ============================================================ */
+:root{
+  --ink:#0C1013;
+  --bed:#141A20;
+  --bed2:#1B242C;
+  --bed3:#222D36;
+  --rule:#2C3944;
+  --rule2:#3B4C59;
+  --chalk:#E9EEF2;
+  --dust:#93A5B3;
+  --dust2:#697D8C;
+
+  --amber:#F2A33C;
+  --cyan:#4FC1D6;
+  --coral:#EE6B5E;
+  --sage:#6FBF8E;
+  --violet:#A98CE0;
+
+  --bind:var(--amber);
+  --warn:var(--coral);
+  --ok:var(--sage);
+
+  --d:'Archivo',system-ui,sans-serif;
+  --b:'IBM Plex Sans',system-ui,sans-serif;
+  --m:'IBM Plex Mono',ui-monospace,monospace;
+
+  --maxw:1220px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+body{
+  margin:0;background:var(--ink);color:var(--chalk);
+  font-family:var(--b);font-size:15.5px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* ---------- type ---------- */
+h1,h2,h3,h4{font-family:var(--d);margin:0;letter-spacing:-.02em;line-height:1.05}
+h1{font-weight:800;font-size:clamp(34px,5.6vw,66px);letter-spacing:-.035em}
+h2{font-weight:700;font-size:clamp(24px,3vw,36px)}
+h3{font-weight:700;font-size:19px;letter-spacing:-.01em}
+h4{font-weight:600;font-size:15px;letter-spacing:0}
+p{margin:0 0 14px}
+a{color:var(--cyan)}
+
+.eyebrow{
+  font-family:var(--m);font-size:11px;font-weight:500;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--dust2);
+}
+.lede{font-size:18px;color:var(--dust);max-width:66ch;line-height:1.55}
+.mono{font-family:var(--m)}
+.num{font-family:var(--m);font-variant-numeric:tabular-nums}
+.small{font-size:13px;color:var(--dust)}
+.tiny{font-size:11.5px;color:var(--dust2);font-family:var(--m);letter-spacing:.03em}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--rule);padding:76px 0 0}
+.hero:before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:
+    linear-gradient(var(--rule) 1px,transparent 1px),
+    linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:58px 58px;
+  -webkit-mask-image:radial-gradient(120% 78% at 74% 0%,#000 0%,transparent 68%);
+          mask-image:radial-gradient(120% 78% at 74% 0%,#000 0%,transparent 68%);
+}
+.hero:after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.36;
+  background-image:radial-gradient(circle,var(--rule2) 1.4px,transparent 1.5px);
+  background-size:58px 58px;background-position:29px 29px;
+  -webkit-mask-image:radial-gradient(120% 78% at 74% 0%,#000 0%,transparent 60%);
+          mask-image:radial-gradient(120% 78% at 74% 0%,#000 0%,transparent 60%);
+}
+.hero .wrap{position:relative;z-index:2}
+.hero h1{margin:18px 0 20px;max-width:19ch}
+.hero h1 em{font-style:normal;color:var(--amber)}
+.metabar{
+  display:flex;flex-wrap:wrap;gap:8px 26px;margin:28px 0 0;
+  padding:14px 0;border-top:1px solid var(--rule);
+  font-family:var(--m);font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dust2);
+}
+.metabar b{color:var(--dust);font-weight:500}
+
+/* ---------- headline stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule);
+  border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-top:0}
+.stat{background:var(--ink);padding:22px 20px}
+.stat .v{font-family:var(--d);font-weight:800;font-size:clamp(26px,3.4vw,40px);
+  letter-spacing:-.035em;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums}
+.stat .v small{font-size:.44em;font-weight:600;color:var(--dust);letter-spacing:0;margin-left:3px}
+.stat .k{margin-top:9px;font-size:12.5px;color:var(--dust);line-height:1.4}
+.stat:nth-child(2) .v{color:var(--cyan)}
+.stat:nth-child(3) .v{color:var(--coral)}
+.stat:nth-child(4) .v{color:var(--sage)}
+
+/* ---------- layout: rail + content ---------- */
+.shell{display:grid;grid-template-columns:190px minmax(0,1fr);gap:44px;align-items:start}
+.shell > main{min-width:0;max-width:100%}
+.rail{position:sticky;top:0;padding:44px 0 60px;max-height:100vh;overflow:auto}
+.rail::-webkit-scrollbar{width:0}
+.rail a{
+  display:block;text-decoration:none;color:var(--dust2);
+  font-family:var(--m);font-size:11.5px;letter-spacing:.04em;
+  padding:6px 0 6px 12px;border-left:2px solid var(--rule);
+  transition:color .18s,border-color .18s;
+}
+.rail a:hover{color:var(--chalk)}
+.rail a.on{color:var(--amber);border-left-color:var(--amber)}
+.rail .grp{margin:18px 0 6px;padding-left:12px;font-family:var(--m);font-size:10px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--rule2)}
+
+/* ---------- sections ---------- */
+section{padding:56px 0;border-top:1px solid var(--rule)}
+section:first-of-type{border-top:none}
+.sechead{display:flex;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.tag{font-family:var(--m);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink);background:var(--dust2);padding:3px 8px;border-radius:2px;font-weight:600}
+.tag.l1{background:var(--cyan)}
+.tag.l2{background:var(--amber)}
+.tag.spec{background:var(--sage)}
+.tag.caveat{background:var(--coral)}
+section > .wrap > .lede,section .seclede{margin:14px 0 30px}
+
+/* ---------- panels ---------- */
+.panel{background:var(--bed);border:1px solid var(--rule);border-radius:4px;padding:24px;margin:22px 0}
+.panel.tight{padding:18px}
+.panel h3{margin-bottom:6px}
+.panel .cap{font-family:var(--m);font-size:11.5px;color:var(--dust2);letter-spacing:.03em;margin-top:14px;line-height:1.55}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.grid-a{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:22px;align-items:start}
+.grid-a.stack{grid-template-columns:minmax(0,1fr);gap:4px}
+.grid-a.stack > div > .call,.grid-a.stack > div > ul{max-width:88ch}
+
+/* ---------- callouts ---------- */
+.call{border-left:3px solid var(--rule2);padding:14px 0 14px 16px;margin:20px 0;background:transparent}
+.call .lbl{font-family:var(--m);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dust2);display:block;margin-bottom:6px}
+.call p:last-child{margin-bottom:0}
+.call.warn{border-left-color:var(--coral)}
+.call.warn .lbl{color:var(--coral)}
+.call.key{border-left-color:var(--amber)}
+.call.key .lbl{color:var(--amber)}
+.call.ok{border-left-color:var(--sage)}
+.call.ok .lbl{color:var(--sage)}
+.call.info{border-left-color:var(--cyan)}
+.call.info .lbl{color:var(--cyan)}
+
+/* ---------- formula ---------- */
+.fx{
+  font-family:var(--m);font-size:15px;background:var(--bed2);border:1px solid var(--rule);
+  border-radius:3px;padding:14px 16px;margin:12px 0;overflow-x:auto;white-space:nowrap;color:var(--chalk)
+}
+.fx b{color:var(--amber);font-weight:600}
+.fx .u{color:var(--dust2)}
+.fxgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.fxcard{background:var(--bed);border:1px solid var(--rule);border-radius:4px;padding:16px}
+.fxcard .nm{font-family:var(--m);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dust2);margin-bottom:10px}
+.fxcard .eq{font-family:var(--m);font-size:15.5px;color:var(--chalk);line-height:1.7}
+.fxcard .eq b{color:var(--cyan);font-weight:600}
+.fxcard .nt{font-size:12.5px;color:var(--dust);margin-top:10px;line-height:1.5}
+
+/* ---------- tables ---------- */
+.grid2>*,.grid3>*,.grid-a>*,.deck>*,.fxgrid>*{min-width:0}
+.tblwrap{overflow-x:auto;min-width:0;margin:18px 0;border:1px solid var(--rule);border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--rule)}
+thead th{
+  background:var(--bed2);font-family:var(--m);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dust);font-weight:600;position:sticky;top:0;white-space:nowrap
+}
+tbody tr:nth-child(even){background:rgba(255,255,255,.016)}
+tbody tr:last-child td{border-bottom:none}
+td.n,th.n{font-family:var(--m);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.dim{color:var(--dust2)}
+caption{caption-side:top;text-align:left;font-family:var(--m);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dust2);padding:11px 12px;background:var(--bed);border-bottom:1px solid var(--rule)}
+.vend{font-family:var(--m);font-size:11px;padding:1px 6px;border-radius:2px;color:var(--ink);font-weight:600;white-space:nowrap}
+
+/* ---------- legend ---------- */
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:12px 0 0;font-family:var(--m);font-size:11.5px;color:var(--dust)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{width:11px;height:11px;border-radius:2px;display:inline-block;flex:none}
+
+/* ---------- CALCULATOR / signature cascade ---------- */
+.calc{background:var(--bed);border:1px solid var(--rule2);border-radius:5px;overflow:hidden;margin:0}
+.calc-top{display:grid;grid-template-columns:300px minmax(0,1fr);gap:0}
+.calc-in{background:var(--bed2);border-right:1px solid var(--rule);padding:20px 20px 24px}
+.calc-out{padding:22px 24px 24px;min-width:0}
+.field{margin-bottom:13px}
+.field label{display:block;font-family:var(--m);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dust2);margin-bottom:5px}
+.field select,.field input{
+  width:100%;background:var(--ink);color:var(--chalk);border:1px solid var(--rule2);
+  border-radius:3px;padding:7px 9px;font-family:var(--m);font-size:13px;
+}
+.field input:focus,.field select:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:var(--amber)}
+.field.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field.row > div{min-width:0}
+.subhead{font-family:var(--m);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--rule2);margin:20px 0 10px;padding-top:14px;border-top:1px solid var(--rule)}
+.subhead:first-child{margin-top:0;padding-top:0;border-top:none}
+
+.readout{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;margin-bottom:6px}
+.readout .big{font-family:var(--d);font-weight:800;font-size:52px;line-height:.92;
+  letter-spacing:-.04em;color:var(--amber);font-variant-numeric:tabular-nums}
+.readout .big small{font-size:.34em;color:var(--dust);letter-spacing:0;margin-left:5px;font-weight:600}
+.readout .sec{font-family:var(--m);font-size:12.5px;color:var(--dust);line-height:1.7;min-width:0}
+.readout .sec b{color:var(--chalk);font-weight:500}
+
+.bindnote{
+  font-family:var(--m);font-size:12.5px;padding:9px 12px;border-radius:3px;margin:16px 0 20px;
+  background:rgba(242,163,60,.09);border:1px solid rgba(242,163,60,.34);color:var(--amber);
+}
+.bindnote.bad{background:rgba(238,107,94,.1);border-color:rgba(238,107,94,.4);color:var(--coral)}
+.bindnote.good{background:rgba(111,191,142,.09);border-color:rgba(111,191,142,.34);color:var(--sage)}
+
+/* cascade bar */
+.casc{margin-top:6px}
+.casc-row{display:grid;grid-template-columns:150px 1fr 96px;gap:12px;align-items:center;
+  padding:5px 0;font-family:var(--m);font-size:11.5px}
+.casc-row .cl{color:var(--dust2);display:flex;gap:8px;align-items:baseline;white-space:nowrap;overflow:hidden}
+.casc-row .cl i{font-style:normal;color:var(--rule2);font-size:10px;width:14px;flex:none}
+.casc-row .cv{text-align:right;color:var(--dust);font-variant-numeric:tabular-nums}
+.casc-row.is-bind .cl,.casc-row.is-bind .cv{color:var(--amber)}
+.casc-row.is-bind .cl i{color:var(--amber)}
+.casc-row.na .cl,.casc-row.na .cv{color:var(--rule2)}
+.track{position:relative;height:15px;background:var(--ink);border:1px solid var(--rule);border-radius:2px;overflow:hidden}
+.track .fill{position:absolute;left:0;top:0;bottom:0;background:var(--rule2);transition:width .32s cubic-bezier(.4,0,.2,1)}
+.casc-row.is-bind .track .fill{background:var(--amber)}
+.casc-row.is-ideal .track .fill{background:var(--bed3);background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,.05) 4px,rgba(255,255,255,.05) 8px)}
+.casc-row.na .track .fill{background:var(--bed2)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.chip{font-family:var(--m);font-size:11px;padding:3px 8px;border-radius:2px;
+  border:1px solid var(--rule2);color:var(--dust2)}
+.chip.hot{border-color:var(--coral);color:var(--coral);background:rgba(238,107,94,.07)}
+.chip.warm{border-color:var(--amber);color:var(--amber);background:rgba(242,163,60,.07)}
+.chip.cool{border-color:var(--sage);color:var(--sage);background:rgba(111,191,142,.07)}
+
+/* ---------- charts ---------- */
+figure{margin:0}
+.chartbox{background:var(--bed);border:1px solid var(--rule);border-radius:4px;padding:20px;margin:22px 0}
+.chartbox h4{margin-bottom:3px}
+.chartbox .sub{font-size:12.5px;color:var(--dust2);margin-bottom:14px}
+svg{display:block;width:100%;height:auto;overflow:hidden}
+.ax{stroke:var(--rule);stroke-width:1}
+.gr{stroke:var(--rule);stroke-width:1;stroke-dasharray:2 4;opacity:.55}
+.axt{font-family:var(--m);font-size:10.5px;fill:var(--dust2)}
+.axl{font-family:var(--m);font-size:10px;fill:var(--dust2);letter-spacing:.12em;text-transform:uppercase}
+.sl{font-family:var(--m);font-size:11px;fill:var(--chalk)}
+.zone{opacity:.1}
+
+.ctrls{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ctrls button{
+  font-family:var(--m);font-size:11.5px;background:var(--bed2);color:var(--dust);
+  border:1px solid var(--rule);border-radius:3px;padding:5px 11px;cursor:pointer;transition:.15s
+}
+.ctrls button:hover{color:var(--chalk);border-color:var(--rule2)}
+.ctrls button[aria-pressed="true"]{background:var(--amber);color:var(--ink);border-color:var(--amber);font-weight:600}
+.ctrls button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ---------- misc ---------- */
+.deck{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin:20px 0}
+.card{background:var(--bed);border:1px solid var(--rule);border-radius:4px;padding:18px}
+.card .hd{font-family:var(--m);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dust2);margin-bottom:9px}
+.card p{font-size:13.5px;margin-bottom:0;color:var(--dust)}
+.card p strong{color:var(--chalk);font-weight:600}
+.card.hi{border-color:var(--rule2)}
+
+ul.tick{list-style:none;padding:0;margin:14px 0}
+ul.tick li{position:relative;padding-left:20px;margin-bottom:9px;font-size:14px;color:var(--dust)}
+ul.tick li:before{content:"";position:absolute;left:2px;top:9px;width:6px;height:6px;background:var(--rule2);border-radius:1px}
+ul.tick li strong{color:var(--chalk);font-weight:600}
+ul.tick.warn li:before{background:var(--coral)}
+ul.tick.key li:before{background:var(--amber)}
+
+footer{border-top:1px solid var(--rule);padding:40px 0 70px;color:var(--dust2);font-size:13px}
+.srclist{columns:2;column-gap:34px;font-size:12.5px;line-height:1.65;color:var(--dust2)}
+.srclist p{break-inside:avoid;margin-bottom:9px}
+.srclist b{color:var(--dust);font-weight:500}
+
+@media (max-width:960px){
+  .shell{grid-template-columns:1fr;gap:0}
+  .rail{position:static;max-height:none;padding:20px 0;display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--rule)}
+  .rail a{border-left:none;border-bottom:2px solid var(--rule);padding:5px 10px}
+  .rail a.on{border-left-color:transparent;border-bottom-color:var(--amber)}
+  .rail .grp{display:none}
+  .calc-top{grid-template-columns:1fr}
+  .calc-in{border-right:none;border-bottom:1px solid var(--rule)}
+  .grid2,.grid3,.grid-a{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .srclist{columns:1}
+  .casc-row{grid-template-columns:110px 1fr 74px;font-size:10.5px}
+}
+</style>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Nested-base CNC · solid carbide · inserted tooling secondary · PCD not included</div>
+    <h1>Chip load gives you a number. <em>Physical limits</em> decide your feed.</h1>
+    <p class="lede">This reference supports a speeds and feeds calculator. It covers plywood, MDF, laminated panel, veneered panel and solid timber on industrial nesting routers. The base calculation is simple. The published data disagrees by a factor of up to 3. A set of physical limits decides the real feed. These limits are spindle torque, vacuum hold-down, corner deceleration and the minimum chip load for MDF.</p>
+    <div class="metabar">
+      <span><b>Layer 1</b> base chip load</span>
+      <span><b>Layer 2</b> eleven limits</span>
+      <span><b>Sources</b> 5 vendor datasets, disagreements marked</span>
+      <span><b>Units</b> metric first</span>
+      <span><b>Compiled</b> August 2026</span>
+    </div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="v">2.5 to 3<small>&times;</small></div>
+    <div class="k">Published chip loads for the same cut differ by this factor. Tool geometry causes much of the difference. One Onsrud catalogue spans almost the full range.</div>
+  </div>
+  <div class="stat">
+    <div class="v">12,000<small>rpm</small></div>
+    <div class="k">Typical spindle breakpoint. Below this speed the spindle gives constant torque. The available power decreases with the speed.</div>
+  </div>
+  <div class="stat">
+    <div class="v">0.10<small>mm/z</small></div>
+    <div class="k">Minimum chip load. Below this value the edge rubs. The rub glazes the MDF binder and burns the panel.</div>
+  </div>
+  <div class="stat">
+    <div class="v">55<small>mm</small></div>
+    <div class="k">A machine needs this distance to reach 20&nbsp;m/min at 2&nbsp;m/s². Shorter features do not reach the programmed feed.</div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="shell">
+
+  <nav class="rail" id="rail">
+    <div class="grp">Start</div>
+    <a href="#cascade">Feed limits</a>
+    <div class="grp">Layer 1</div>
+    <a href="#maths">Core maths</a>
+    <a href="#data">Chip load data</a>
+    <a href="#spread">Vendor spread</a>
+    <a href="#doc">Depth reduction</a>
+    <div class="grp">Layer 2</div>
+    <a href="#floor">MDF minimum</a>
+    <a href="#compression">Compression</a>
+    <a href="#power">Spindle power</a>
+    <a href="#kc">Cutting force</a>
+    <a href="#vacuum">Vacuum</a>
+    <a href="#flutes">Effective flutes</a>
+    <a href="#onion">Onion skin</a>
+    <a href="#thinning">Chip thinning</a>
+    <a href="#deflect">Deflection</a>
+    <a href="#corner">Corners</a>
+    <a href="#edge">Edge quality</a>
+    <a href="#misc">Other limits</a>
+    <div class="grp">Build it</div>
+    <a href="#geometry">Tool selection</a>
+    <a href="#changed">What changed</a>
+    <a href="#arch">Architecture</a>
+    <a href="#caveats">Caveats</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <main>
+
+  <!-- ===================== CASCADE / CALCULATOR ===================== -->
+  <section id="cascade" style="border-top:none;padding-top:44px">
+    <div class="sechead"><span class="tag l2">Calculator</span><h2>The feed limit sequence</h2></div>
+    <p class="seclede lede">The calculator starts with an ideal feed. Each limit then reduces that feed. The lowest result is the feed you can use. The limit that gives the lowest result is the one to correct. Build the calculator this way: calculate the ideal feed first, then report the active limit.</p>
+
+    <div class="calc">
+      <div class="calc-top">
+        <div class="calc-in">
+          <div class="subhead">Cut</div>
+          <div class="field"><label for="i-mat">Material</label>
+            <select id="i-mat">
+              <option value="mdf">MDF / particleboard</option>
+              <option value="lam">Laminated / melamine PB</option>
+              <option value="hpl">HPL-faced panel</option>
+              <option value="ply">Plywood</option>
+              <option value="hard">Hardwood</option>
+              <option value="soft">Softwood</option>
+            </select>
+          </div>
+          <div class="field"><label for="i-prof">Data profile</label>
+            <select id="i-prof">
+              <option value="ind">Industrial band, Freud and Rennie</option>
+              <option value="cons">Conservative, Onsrud straight series</option>
+              <option value="eu">European, ITA Tools</option>
+            </select>
+          </div>
+          <div class="field row">
+            <div><label for="i-dia">Diameter mm</label><input id="i-dia" type="number" value="12" min="3" max="25" step="0.5"></div>
+            <div><label for="i-z">Flutes Z</label><input id="i-z" type="number" value="2" min="1" max="8" step="1"></div>
+          </div>
+          <div class="field row">
+            <div><label for="i-ap">Axial a<sub>p</sub> mm</label><input id="i-ap" type="number" value="18" min="1" max="60" step="1"></div>
+            <div><label for="i-ae">Radial a<sub>e</sub> mm</label><input id="i-ae" type="number" value="12" min="0.2" max="25" step="0.5"></div>
+          </div>
+          <div class="field"><label for="i-rpm">Spindle rpm</label><input id="i-rpm" type="number" value="18000" min="3000" max="24000" step="500"></div>
+
+          <div class="subhead">Machine</div>
+          <div class="field row">
+            <div><label for="i-kw">Spindle kW</label><input id="i-kw" type="number" value="10" min="1" max="30" step="0.5"></div>
+            <div><label for="i-bp">Breakpoint rpm</label><input id="i-bp" type="number" value="12000" min="3000" max="24000" step="500"></div>
+          </div>
+          <div class="field row">
+            <div><label for="i-vmax">Max feed m/min</label><input id="i-vmax" type="number" value="30" min="2" max="90" step="1"></div>
+            <div><label for="i-acc">Accel m/s²</label><input id="i-acc" type="number" value="2" min="0.2" max="12" step="0.1"></div>
+          </div>
+
+          <div class="subhead">Part and hold-down</div>
+          <div class="field row">
+            <div><label for="i-area">Footprint cm²</label><input id="i-area" type="number" value="80" min="4" max="20000" step="5"></div>
+            <div><label for="i-feat">Feature len mm</label><input id="i-feat" type="number" value="120" min="5" max="2400" step="5"></div>
+          </div>
+          <div class="field row">
+            <div><label for="i-vac">Vacuum kPa</label><input id="i-vac" type="number" value="83" min="10" max="101" step="1"></div>
+            <div><label for="i-mu">Grip factor</label><input id="i-mu" type="number" value="0.4" min="0.05" max="1" step="0.05"></div>
+          </div>
+          <p class="tiny" style="margin:6px 0 0">The grip factor is your own estimate. No source publishes this value. It covers friction, air leakage and safety margin on the theoretical pressure times area figure.</p>
+        </div>
+
+        <div class="calc-out">
+          <div class="readout">
+            <div>
+              <div class="tiny" style="margin-bottom:6px">Recommended feed</div>
+              <div class="big" id="o-feed">·<small>m/min</small></div>
+            </div>
+            <div class="sec">
+              <div>Chip load delivered <b id="o-fz">·</b> mm/tooth</div>
+              <div>Ideal feed before limits <b id="o-ideal">·</b> m/min</div>
+              <div>Cut power and available <b id="o-pw">·</b></div>
+              <div>Chip thinning factor <b id="o-ctf">·</b></div>
+            </div>
+          </div>
+          <div class="bindnote" id="o-bind">·</div>
+          <div class="casc" id="o-casc"></div>
+          <div class="chips" id="o-chips"></div>
+        </div>
+      </div>
+    </div>
+    <p class="tiny" style="margin-top:12px">This is a simple model that shows the structure. Every number is a start point. Prove each one with a test cut and a record of linear metres per bit.</p>
+  </section>
+
+  <!-- ===================== CORE MATHS ===================== -->
+  <section id="maths">
+    <div class="sechead"><span class="tag l1">Layer 1</span><h2>The core maths</h2></div>
+    <p class="seclede lede">Three equations and one conversion error to avoid. The wood industry works from chip load per tooth. It does not work from surface speed. But surface speed still sets a maximum rpm on large tools.</p>
+
+    <div class="fxgrid">
+      <div class="fxcard">
+        <div class="nm">Chip load per tooth</div>
+        <div class="eq"><b>f<sub>z</sub></b> = V<sub>f</sub> / (n &times; Z)</div>
+        <div class="nt">V<sub>f</sub> feed mm/min · n rpm · Z flutes. The result is in mm/tooth. Every vendor chart publishes this number.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Feed</div>
+        <div class="eq"><b>V<sub>f</sub></b> = n &times; Z &times; f<sub>z</sub></div>
+        <div class="nt">Use this form in practice. Select a chip load target and an rpm. The equation gives a feed. A limit then reduces it.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Spindle speed</div>
+        <div class="eq"><b>n</b> = V<sub>f</sub> / (Z &times; f<sub>z</sub>)</div>
+        <div class="nt">Use this form when the machine limits the feed. It gives the rpm that holds the chip load.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Surface speed</div>
+        <div class="eq"><b>V<sub>c</sub></b> = &pi; &times; D &times; n / 1000<br><span class="u">SFM = 0.262 &times; D<sub>in</sub> &times; n</span></div>
+        <div class="nt">This gives m/min from D in mm. It sets a maximum rpm on large diameters. Vendor charts do not show it.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Material removal rate</div>
+        <div class="eq"><b>MRR</b> = a<sub>p</sub> &times; a<sub>e</sub> &times; V<sub>f</sub></div>
+        <div class="nt">The result is in mm³/min. For a full slot, a<sub>e</sub> = D. The power calculation uses this result.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Rpm from surface speed</div>
+        <div class="eq"><b>n</b> = (V<sub>c</sub> &times; 1000) / (&pi; &times; D)<br><span class="u">n = SFM &times; 3.82 / D<sub>in</sub></span></div>
+        <div class="nt">The imperial constant is 3.82. It is not 4. The error increases as the diameter decreases.</div>
+      </div>
+    </div>
+
+    <div class="call warn">
+      <span class="lbl">Conversion error to avoid</span>
+      <p>US vendors publish inch/tooth and IPM. European vendors publish mm/tooth and m/min. For chip load, <span class="mono">1 inch/tooth = 25.4 mm/tooth</span>. For <em>feed</em>, the conversion is different: <span class="mono">IPM &divide; 39.37 = m/min</span>. Do not divide the feed by 25.4. Cutter Shop states the rule as divide inches per minute by 39.374. If you use the wrong divisor, the feed is wrong by a factor of 1.55.</p>
+    </div>
+
+    <div class="chartbox">
+      <h4>Feed, rpm and chip load are one relationship</h4>
+      <div class="sub">The feed that holds a given chip load on a 2-flute tool. The lines are diagonal. A feed reduction at constant rpm therefore moves the tool below the minimum chip load.</div>
+      <div id="ch-fan"></div>
+      <div class="legend" id="lg-fan"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CHIP LOAD DATA ===================== -->
+  <section id="data">
+    <div class="sechead"><span class="tag l1">Layer 1</span><h2>Published chip load, five sources</h2></div>
+    <p class="seclede lede">Chip load increases with diameter and changes with the material. MDF and particleboard take the highest chip loads. Laminated faces and cross-grain hardwood take the lowest. All values below are per tooth for solid carbide. The depth of cut is approximately one diameter.</p>
+
+    <div class="chartbox">
+      <h4>Chip load against tool diameter</h4>
+      <div class="sub">Each shaded band is one vendor published minimum to maximum. Select a material to see which vendors publish data for it.</div>
+      <div class="ctrls" id="ct-mat"></div>
+      <div id="ch-dia"></div>
+      <div class="legend" id="lg-dia"></div>
+    </div>
+
+    <div>
+      <div>
+        <div class="tblwrap">
+          <table>
+            <caption>Freud. Published inch/tooth, converted</caption>
+            <thead><tr><th>Dia</th><th class="n">MDF / PB</th><th class="n">Lam PB</th><th class="n">Hardwood</th><th class="n">Softwood</th><th class="n">Plywood</th></tr></thead>
+            <tbody id="tb-freud"></tbody>
+          </table>
+        </div>
+        <p class="tiny">Condition: depth of cut at or below one diameter.</p>
+      </div>
+      <div>
+        <div class="tblwrap">
+          <table>
+            <caption>Rennie Tool. Published mm/tooth</caption>
+            <thead><tr><th>Dia</th><th class="n">Hardwood</th><th class="n">Soft ply</th><th class="n">MDF / PB</th><th class="n">HPL</th></tr></thead>
+            <tbody id="tb-rennie"></tbody>
+          </table>
+        </div>
+        <p class="tiny">Condition: up-cut or down-cut tools. These values do <em>not</em> apply to compression tools. 18,000 rpm, depth approximately 1&times;D.</p>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <div class="tblwrap">
+          <table>
+            <caption>Onsrud 48-000 straight series. Inch/tooth, converted</caption>
+            <thead><tr><th>Dia</th><th class="n">inch/tooth</th><th class="n">mm/tooth</th></tr></thead>
+            <tbody id="tb-onsrud"></tbody>
+          </table>
+        </div>
+        <p class="tiny">Onsrud changes the chip load by series <em>and</em> by diameter, against specific part numbers. For a 1/2&#8243; tool in hardwood, the 2017 catalogue runs from 0.006 to 0.008&#8243; (48-000 straight) up to 0.021 to 0.023&#8243; (60-100C compression chipbreaker).</p>
+      </div>
+      <div>
+        <div class="tblwrap">
+          <table>
+            <caption>ITA Tools. European, mm/tooth, not by diameter</caption>
+            <thead><tr><th>Material</th><th class="n">mm/tooth</th><th>Reference point</th></tr></thead>
+            <tbody>
+              <tr><td>Laminated chipboard</td><td class="n">0.15 – 0.25</td><td class="dim" rowspan="3" style="vertical-align:middle">15 to 30 m/min at<br>20,000 to 21,000 rpm,<br>12 mm nesting tool</td></tr>
+              <tr><td>MDF</td><td class="n">0.10 – 0.20</td></tr>
+              <tr><td>Solid hardwood</td><td class="n">0.15 – 0.30</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tiny">ITA also give hardwood 8 to 12 m/min along the grain and 5 to 8 m/min across it. Softwoods accept 20 to 30% more feed. Check for resin build-up.</p>
+      </div>
+    </div>
+
+    <div class="call warn">
+      <span class="lbl">ITA's two datasets don't agree with each other</span>
+      <p>Work ITA's own numbers backwards and a problem shows up. They give a reference point of 20 m/min at 20,000 rpm on a 12 mm nesting tool, and they separately publish an MDF chip load of 0.10 to 0.20 mm/tooth. Both figures describe the same cut, so they ought to reconcile. They don't.</p>
+      <p>Do the arithmetic: 20,000 mm/min &divide; 20,000 rpm = 1.0 mm per revolution. Divide that by the flute count and you get <span class="mono">0.50 mm/tooth</span> on two flutes, <span class="mono">0.33</span> on three, <span class="mono">0.25</span> on four. You'd need six flutes or more before the result lands anywhere near their published figure.</p>
+      <p>The key thing to understand is the size of the gap, which runs to a factor of two to five depending on the tool you assume. Three explanations fit. The mm/tooth column could be per revolution rather than per tooth, it could assume a high-flute-count nesting tool, or the two datasets were compiled separately and never checked against each other. Their published material doesn't say which, so I'm not going to guess on your behalf.</p>
+      <p>Note: this is the strongest argument in the whole reference for making flute count an explicit setting the user chooses, with the source named next to it. Bury the convention in a lookup table and the calculator quietly inherits whichever assumption you happened to code, and you won't find out it was the wrong one until a test cut tells you.</p>
+    </div>
+  </section>
+
+  <!-- ===================== VENDOR SPREAD ===================== -->
+  <section id="spread">
+    <div class="sechead"><span class="tag l1">Layer 1</span><h2>Where the vendors disagree</h2></div>
+    <p class="seclede lede">You'll hit this the moment you start populating tables. Look up a 12.7 mm tool in hardwood across five vendors and the answers span a factor of 2.5 to 3, with the same diameter, the same material and the same nominal conditions behind every one of them. The temptation is to average them and move on. Don't. The spread carries two real signals, the machine class each vendor assumed and the tool geometry each chart was written for, and the geometry signal turned out to be the bigger of the two once the 2017 Onsrud catalogue went under the microscope.</p>
+
+    <div class="chartbox">
+      <h4>12.7 mm solid carbide in hardwood</h4>
+      <div class="sub">Each bar is a published range in mm/tooth, with Onsrud now split out by tool series. The two groups are still there. What's changed is that one vendor appears in both of them.</div>
+      <div id="ch-spread"></div>
+    </div>
+
+    <div class="grid-a">
+      <div>
+        <div class="call key">
+          <span class="lbl">One vendor spans the whole spread</span>
+          <p>The key thing to understand is that Onsrud's own catalogue covers nearly the full range by itself. Their 48-000 straight series in hardwood at 12.7 mm sits at 0.152 to 0.203 mm/tooth. Their 60-100C compression chipbreaker, same material, same diameter, same technical data page, sits at 0.533 to 0.584. That's a 3&times; spread inside one catalogue, and the top of it lands slightly above Vortex. The plain 2-flute spirals (52-200/57-200) and the 3-flute hoggers (60-000) fill in the ladder between them.</p>
+          <p>The forum lore about conservative Onsrud numbers grew out of their straight and plain-spiral series, because those are the general purpose tools people look up first. Machine class is still real. A CAMheads instructor puts the Vortex-style charts squarely on machines with 10 hp spindles or more, and reports running close to those numbers on a Morbidelli, which is about as direct a confirmation as a forum thread gives you. But line the series up and tool geometry explains at least as much of the spread as the machine does. Nobody on those threads explained the gap, and none of the vendors publish a test method you could use to work out who is right. The catalogue quietly did the explaining for them.</p>
+        </div>
+        <div class="call ok">
+          <span class="lbl">What this means for the calculator</span>
+          <p>Rule number one: key the chip load envelope by material and tool geometry class first, vendor second. One number per vendor was never going to work, Onsrud alone would need three. Use the chipbreaker and industrial band when the tool genuinely is one of those, keep the straight and plain-spiral values as the conservative floor, and drop back to that floor when the machine is lighter than you'd like, the tool is long, or the part is small enough that hold-down becomes the real problem.</p>
+        </div>
+      </div>
+      <div>
+        <div class="deck" style="grid-template-columns:1fr;margin-top:0">
+          <div class="card hi">
+            <div class="hd">Datapoint · MDF</div>
+            <p>Two-flute 1/2&#8243; square tool in 1/4&#8243; MDF. <strong>Vortex specify 0.025 to 0.027&#8243;</strong>, i.e: 0.64 to 0.69 mm/tooth. Ted Bruning reported that figure in <em>Woodshop News</em>.</p>
+          </div>
+          <div class="card hi">
+            <div class="hd">Datapoint · hardwood</div>
+            <p>Same 1/2&#8243; diameter in hardwood, one catalogue page: <strong>Onsrud 48-000 straight at .006 to .008&#8243;</strong> against <strong>Onsrud 60-100C compression at .021 to .023&#8243;</strong>. That gap survives with every other variable held constant, so the tool is what's driving it.</p>
+          </div>
+          <div class="card hi">
+            <div class="hd">What this means for the build</div>
+            <p>Store every range with its source and geometry class attached, let the user pick a profile, and show the other bands faintly for comparison. <strong>Don't store a blended mean.</strong> An averaged number is one no vendor will stand behind, so when a test cut disagrees with it you'll have nothing to trace back to.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DOC DERATING ===================== -->
+  <section id="doc">
+    <div class="sechead"><span class="tag l1">Layer 1</span><h2>Depth of cut reduces the chip load</h2></div>
+    <p class="seclede lede">Freud and Onsrud give the same rule. Almost every source agrees on it. Published chip loads assume a depth of cut of one diameter or less.</p>
+
+    <div class="grid-a">
+      <div class="chartbox" style="margin-top:0">
+        <h4>Chip load multiplier against depth</h4>
+        <div class="sub">The depth is a multiple of the tool diameter.</div>
+        <div id="ch-doc"></div>
+      </div>
+      <div>
+        <div class="tblwrap" style="margin-top:0">
+          <table>
+            <thead><tr><th>Depth of cut</th><th class="n">Chip load</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="n">1 &times; D</td><td class="n" style="color:var(--sage)">100%</td><td class="dim">Use the published value</td></tr>
+              <tr><td class="n">2 &times; D</td><td class="n" style="color:var(--amber)">≤ 75%</td><td class="dim">Reduce the value by 25% or more</td></tr>
+              <tr><td class="n">3 &times; D</td><td class="n" style="color:var(--coral)">≤ 50%</td><td class="dim">Reduce the value by 50% or more</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="tick key">
+          <li><strong>The standard axial depth is 1&times;D.</strong> Use up to 2&times;D on larger rigid tools. Vortex permit 2&times;D for tools of 1/4&#8243; and above, and 1&times;D below that size.</li>
+          <li><strong>A larger diameter permits much more depth.</strong> Use a tool of 12 mm or more for a single-pass nested cut. Do not use a small tool at a large depth.</li>
+          <li><strong>Compression tools add a second rule.</strong> A compression tool sets a <em>minimum</em> depth. On some panels the two rules leave no permitted depth.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MDF FLOOR ===================== -->
+  <section id="floor">
+    <div class="sechead"><span class="tag l2">Limit 01</span><h2>The minimum chip load for MDF</h2></div>
+    <p class="seclede lede">MDF is abrasive. The cured UF and MUF resin micro-crystals are harder than the wood fibre around them. The tool does not break. Instead the cutting edge becomes round, the binder glazes and the panel edge burns.</p>
+
+    <div class="grid-a stack">
+      <div class="chartbox" style="margin-top:0">
+        <h4>Below the minimum, the tool rubs</h4>
+        <div class="sub">Chip load per tooth against the condition at the cutting edge.</div>
+        <div id="ch-floor"></div>
+        <div class="grid2" style="gap:10px 24px;margin-top:14px">
+          <p class="cap" style="margin:0"><b style="color:var(--coral)">Plough zone.</b> No chip forms. The edge rubs, the temperature increases and the binder glazes.<br>
+          <b style="color:var(--amber)">Marginal zone.</b> The chip forms intermittently. The edge becomes round quickly.</p>
+          <p class="cap" style="margin:0"><b style="color:var(--sage)">Cut zone.</b> The chip forms correctly and removes the heat.<br>
+          <b style="color:var(--cyan)">Heavy zone.</b> Rigid machines permit this range. Check the spindle power and the hold-down.</p>
+        </div>
+      </div>
+      <div>
+        <div class="call warn">
+          <span class="lbl">The threshold value</span>
+          <p>Below approximately <span class="mono">0.08 to 0.10 mm/tooth</span> the edge rubs and does not cut. CNCCookbook give the general carbide limit as approximately 0.004&#8243;, which is 0.10 mm. Below this value the tool rubs, the tool life decreases and the machine chatters. Minimum-chip-thickness theory agrees. Below approximately 5 to 20% of the cutting edge radius, no chip forms and the tool ploughs.</p>
+        </div>
+        <ul class="tick warn">
+          <li><strong>This is a minimum value, not a target value.</strong> It is the only limit that <em>increases</em> the feed. It is also the reason a feed reduction often makes the MDF finish worse.</li>
+          <li><strong>Tool life in MDF is 50 to 70% shorter</strong> than in solid wood, from vendor and user figures.</li>
+          <li><strong>The rub condition continues once it starts.</strong> A round edge needs a thicker chip to cut. A tool that goes below the minimum therefore stays below it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="chartbox">
+      <h4>Measured edge recession, K10 carbide</h4>
+      <div class="sub">Per 4,000 linear metres at the same chip load. Source: ZC Tools pre-mill data.</div>
+      <div id="ch-wear"></div>
+      <p class="cap">The wear rate in MDF is approximately six times the rate in radiata pine. This value decides whether a coated tool is economic. It also shows where PCD becomes the lower cost per metre, although PCD is outside this scope.</p>
+    </div>
+  </section>
+
+  <!-- ===================== COMPRESSION ===================== -->
+  <section id="compression">
+    <div class="sechead"><span class="tag l2">Limit 02</span><h2>Compression geometry sets a minimum depth</h2></div>
+    <p class="seclede lede">Every other rule reduces the depth of cut. This rule increases it, and it is absolute. The material must fully cover the transition between the up-cut and down-cut zones. If it does not, one face tears out.</p>
+
+    <div class="grid-a stack">
+      <div>
+        <div class="chartbox" style="margin-top:0">
+          <h4>Where the transition has to sit</h4>
+          <div class="sub">The up-cut zone is at the tip. The down-cut zone is above it. The tool moves chips inward from both faces.</div>
+          <div id="ch-comp"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="call key">
+          <span class="lbl">The rule</span>
+          <p>The up-cut length is usually approximately 1&times; the cutting diameter. On thin-panel tools it can be as short as 0.4&times;. Vortex give this instruction: a tool with a 0.5&#8243; up-cut length must cut a minimum of 0.563&#8243; in one pass. This is the up-cut length plus approximately <span class="mono">1.6 mm</span>.</p>
+        </div>
+        <div class="call warn">
+          <span class="lbl">Failure condition</span>
+          <p>If you cut too shallow with a compression tool, the top laminate chips. An example is 5/8&#8243; material with a tool geometry for 3/4&#8243; material. The tool is sharp and the feed is correct. But the geometry is in the wrong position in the panel.</p>
+        </div>
+        <ul class="tick">
+          <li><strong>Ramp and plunge at approximately 45&deg;</strong> over 2 to 4 inches at approximately one third of the feed. This applies to down-cut and compression tools.</li>
+          <li><strong>Match the up-cut length to the panel thickness.</strong> A 0.700&#8243; up-shear tool chips material thinner than 3/4&#8243;. Use approximately 0.400&#8243; for 1/2&#8243; material.</li>
+          <li><strong>Check both depth rules together.</strong> The depth reduction rule gives a maximum of 1 to 2&times;D. The compression tool gives a minimum. On a thick panel with a small tool, no single pass satisfies both rules.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SPINDLE POWER ===================== -->
+  <section id="power">
+    <div class="sechead"><span class="tag l2">Limit 03</span><h2>Spindle torque below the breakpoint</h2></div>
+    <p class="seclede lede">Industrial router spindles give constant torque below the breakpoint and constant power above it. If you reduce the rpm to hold a chip load target on a large tool, the available power decreases with it. This limit often decides a full-depth nested pass at high feed.</p>
+
+    <div class="chartbox">
+      <h4>Power and torque against rpm</h4>
+      <div class="sub">A 10 kW spindle with a breakpoint at 12,000 rpm and a maximum speed of 24,000 rpm. Change the breakpoint to see the effect of a different spindle.</div>
+      <div class="ctrls" id="ct-bp"></div>
+      <div id="ch-power"></div>
+      <div class="legend" id="lg-power"></div>
+      <p class="cap">Below the breakpoint the torque is constant and the power decreases with the rpm. Above the breakpoint the power is constant and the torque decreases as 1/n. If you reduce the rpm to half the rated speed, the available power also falls to approximately half. Torque curves differ between spindles with the same rating. One 3.8 kW HSD-type spindle can be constant from 12,000 to 24,000 rpm. Another reaches its rating only from 18,000 rpm.</p>
+    </div>
+
+    <div class="fxgrid">
+      <div class="fxcard">
+        <div class="nm">Power from torque</div>
+        <div class="eq"><b>P</b><span class="u">kW</span> = T &times; n &times; 2&pi; / 60,000</div>
+        <div class="nt">T is in Nm and n is in rpm. At 12,000 rpm a 10 kW spindle gives 7.96 Nm.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Available power below breakpoint</div>
+        <div class="eq"><b>P<sub>avail</sub></b> = P<sub>rated</sub> &times; n / n<sub>bp</sub></div>
+        <div class="nt">The decrease is linear. At 6,000 rpm with a 12,000 rpm breakpoint, half the rated power is available.</div>
+      </div>
+      <div class="fxcard">
+        <div class="nm">Torque above breakpoint</div>
+        <div class="eq"><b>T</b> = P<sub>rated</sub> &times; 60,000 / (2&pi; &times; n)</div>
+        <div class="nt">A 10 kW spindle gives 5.3 Nm at 18,000 rpm and 3.98 Nm at 24,000 rpm.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== KC / CUTTING FORCE ===================== -->
+  <section id="kc">
+    <div class="sechead"><span class="tag l2">Limit 03b</span><h2>Cutting power from specific cutting force</h2></div>
+    <p class="seclede lede">Peer-reviewed k<sub>c</sub> values exist for wood panels and you can use them. They let the calculator convert a proposed cut into a power value in kilowatts. The calculator then compares that value against the spindle curve.</p>
+
+    <div class="grid-a stack">
+      <div>
+        <div class="fx"><b>P<sub>cut</sub></b> <span class="u">W</span> = k<sub>c</sub> <span class="u">N/mm²</span> &times; MRR <span class="u">mm³/min</span> &divide; 60,000</div>
+        <div class="fx"><b>P<sub>cut</sub></b> <span class="u">W</span> = k<sub>c</sub> <span class="u">N/mm²</span> &times; MRR <span class="u">cm³/min</span> &divide; 60</div>
+        <div class="call warn">
+          <span class="lbl">Unit error to avoid</span>
+          <p>N/mm² and J/mm³ are <em>not</em> numerically equal. <span class="mono">1 J/mm³ = 1000 N/mm²</span>. Use the equation above. Do not substitute one unit for the other, or the result is wrong by a factor of 1000. Also, the metal-cutting k<sub>c1.1</sub> and m<sub>c</sub> tables do not apply to wood. Their values are 20 to 100 times too high.</p>
+        </div>
+        <div class="tblwrap">
+          <table>
+            <caption>Specific cutting force, peer-reviewed</caption>
+            <thead><tr><th>Material</th><th class="n">k<sub>c</sub> N/mm²</th><th>Source</th></tr></thead>
+            <tbody>
+              <tr><td>Particleboard</td><td class="n">32.0 to 37.6</td><td class="dim">Pałubicki 2021, <em>Materials</em> 14(9):2208. Up-milling. The value increases with cutting speed across 40 to 60 m/s</td></tr>
+              <tr><td>MDF</td><td class="n">31.4 ± 2.7</td><td class="dim">Goli et al. 2018, <em>Materials</em> 11(12):2575. Round-shape machining. Almost isotropic</td></tr>
+              <tr><td>Panels, default value</td><td class="n">≈ 35</td><td class="dim">Combined start value</td></tr>
+              <tr><td>Softwood / dense hardwood</td><td class="n">≈ 25 / ≈ 40</td><td class="dim">Estimates for the calculator default values</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="tiny">The equivalent specific cutting energy is approximately 30 to 40 J/cm³. This is approximately 0.5 to 0.65 W for each cm³/min of material removal.</p>
+      </div>
+      <div>
+        <div class="chartbox" style="margin-top:0">
+          <h4>Worked example. The 2.5 kW slot</h4>
+          <div class="sub">A 12 mm tool in an 18 mm board. Full-depth slot at 20 m/min.</div>
+          <div id="ch-worked"></div>
+        </div>
+        <div class="call key">
+          <span class="lbl">Why a nesting router needs 10 kW or more</span>
+          <p>a<sub>p</sub> 18 &times; a<sub>e</sub> 12 &times; 20,000 mm/min = <span class="mono">4.32 &times; 10⁶ mm³/min</span>. At k<sub>c</sub> 35 this gives <span class="mono">2.52 kW at the cutting edge</span>. This value excludes spindle efficiency and the vacuum pump. It also assumes 20 m/min and not 30 m/min. These numbers set the machine class.</p>
+        </div>
+        <p class="tiny">Note: k<sub>c</sub> increases sharply at small chip thickness. This is Kienzle behaviour. Power estimates for light finish passes are therefore too low. The literature gives no accurate Kienzle constants for wood panels. The round-shape papers use a linear F<sub>c</sub> = intercept + K<sub>s</sub>·h model instead.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== VACUUM ===================== -->
+  <section id="vacuum">
+    <div class="sechead"><span class="tag l2">Limit 04</span><h2>Vacuum hold-down limits the feed</h2></div>
+    <p class="seclede lede">A small nested part has a small footprint. The hold-down force changes with the area, but the cutting force does not. Below a given part size, the hold-down sets the feed limit. No change of tool corrects this.</p>
+
+    <div class="chartbox">
+      <h4>Hold-down against cutting force as parts get smaller</h4>
+      <div class="sub">A square part in an 18 mm panel with a 12 mm tool at 0.5 mm/tooth. The hold-down force decreases with the square of the edge length. The cutting force stays constant.</div>
+      <div id="ch-vac"></div>
+      <div class="legend" id="lg-vac"></div>
+      <p class="cap">The theoretical hold-down is the full 83 kPa times the area. This is approximately 2.5 times the usable curve on this chart. At the crossover point the part starts to move during the cut. Below the crossover, use an onion skin or tabs. Do not only increase the vacuum.</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="hd">Theoretical ceiling</div>
+        <p>At sea level, 1 atm is approximately <strong>14.7 psi or 101 kPa</strong>. Practical flow-type tables reach approximately <strong>24&#8243; Hg, which is 12 psi or 83 kPa</strong>. Users assume 12 psi as the maximum and reduce it for altitude.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Leakage compounds</div>
+        <p>The tool opens more of the porous MDF board as the cut continues. The air leakage then increases and the available vacuum decreases. <strong>The sheet holds the last parts least well.</strong> The offcut frame is also weakest at that point.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Onion skin is the fix</div>
+        <p>Leave approximately <strong>0.25 mm or 0.010&#8243;</strong> and cut through last at a reduced feed. One CNC controller patent does this automatically. It leaves approximately ten thousandths of an inch on parts below a set size and reduces the feed on the final pass.</p>
+      </div>
+    </div>
+
+    <div class="call warn">
+      <span class="lbl">Limits of this model</span>
+      <p>Pressure &times; area gives the <em>theoretical maximum normal</em> force. Friction against the spoilboard resists the sideways movement of the part. That friction force is only a fraction of the normal force. The sources reviewed publish no coefficient for it. The calculator therefore shows the grip factor as a user input. It does not hide an estimated value inside the calculation.</p>
+    </div>
+  </section>
+
+  <!-- ===================== EFFECTIVE FLUTES ===================== -->
+  <section id="flutes">
+    <div class="sechead"><span class="tag l2">Limit 05</span><h2>Effective flute count on inserted tooling</h2></div>
+    <p class="seclede lede">This is a secondary requirement for the calculator. It is also the easiest place to set a feed 200 to 300% too high. Runout causes one insert to do most of the cutting. The nominal flute count is therefore incorrect.</p>
+
+    <div class="grid-a stack">
+      <div class="chartbox" style="margin-top:0">
+        <h4>What runout does to chip distribution</h4>
+        <div class="sub">A head with four inserts. Compare the nominal assumption with the effect of runout.</div>
+        <div id="ch-flute"></div>
+      </div>
+      <div>
+        <div class="call warn">
+          <span class="lbl">Use a conservative value</span>
+          <p>Assume an <span class="mono">effective Z of 1</span> for inserted tooling. Use a higher value only if the head is precision-set with runout held to fractions of a thousandth of an inch. The true value can be 1. If you calculate on the nominal Z, the feed per active insert is too high by the full flute count.</p>
+        </div>
+        <ul class="tick">
+          <li><strong>Patent literature defines the term effective flutes.</strong> It is the number of flutes that must pass to cut one complete profile. On a head with eight helical insert groups that overlap, the effective flute count can be four.</li>
+          <li><strong>The same effect occurs on solid carbide.</strong> Collet runout on a six-flute nesting tool loads the flutes unequally and reduces tool life by 20 to 30%. The cause is the same but the effect is smaller.</li>
+          <li><strong>The count for up-cut, down-cut and compression tools is also unclear.</strong> Sources disagree on whether to count only the up-cut flutes or all of them. Make this an input. Do not assume a value.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ONION SKIN ===================== -->
+  <section id="onion">
+    <div class="sechead"><span class="tag l2">Limit 06</span><h2>Onion skin and multiple passes</h2></div>
+    <p class="seclede lede">The calculator must work per <em>pass</em>. It must not give one feed for the whole cut. The roughing pass and the skin pass have different radial engagement, different chip thinning and different active limits.</p>
+
+    <div class="chartbox">
+      <h4>Two passes, two completely different cuts</h4>
+      <div class="sub">The tool, the material and the sheet are the same. All other conditions change.</div>
+      <div id="ch-onion"></div>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Pass</th><th class="n">Radial a<sub>e</sub></th><th class="n">Axial a<sub>p</sub></th><th class="n">Thinning</th><th>Usual active limit</th></tr></thead>
+        <tbody>
+          <tr><td>Rough or profile</td><td class="n">Full slot (= D)</td><td class="n">Panel &minus; skin</td><td class="n">None</td><td class="dim">Spindle power, or the machine maximum feed</td></tr>
+          <tr><td>Skin or through</td><td class="n">Full slot, 0.2 to 0.5 mm axial</td><td class="n">0.2 to 0.5 mm</td><td class="n">None</td><td class="dim">Vacuum hold-down. Use a reduced feed</td></tr>
+          <tr><td>Finish (light radial)</td><td class="n">≈ 0.25 mm per side</td><td class="n">Full depth</td><td class="n">1.15–1.7&times;</td><td class="dim">Minimum chip load. Compensate the feed or the tool rubs</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tiny">A typical onion skin is 0.2 to 0.5 mm, which is 0.010 to 0.020&#8243;. Use tabs instead if the skin cut-through quality is not acceptable.</p>
+  </section>
+
+  <!-- ===================== CHIP THINNING ===================== -->
+  <section id="thinning">
+    <div class="sechead"><span class="tag l2">Limit 07</span><h2>Radial chip thinning</h2></div>
+    <p class="seclede lede">If the radial engagement is less than half the diameter, the true chip is thinner than the programmed chip load. The geometry comes from metal cutting. Wood CAM applies the same equation. But one condition is specific to wood.</p>
+
+    <div class="grid-a">
+      <div class="chartbox" style="margin-top:0">
+        <h4>Compensation factor against radial engagement</h4>
+        <div class="sub">The curve is almost flat down to approximately 40% engagement. Below that it increases quickly.</div>
+        <div id="ch-thin"></div>
+      </div>
+      <div>
+        <div class="fx">factor = D &divide; ( 2 &times; &radic;( a<sub>e</sub> &times; (D &minus; a<sub>e</sub>) ) )</div>
+        <div class="fx">adjusted <b>f<sub>z</sub></b> = target f<sub>z</sub> &times; factor</div>
+        <div class="fx">effective chip = programmed f<sub>z</sub> &divide; factor</div>
+        <div class="tblwrap">
+          <table>
+            <thead><tr><th class="n">a<sub>e</sub> / D</th><th class="n">Factor</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td class="n">50%</td><td class="n">1.00</td><td class="dim">No compensation is necessary</td></tr>
+              <tr><td class="n">25%</td><td class="n">1.15</td><td class="dim">Increase the feed by 15%</td></tr>
+              <tr><td class="n">10%</td><td class="n">1.66</td><td class="dim">Increase the feed by 66%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="call warn">
+          <span class="lbl">Condition specific to wood</span>
+          <p>The geometry is correct. But Vortex give a practical rule: always use the minimum chip load on the radial depth of cut. If you do not, the tool wears without cutting. Do not use a radial engagement so small that even a compensated feed keeps the chip below the minimum.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DEFLECTION ===================== -->
+  <section id="deflect">
+    <div class="sechead"><span class="tag l2">Limit 08</span><h2>Deflection and stick-out</h2></div>
+    <p class="seclede lede">Deflection increases with the cube of the length and decreases with the fourth power of the diameter. No feed value corrects a tool that extends too far from the holder.</p>
+
+    <div class="chartbox">
+      <h4>Relative deflection against length-to-diameter ratio</h4>
+      <div class="sub">The chart normalises the values to 1.0 at a ratio of 3:1. A small increase in length gives a large increase in deflection.</div>
+      <div id="ch-defl"></div>
+      <p class="cap">Carbide can cut to a depth of 4 to 10&times; its diameter if you reduce the feed. The permitted ratio is higher for small tools. Always use the shortest tool that reaches the full depth. Keep the depth per pass at or below 1&times;D on long tools.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CORNERS ===================== -->
+  <section id="corner">
+    <div class="sechead"><span class="tag l2">Limit 09</span><h2>Corner deceleration</h2></div>
+    <p class="seclede lede">The machine decelerates to almost zero at every corner. It then accelerates again after the corner. The chip load therefore decreases to a very low value in the corner. Small parts and small radii burn for this reason.</p>
+
+    <div class="grid-a">
+      <div class="chartbox" style="margin-top:0">
+        <h4>Distance needed to reach programmed feed</h4>
+        <div class="sub">L<sub>min</sub> = v² / a. Three classes of acceleration.</div>
+        <div id="ch-corner"></div>
+        <div class="legend" id="lg-corner"></div>
+      </div>
+      <div>
+        <div class="fx"><b>L<sub>min</sub></b> = v² &divide; a <span class="u">metres, m/s, m/s²</span></div>
+        <div class="call key">
+          <span class="lbl">Two examples</span>
+          <p>At 50 mm/s with an acceleration of 500 mm/s², the machine needs <span class="mono">5 mm</span> to reach the feed. At 20 m/min, which is 333 mm/s, with an acceleration of 2,000 mm/s², the machine needs <span class="mono">55 mm</span>. It needs the same distance again to stop. One forum report describes a machine that needs 3&#8243; to decelerate and 3&#8243; to accelerate. That machine is below the programmed feed for 6&#8243; of every side.</p>
+        </div>
+        <ul class="tick warn">
+          <li><strong>The programmed chip load is not the chip load in the corner.</strong> On a 120 mm part side at 20 m/min, the machine accelerates or decelerates for most of the side.</li>
+          <li><strong>Use the corner feed option in the CAM system.</strong> It reduces the feed by a set percentage over a set distance before and after the corner. The chip load then stays in range.</li>
+          <li><strong>Acceleration is more important than maximum feed</strong> for small nested parts. The machine reaches the maximum feed only on long moves.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EDGE QUALITY ===================== -->
+  <section id="edge">
+    <div class="sechead"><span class="tag l2">Limit 10</span><h2>Laminate edge quality is a geometry problem</h2></div>
+    <p class="seclede lede">The shear angle, the helix, the compression geometry, the chipbreaker, the carbide grade and the edge sharpness control this result. The calculator can give a correct feed for the wrong tool. The panel then still chips.</p>
+
+    <div class="call warn">
+      <span class="lbl">Field report from WOODWEB</span>
+      <p>One shop destroyed two $80 compression tools within ten sheets of Wilsonart HPL. The same shop then cut more than thirty sheets correctly with a <em>cheaper straight carbide-tipped tool</em>. The sharp compression edge fractures on hard HPL and on melamine resin. A stronger and less sharp edge does not fracture.</p>
+      <p>Note this result. On hard laminate, the sharper and more expensive tool was the wrong tool.</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="hd">Geometry, not feed</div>
+        <p>Leitz supply positive, neutral and negative shear geometries by application in the Diamaster PRO and PLUS range. <strong>Match the shear angle to the face material.</strong> Do not match it to a feed target.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Match up-cut to thickness</div>
+        <p>A 0.700&#8243; up-shear tool <strong>chips material thinner than 3/4&#8243;</strong>. Use approximately 0.400&#8243; up-shear for 1/2&#8243; material. The tool family is correct but the size is wrong.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Abrasive fillers</div>
+        <p>Melamine and HPL contain aluminium-sulfate and mineral fillers. Use a <strong>chipbreaker compression tool</strong> of the 3+3 type against this abrasion. At high volume PCD gives the lowest cost, but PCD is outside this scope.</p>
+      </div>
+    </div>
+
+    <div class="call key">
+      <span class="lbl">Rule for the calculator advice function</span>
+      <p>If the user reports laminate edge chips, do not recommend a feed change. Recommend a change of tool geometry. A feed change does not correct this defect and wastes a sheet.</p>
+    </div>
+  </section>
+
+  <!-- ===================== MISC ===================== -->
+  <section id="misc">
+    <div class="sechead"><span class="tag l2">Limit 11</span><h2>The other limits</h2></div>
+    <p class="seclede lede">These effects are smaller. But each one appears in the literature because it caused a real failure.</p>
+    <div class="deck">
+      <div class="card">
+        <div class="hd">Grain direction in solid timber</div>
+        <p>A cross-grain cut needs a lower feed than a cut along the grain. ITA give <strong>hardwood at 8 to 12 m/min along the grain and 5 to 8 m/min across it</strong>. Softwoods accept 20 to 30% more feed.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Resin and pitch</div>
+        <p>Softwood resin builds up on the flute. Clean the tool at regular intervals. <strong>A DLC coating reduces this adhesion.</strong> This is possibly its largest practical benefit.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Dust extraction removes heat</div>
+        <p>Extraction removes chips from the cut zone, keeps the flutes clear and removes heat. <strong>It is necessary for the cut.</strong> It is not only a cleanliness function.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Moisture content</div>
+        <p>The moisture content of solid timber changes the cut and the finish. Add an input for it in the calculator. No source publishes a correction value, so the user must estimate it.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Climb vs conventional</div>
+        <p>A nested cut usually uses climb milling for the finish. On the final skin pass or tab pass, <strong>the cut direction changes the part stability</strong> as much as it changes the finish.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Axial depth rule of thumb</div>
+        <p>Use <strong>1&times;D as the standard value</strong>. Use up to 2&times;D on large rigid tools. Use 1&times;D as the maximum for tools of 1/4&#8243; and smaller.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TOOL SELECTION ===================== -->
+  <section id="geometry">
+    <div class="sechead"><span class="tag spec">Build it</span><h2>Up-cut, down-cut, compression</h2></div>
+    <p class="seclede lede">Select the tool geometry first. Calculate the feed second. If the geometry is wrong, no chip load value from any vendor chart gives an acceptable panel.</p>
+
+    <div class="chartbox">
+      <h4>Selection by face requirement</h4>
+      <div class="sub">The faces that must be clean decide the geometry. All other decisions follow from that.</div>
+      <div id="ch-tree"></div>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Geometry</th><th>Chip flow</th><th>Top face</th><th>Bottom face</th><th>Watch for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Up-cut</strong></td><td class="dim">Lifts chips out of the cut</td><td style="color:var(--coral)">Rough</td><td style="color:var(--sage)">Clean</td><td class="dim">Best chip removal. Lifts small parts off the bed.</td></tr>
+          <tr><td><strong>Down-cut</strong></td><td class="dim">Pushes chips into the cut</td><td style="color:var(--sage)">Clean</td><td style="color:var(--coral)">Rough</td><td class="dim">Poor chip removal, more heat and a burn risk. Use a lower feed. Holds parts down.</td></tr>
+          <tr><td><strong>Compression</strong></td><td class="dim">Inward from both faces</td><td style="color:var(--sage)">Clean</td><td style="color:var(--sage)">Clean</td><td class="dim">Sets a minimum depth. The sharp edge fractures on hard HPL.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== WHAT CHANGED ===================== -->
+  <section id="changed">
+    <div class="sechead"><span class="tag spec">Build it</span><h2>What changed in fifteen years</h2></div>
+    <p class="seclede lede">Tooling and machines changed substantially. The chip load advice did not change.</p>
+
+    <div class="chartbox">
+      <h4>Then and now</h4>
+      <div class="sub">The areas that changed, and the area that did not.</div>
+      <div id="ch-changed"></div>
+    </div>
+
+    <div class="deck">
+      <div class="card hi">
+        <div class="hd">Carbide grade</div>
+        <p>Micrograin and sub-micrograin grades are now standard. They are sharper, more durable and you can regrind them. Infinity state that their optimal-helix micrograin tools <strong>last up to 300% longer</strong> than standard router tools.</p>
+      </div>
+      <div class="card hi">
+        <div class="hd">Coatings, with a caveat</div>
+        <p>DLC and nanocomposite nACo-type coatings are now standard for wood and MDF. Vendors state a tool life increase of <strong>2 to 3 times</strong>. Users report that the coating wears off the cutting edge quickly. Part of the benefit is therefore less resin build-up and slower wear on the tool body. Plain TiN gives no useful benefit on wood.</p>
+      </div>
+      <div class="card hi">
+        <div class="hd">Nesting-specific geometry</div>
+        <p><strong>Compression tools in 3+3, 2+2 and 3+1 configurations</strong> and chipbreaker rough tools are now separate product categories. Three-flute nesting tools for high feed are now standard products.</p>
+      </div>
+      <div class="card hi">
+        <div class="hd">Spindles and holders</div>
+        <p>HSK-interface spindles now give higher power. Use <strong>shrink-fit HSK63F</strong> holders for a nested cut at high feed. ER32 and ER40 collets are adequate to approximately 18 m/min. Above that feed, collet runout loads the flutes unequally and reduces tool life by 20 to 30%.</p>
+      </div>
+      <div class="card hi">
+        <div class="hd">CAM caught up</div>
+        <p>Chip thinning compensation in Mastercam Dynamic, Fusion Adaptive and hyperMILL is now standard. <strong>Corner feed control</strong> is also standard. Neither function now needs custom post processor code.</p>
+      </div>
+      <div class="card hi">
+        <div class="hd">The data did not move</div>
+        <p>Chip load advice still comes from <strong>catalogues and from custom</strong>. Vendors publish start ranges and instruct you to confirm them with a test cut. This has not changed in fifteen years.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ARCHITECTURE ===================== -->
+  <section id="arch">
+    <div class="sechead"><span class="tag spec">Build it</span><h2>Calculator structure</h2></div>
+    <p class="seclede lede">The calculator has two layers. Layer 1 gives an ideal feed. Layer 2 reduces that feed and reports which limit caused the reduction. That report is the most useful output.</p>
+
+    <div class="chartbox">
+      <h4>Data flow</h4>
+      <div class="sub">The inputs are on the left. The active limit appears on the right.</div>
+      <div id="ch-arch"></div>
+    </div>
+
+    <div class="tblwrap">
+      <table>
+        <caption>Values to implement</caption>
+        <thead><tr><th>Module</th><th class="n">Threshold / formula</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Chip load lookup</td><td class="n">material &times; diameter &times; vendor</td><td class="dim">Store each range with its source. Interpolate on diameter. Do not average the vendors.</td></tr>
+          <tr><td>Depth derating</td><td class="n">100% / ≤75% / ≤50% at 1&times;/2&times;/3&times;D</td><td class="dim">Apply this before all other steps.</td></tr>
+          <tr><td>Chip thinning</td><td class="n">D / (2&radic;(a<sub>e</sub>(D&minus;a<sub>e</sub>))) when a<sub>e</sub> &lt; D/2</td><td class="dim">Increases the feed. The result must stay above the minimum chip load.</td></tr>
+          <tr><td>Minimum chip load</td><td class="n">warn &lt; 0.10, hard &lt; 0.08 mm/tooth</td><td class="dim">MDF and particleboard. The only limit that <em>increases</em> the feed.</td></tr>
+          <tr><td>Spindle power</td><td class="n">P = k<sub>c</sub> &times; MRR / 60,000; constant-T below n<sub>bp</sub></td><td class="dim">Default k<sub>c</sub> values: 35 for panels, 25 for softwood, 40 for dense hardwood and HPL.</td></tr>
+          <tr><td>Vacuum</td><td class="n">grip &times; P<sub>vac</sub> &times; area vs k<sub>c</sub> &times; a<sub>p</sub> &times; f<sub>z</sub></td><td class="dim">Below the crossover, recommend an onion skin or tabs. Do not recommend more vacuum.</td></tr>
+          <tr><td>Corner dynamics</td><td class="n">flag when feature length &lt; v²/a</td><td class="dim">Recommend the CAM corner feed function. Do not recommend a reduction of the whole feed.</td></tr>
+          <tr><td>Deflection</td><td class="n">L:D warning band</td><td class="dim">Use the shortest tool that reaches the depth. Keep a<sub>p</sub> at 1&times;D or less on long tools.</td></tr>
+          <tr><td>Compression minimum</td><td class="n">a<sub>p</sub> ≥ up-cut length + ~1.5 mm</td><td class="dim">Block the value. Do not give a warning only. This rule conflicts with the depth reduction rule on thick panels.</td></tr>
+          <tr><td>Effective flutes</td><td class="n">inserted: assume Z<sub>eff</sub> = 1</td><td class="dim">The user can change this value. Make the up-cut and down-cut count rule visible. Do not assume it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2">
+      <div class="call ok">
+        <span class="lbl">Diagnostic rules to include</span>
+        <p><strong>Laminate edge chips.</strong> Change the tool geometry. Do not change the feed.<br>
+        <strong>Burn marks in corners.</strong> Use the CAM corner feed function, or increase the machine acceleration.<br>
+        <strong>Glazed or polished MDF edge.</strong> Increase the feed or reduce the rpm to raise the chip load above the minimum.<br>
+        <strong>Parts lift or move.</strong> Use an onion skin or tabs. More vacuum does not correct a small footprint.<br>
+        <strong>Torque stall at low rpm.</strong> Increase the rpm into the constant-power range, or reduce the depth and the feed.</p>
+      </div>
+      <div class="call info">
+        <span class="lbl">How to validate the values</span>
+        <p>Every source states that the published data is a start point. Record the linear metres per tool and correct your own tables against that record. A good 12 mm carbide tool gives approximately <strong>600 to 1,000 linear metres in laminated chipboard</strong> before the edge quality falls. Use this figure to check your default values.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== CAVEATS ===================== -->
+  <section id="caveats">
+    <div class="sechead"><span class="tag caveat">Read this</span><h2>Where the data is weak</h2></div>
+    <p class="seclede lede">Read this section. A calculator that shows these numbers to four significant figures suggests an accuracy that the source data does not have.</p>
+
+    <div class="deck">
+      <div class="card">
+        <div class="hd">Chip load data</div>
+        <p>Vendor charts disagree by 2 to 3 times. Much of the difference follows the tool geometry class. They seldom give the test method. They also serve a marketing function. <strong>The values come from custom, not from measurement.</strong> Use every table as a start range only, and compare values only within the same geometry class.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Plywood k<sub>c</sub></div>
+        <p>Few sources publish plywood data. Peer-reviewed panel values exist for MDF and particleboard only. <strong>Plywood values appear mainly as chart figures.</strong> Plywood is also semi-anisotropic, so one k<sub>c</sub> value is a simplification.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Small-chip power</div>
+        <p>k<sub>c</sub> increases at small chip thickness. <strong>Power estimates for light finish passes are therefore too low.</strong> The literature contains no accurate Kienzle constants for wood panels.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Flute count convention</div>
+        <p>The sources are unclear for up-cut, down-cut and compression tooling. <strong>Make this a user input</strong> with a documented default value. The ITA disagreement above shows why.</p>
+      </div>
+      <div class="card">
+        <div class="hd">Inserted tooling</div>
+        <p>The advice on effective flute count comes <strong>from users, not from published data</strong>. Use a conservative value unless the head has a precision runout setting.</p>
+      </div>
+      <div class="card">
+        <div class="hd">PCD excluded by scope</div>
+        <p>PCD is outside this scope. But it controls the cost of high-volume MDF and laminate work. Vendors state a tool life of approximately <strong>50 times that of carbide in MDF</strong>. PCD gives the lowest long-term cost per metre.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SOURCES ===================== -->
+  <section id="sources">
+    <div class="sechead"><span class="tag caveat">Provenance</span><h2>Sources</h2></div>
+    <div class="srclist">
+      <p><b>Freud.</b> Chip load charts in inch/tooth for solid carbide, depth of cut at or below the diameter.</p>
+      <p><b>Rennie Tool.</b> Chip load charts in mm/tooth for up-cut or down-cut tools at 18,000 rpm.</p>
+      <p><b>LMT Onsrud.</b> The 48-000 straight series and the hardwood charts, in inch/tooth by part number.</p>
+      <p><b>Vortex Tool.</b> Chip load charts, depth of cut instructions and the radial engagement rule.</p>
+      <p><b>ITA Tools.</b> European mm/tooth targets, nested-cut feed and rpm reference points, and feeds by grain direction.</p>
+      <p><b>Leitz.</b> Diamaster PRO and PLUS shear geometry by application, and compact laminate tooling.</p>
+      <p><b>Pałubicki, B. (2021).</b> Cutting Forces in Peripheral Up-Milling of Particleboard, <em>Materials</em> 14(9):2208, doi:10.3390/ma14092208.</p>
+      <p><b>Goli, Curti, Marcon, Scippa, Campatelli, Furferi, Denaud (2018).</b> Specific Cutting Forces of Isotropic and Orthotropic Engineered Wood Products by Round Shape Machining, <em>Materials</em> 11(12):2575, doi:10.3390/ma11122575.</p>
+      <p><b>Curti and Goli.</b> Plywood cutting force figures, HAL hal-04274766.</p>
+      <p><b>ZC Tools.</b> Pre-mill MDF rpm and feed equations, and K10 edge recession data.</p>
+      <p><b>CNCCookbook.</b> Chip thinning and the rub condition, and the 0.004&#8243; minimum from Ingersoll.</p>
+      <p><b>CAMheads CNC Router Forum.</b> The Chipload Charts thread, with the discussion of vendor differences by machine class.</p>
+      <p><b>Woodshop News.</b> Ted Bruning, Factors to factoring chip load.</p>
+      <p><b>WOODWEB.</b> CNC Tool Choice to Limit Laminate Chipping, CNC Bits for Cutting HPL Laminate, and the nested-cut feed threads.</p>
+      <p><b>US Patent 6,830,416.</b> Automatic onion-skin retention on small parts under low-level vacuum.</p>
+      <p><b>US Patent 9,505,066.</b> The definition of effective flutes for rotary cutting tools with regrindable inserts.</p>
+      <p><b>Practical Machinist.</b> Vacuum workholding on small parts, and the 12 psi assumption.</p>
+      <p><b>igolden-cnc.</b> Spindle constant-torque and constant-power behaviour.</p>
+      <p><b>UltraNC.</b> Feed against cycle time, acceleration and corner behaviour.</p>
+      <p><b>CNCSourced.</b> Depth capability against diameter for carbide router tooling.</p>
+      <p><b>Smarter Production.</b> A practical feeds and speeds guide for furniture makers, and the effects of holder and collet runout.</p>
+      <p><b>Cutter Shop.</b> Metric conversion instructions, IPM &divide; 39.374.</p>
+      <p><b>Amana and ToolsToday, Infinity, Router Forums.</b> DLC coating claims with user responses, and micrograin carbide tool life claims.</p>
+    </div>
+  </section>
+
+  </main>
+</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <p style="max-width:70ch">Compiled in August 2026 for a solid-carbide speeds and feeds calculator for industrial nested-base routers. The calculator supports inserted tooling as a secondary function with conservative effective-flute values. The scope excludes PCD and diamond-tipped tooling.</p>
+    <p class="tiny" style="margin-top:14px">All figures are start points. Confirm each one with a test cut and a record of linear metres per tool before you use it as a default.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   DATA — all chip loads mm/tooth, per tooth, solid carbide
+   ============================================================ */
+var C = {amber:'#F2A33C',cyan:'#4FC1D6',coral:'#EE6B5E',sage:'#6FBF8E',violet:'#A98CE0',
+         rule:'#2C3944',rule2:'#3B4C59',dust:'#93A5B3',dust2:'#697D8C',chalk:'#E9EEF2',bed2:'#1B242C'};
+
+var FREUD = {label:'Freud', c:C.amber, note:'inch/tooth, converted',
+  d:[3.175,6.35,9.525,12.7],
+  m:{ mdf:[[0.10,0.18],[0.33,0.43],[0.46,0.53],[0.58,0.69]],
+      lam:[[0.08,0.15],[0.25,0.38],[0.36,0.46],[0.56,0.66]],
+      hard:[[0.05,0.13],[0.20,0.28],[0.36,0.41],[0.46,0.53]],
+      soft:[[0.10,0.15],[0.25,0.30],[0.41,0.48],[0.51,0.58]],
+      ply:[[0.08,0.13],[0.15,0.23],[0.38,0.46],[0.46,0.53]] }};
+
+var RENNIE = {label:'Rennie', c:C.cyan, note:'mm/tooth as published',
+  d:[3.175,6.35,9.35,12.7],
+  m:{ hard:[[0.076,0.127],[0.229,0.279],[0.381,0.457],[0.483,0.534]],
+      ply:[[0.102,0.153],[0.279,0.330],[0.432,0.508],[0.533,0.584]],
+      mdf:[[0.102,0.178],[0.330,0.406],[0.508,0.584],[0.635,0.686]],
+      hpl:[[0.076,0.127],[0.229,0.305],[0.381,0.457],[0.584,0.635]] }};
+
+var ONSRUD = {label:'Onsrud 48-000', c:C.coral, note:'generic straight series, conservative floor',
+  d:[3.175,6.35,9.525,12.7,19.05,25.4],
+  g:[[0.102,0.152],[0.127,0.178],[0.152,0.203],[0.178,0.229],[0.203,0.254],[0.229,0.279]],
+  inch:['.004–.006','.005–.007','.006–.008','.007–.009','.008–.010','.009–.011']};
+
+var VORTEX = {label:'Vortex', c:C.sage, pts:{hard:{d:12.7,r:[0.483,0.533]}, mdf:{d:12.7,r:[0.635,0.686]}}};
+var ITA    = {label:'ITA Tools', c:C.violet, flat:{lam:[0.15,0.25], mdf:[0.10,0.20], hard:[0.15,0.30]}};
+
+var MATS = [['mdf','MDF / particleboard'],['lam','Laminated PB'],['hpl','HPL-faced'],
+            ['ply','Plywood'],['hard','Hardwood'],['soft','Softwood']];
+var KC = {mdf:35, lam:36, hpl:40, ply:33, hard:40, soft:25};
+var DIA_LBL = {3.175:'1/8″',6.35:'1/4″',9.35:'9.35',9.525:'3/8″',12.7:'1/2″',19.05:'3/4″',25.4:'1″'};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function $(s){return document.querySelector(s)}
+function f(n,d){ if(!isFinite(n)) return '—'; return n.toFixed(d===undefined?2:d) }
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+
+function interp(xs, ys, x){
+  if(x<=xs[0]) return ys[0];
+  if(x>=xs[xs.length-1]) return ys[ys.length-1];
+  for(var i=0;i<xs.length-1;i++){
+    if(x>=xs[i] && x<=xs[i+1]){
+      var t=(x-xs[i])/(xs[i+1]-xs[i]);
+      return [ys[i][0]+t*(ys[i+1][0]-ys[i][0]), ys[i][1]+t*(ys[i+1][1]-ys[i][1])];
+    }
+  }
+  return ys[ys.length-1];
+}
+
+function chart(sel, o){
+  var W=o.w||760, H=o.h||300;
+  var m={t:o.mt||16,r:o.mr||24,b:o.mb||42,l:o.ml||58};
+  var iw=W-m.l-m.r, ih=H-m.t-m.b;
+  var X=function(v){return m.l+(v-o.x[0])/(o.x[1]-o.x[0])*iw};
+  var Y=function(v){return m.t+ih-(v-o.y[0])/(o.y[1]-o.y[0])*ih};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.aria||'')+'">';
+
+  (o.zones||[]).forEach(function(z){
+    s+='<rect x="'+m.l+'" y="'+Y(z.y1)+'" width="'+iw+'" height="'+(Y(z.y0)-Y(z.y1))+'" fill="'+z.c+'" opacity="'+(z.o||0.09)+'"/>';
+    if(z.label) s+='<text class="axt" x="'+(m.l+9)+'" y="'+(Y(z.y1)+15)+'" fill="'+z.c+'">'+esc(z.label)+'</text>';
+  });
+  (o.vzones||[]).forEach(function(z){
+    s+='<rect x="'+X(z.x0)+'" y="'+m.t+'" width="'+(X(z.x1)-X(z.x0))+'" height="'+ih+'" fill="'+z.c+'" opacity="'+(z.o||0.08)+'"/>';
+  });
+
+  o.yt.forEach(function(t){
+    s+='<line class="gr" x1="'+m.l+'" y1="'+Y(t)+'" x2="'+(m.l+iw)+'" y2="'+Y(t)+'"/>';
+    s+='<text class="axt" x="'+(m.l-9)+'" y="'+(Y(t)+4)+'" text-anchor="end">'+(o.yf?o.yf(t):t)+'</text>';
+  });
+  o.xt.forEach(function(t){
+    if(o.xgrid) s+='<line class="gr" x1="'+X(t)+'" y1="'+m.t+'" x2="'+X(t)+'" y2="'+(m.t+ih)+'"/>';
+    s+='<text class="axt" x="'+X(t)+'" y="'+(m.t+ih+19)+'" text-anchor="middle">'+(o.xf?o.xf(t):t)+'</text>';
+  });
+
+  (o.bands||[]).forEach(function(b){
+    var up='',dn='';
+    b.p.forEach(function(p,i){ up+=(i?' L':'M')+X(p[0])+' '+Y(p[2]) });
+    for(var i=b.p.length-1;i>=0;i--){ dn+=' L'+X(b.p[i][0])+' '+Y(b.p[i][1]) }
+    s+='<path d="'+up+dn+' Z" fill="'+b.c+'" opacity="'+(b.o||0.17)+'"/>';
+    s+='<path d="'+up+'" fill="none" stroke="'+b.c+'" stroke-width="1.4" opacity=".8"/>';
+    s+='<path d="'+dn.replace(/^ L/,'M')+'" fill="none" stroke="'+b.c+'" stroke-width="1.4" opacity=".8"/>';
+  });
+
+  (o.series||[]).forEach(function(ln){
+    var d='';
+    ln.p.forEach(function(p,i){ d+=(i?' L':'M')+X(p[0])+' '+Y(p[1]) });
+    s+='<path d="'+d+'" fill="none" stroke="'+ln.c+'" stroke-width="'+(ln.w||2)+'"'+(ln.dash?' stroke-dasharray="'+ln.dash+'"':'')+' stroke-linejoin="round"/>';
+    if(ln.dots) ln.p.forEach(function(p){ s+='<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="3.2" fill="'+ln.c+'"/>' });
+    if(ln.tag){ var lp=ln.p[ln.p.length-1];
+      s+='<text class="sl" x="'+(X(lp[0])+6)+'" y="'+(Y(lp[1])+4)+'" fill="'+ln.c+'">'+esc(ln.tag)+'</text>' }
+  });
+
+  (o.marks||[]).forEach(function(mk){
+    if(mk.vx!==undefined){
+      s+='<line x1="'+X(mk.vx)+'" y1="'+m.t+'" x2="'+X(mk.vx)+'" y2="'+(m.t+ih)+'" stroke="'+mk.c+'" stroke-width="1.2" stroke-dasharray="4 3"/>';
+      if(mk.label) s+='<text class="axt" x="'+(X(mk.vx)+7)+'" y="'+(m.t+13)+'" fill="'+mk.c+'">'+esc(mk.label)+'</text>';
+    }
+    if(mk.hy!==undefined){
+      s+='<line x1="'+m.l+'" y1="'+Y(mk.hy)+'" x2="'+(m.l+iw)+'" y2="'+Y(mk.hy)+'" stroke="'+mk.c+'" stroke-width="1.2" stroke-dasharray="4 3"/>';
+      if(mk.label) s+='<text class="axt" x="'+(m.l+iw)+'" y="'+(Y(mk.hy)-6)+'" text-anchor="end" fill="'+mk.c+'">'+esc(mk.label)+'</text>';
+    }
+    if(mk.pt){ s+='<circle cx="'+X(mk.pt[0])+'" cy="'+Y(mk.pt[1])+'" r="4.5" fill="none" stroke="'+mk.c+'" stroke-width="1.8"/>';
+      if(mk.label && mk.pt) s+='<text class="sl" x="'+(X(mk.pt[0])+9)+'" y="'+(Y(mk.pt[1])+4)+'" fill="'+mk.c+'">'+esc(mk.label)+'</text>' }
+  });
+
+  s+='<line class="ax" x1="'+m.l+'" y1="'+(m.t+ih)+'" x2="'+(m.l+iw)+'" y2="'+(m.t+ih)+'"/>';
+  s+='<line class="ax" x1="'+m.l+'" y1="'+m.t+'" x2="'+m.l+'" y2="'+(m.t+ih)+'"/>';
+  if(o.xl) s+='<text class="axl" x="'+(m.l+iw)+'" y="'+(m.t+ih+36)+'" text-anchor="end">'+esc(o.xl)+'</text>';
+  if(o.yl) s+='<text class="axl" x="'+m.l+'" y="'+(m.t-5)+'">'+esc(o.yl)+'</text>';
+  s+='</svg>';
+  $(sel).innerHTML=s;
+}
+
+function legend(sel, items){
+  if(!$(sel)) return;
+  $(sel).innerHTML = items.map(function(i){
+    return '<span><i style="background:'+i.c+(i.dash?';opacity:.65':'')+'"></i>'+esc(i.t)+'</span>';
+  }).join('');
+}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+(function(){
+  var b='';
+  FREUD.d.forEach(function(d,i){
+    b+='<tr><td class="n">'+DIA_LBL[d]+' <span class="dim">'+d+'</span></td>';
+    ['mdf','lam','hard','soft','ply'].forEach(function(k){
+      var r=FREUD.m[k][i]; b+='<td class="n">'+f(r[0])+' – '+f(r[1])+'</td>';
+    });
+    b+='</tr>';
+  });
+  $('#tb-freud').innerHTML=b;
+
+  b='';
+  RENNIE.d.forEach(function(d,i){
+    b+='<tr><td class="n">'+(DIA_LBL[d]?DIA_LBL[d]+' <span class="dim">'+d+'</span>':d)+'</td>';
+    ['hard','ply','mdf','hpl'].forEach(function(k){
+      var r=RENNIE.m[k][i]; b+='<td class="n">'+f(r[0],3)+' – '+f(r[1],3)+'</td>';
+    });
+    b+='</tr>';
+  });
+  $('#tb-rennie').innerHTML=b;
+
+  b='';
+  ONSRUD.d.forEach(function(d,i){
+    b+='<tr><td class="n">'+DIA_LBL[d]+' <span class="dim">'+d+'</span></td>'+
+       '<td class="n dim">'+ONSRUD.inch[i]+'″</td>'+
+       '<td class="n">'+f(ONSRUD.g[i][0],3)+' – '+f(ONSRUD.g[i][1],3)+'</td></tr>';
+  });
+  $('#tb-onsrud').innerHTML=b;
+})();
+
+/* ============================================================
+   CH-FAN — feed / rpm / chip load surface
+   ============================================================ */
+(function(){
+  var loads=[0.08,0.15,0.25,0.40,0.55,0.70];
+  var cols=[C.coral,C.coral,C.amber,C.amber,C.sage,C.sage];
+  var ser=loads.map(function(fz,i){
+    var p=[]; for(var n=6000;n<=24000;n+=2000){ p.push([n, n*2*fz/1000]) }
+    return {p:p, c:cols[i], w:i%2?2:1.6, dash:i%2?null:'5 4', tag:f(fz,2)};
+  });
+  var floorBand=[]; for(var n=6000;n<=24000;n+=2000){ floorBand.push([n,0,n*2*0.08/1000]) }
+  chart('#ch-fan',{h:300, x:[6000,24000], y:[0,36], mr:66,
+    xt:[6000,9000,12000,15000,18000,21000,24000], yt:[0,6,12,18,24,30,36],
+    xf:function(v){return (v/1000)+'k'}, xl:'spindle rpm', yl:'feed m/min',
+    bands:[{p:floorBand, c:C.coral, o:.13}],
+    vzones:[{x0:6000,x1:12000,c:C.coral,o:.05}],
+    marks:[{vx:12000,c:C.dust2,label:'constant-torque region ends'},
+           {pt:[15000,15000*2*0.08/1000],c:C.coral,label:'below this line the tool ploughs'}],
+    series:ser, aria:'Feed against spindle speed for chip loads from 0.08 to 0.70 mm per tooth'});
+  legend('#lg-fan', loads.map(function(fz,i){return {c:cols[i], t:f(fz,2)+' mm/tooth'}}));
+})();
+
+/* ============================================================
+   CH-DIA — chip load vs diameter, per vendor, per material
+   ============================================================ */
+function drawDia(mat){
+  var bands=[], series=[], marks=[], leg=[];
+  if(FREUD.m[mat]){
+    bands.push({p:FREUD.d.map(function(d,i){return [d,FREUD.m[mat][i][0],FREUD.m[mat][i][1]]}), c:C.amber});
+    leg.push({c:C.amber,t:'Freud'});
+  }
+  if(RENNIE.m[mat]){
+    bands.push({p:RENNIE.d.map(function(d,i){return [d,RENNIE.m[mat][i][0],RENNIE.m[mat][i][1]]}), c:C.cyan});
+    leg.push({c:C.cyan,t:'Rennie'});
+  }
+  bands.push({p:ONSRUD.d.map(function(d,i){return [d,ONSRUD.g[i][0],ONSRUD.g[i][1]]}), c:C.coral, o:.14});
+  leg.push({c:C.coral,t:'Onsrud 48-000 (generic)'});
+  if(VORTEX.pts[mat]){
+    var v=VORTEX.pts[mat];
+    series.push({p:[[v.d,v.r[0]],[v.d,v.r[1]]], c:C.sage, w:5});
+    marks.push({pt:[v.d,(v.r[0]+v.r[1])/2], c:C.sage, label:'Vortex'});
+    leg.push({c:C.sage,t:'Vortex (12.7 mm datapoint)'});
+  }
+  if(ITA.flat[mat]){
+    bands.push({p:[[3,ITA.flat[mat][0],ITA.flat[mat][1]],[26,ITA.flat[mat][0],ITA.flat[mat][1]]], c:C.violet, o:.13});
+    leg.push({c:C.violet,t:'ITA Tools (not diameter-resolved)'});
+  }
+  chart('#ch-dia',{h:320, x:[3,26], y:[0,0.75], mr:26,
+    xt:[3.175,6.35,9.525,12.7,16,19.05,22,25.4], yt:[0,0.15,0.30,0.45,0.60,0.75],
+    xf:function(v){return f(v,1)}, yf:function(v){return f(v,2)},
+    xl:'tool diameter mm', yl:'chip load mm/tooth',
+    zones:[{y0:0,y1:0.10,c:C.coral,o:.12,label:'minimum chip load'}],
+    bands:bands, series:series, marks:marks,
+    aria:'Chip load against tool diameter for '+mat});
+  legend('#lg-dia', leg);
+}
+(function(){
+  var box=$('#ct-mat');
+  box.innerHTML = MATS.map(function(m,i){
+    return '<button data-m="'+m[0]+'" aria-pressed="'+(i===0)+'">'+m[1]+'</button>';
+  }).join('');
+  box.addEventListener('click', function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    [].forEach.call(box.children,function(x){x.setAttribute('aria-pressed', x===b)});
+    drawDia(b.dataset.m);
+  });
+  drawDia('mdf');
+})();
+
+/* ============================================================
+   CH-SPREAD — horizontal range plot, 12.7 mm hardwood
+   ============================================================ */
+(function(){
+  var rows=[
+    {n:'Onsrud 48-000 straight',   r:[0.152,0.203], c:C.coral},
+    {n:'Onsrud 52-200 spiral',     r:[0.178,0.229], c:C.coral},
+    {n:'ITA Tools',                r:[0.15,0.30],   c:C.violet},
+    {n:'Onsrud 60-000 HH hogger',  r:[0.432,0.483], c:C.amber},
+    {n:'Freud',                    r:[0.46,0.53],   c:C.amber},
+    {n:'Rennie',                   r:[0.483,0.534], c:C.cyan},
+    {n:'Vortex',                   r:[0.483,0.533], c:C.sage},
+    {n:'Onsrud 60-100C compression', r:[0.533,0.584], c:C.sage}
+  ];
+  var W=760,H=330,m={t:26,r:26,b:46,l:196}, iw=W-m.l-m.r, rh=(H-m.t-m.b)/rows.length;
+  var xmax=0.66, X=function(v){return m.l+v/xmax*iw};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Published chip load ranges for a 12.7 mm tool in hardwood, by vendor and Onsrud tool series">';
+  s+='<rect x="'+X(0.15)+'" y="'+m.t+'" width="'+(X(0.30)-X(0.15))+'" height="'+(H-m.t-m.b)+'" fill="'+C.coral+'" opacity=".05"/>';
+  s+='<rect x="'+X(0.43)+'" y="'+m.t+'" width="'+(X(0.584)-X(0.43))+'" height="'+(H-m.t-m.b)+'" fill="'+C.sage+'" opacity=".05"/>';
+  [0,0.1,0.2,0.3,0.4,0.5,0.6].forEach(function(t){
+    s+='<line class="gr" x1="'+X(t)+'" y1="'+m.t+'" x2="'+X(t)+'" y2="'+(H-m.b)+'"/>';
+    s+='<text class="axt" x="'+X(t)+'" y="'+(H-m.b+19)+'" text-anchor="middle">'+f(t,1)+'</text>';
+  });
+  rows.forEach(function(r,i){
+    var y=m.t+rh*i+rh/2;
+    s+='<text class="sl" x="'+(m.l-12)+'" y="'+(y+4)+'" text-anchor="end" fill="'+r.c+'">'+r.n+'</text>';
+    s+='<rect x="'+X(r.r[0])+'" y="'+(y-8)+'" width="'+(X(r.r[1])-X(r.r[0]))+'" height="16" rx="2" fill="'+r.c+'" opacity=".8"/>';
+    s+='<text class="axt" x="'+(X(r.r[1])+9)+'" y="'+(y+4)+'">'+f(r.r[0],3)+'–'+f(r.r[1],3)+'</text>';
+  });
+  s+='<text class="axt" x="'+X(0.225)+'" y="'+(m.t-9)+'" text-anchor="middle" fill="'+C.coral+'">straight and plain spiral</text>';
+  s+='<text class="axt" x="'+X(0.505)+'" y="'+(m.t-9)+'" text-anchor="middle" fill="'+C.sage+'">chipbreaker and industrial charts</text>';
+  s+='<line class="ax" x1="'+m.l+'" y1="'+(H-m.b)+'" x2="'+(m.l+iw)+'" y2="'+(H-m.b)+'"/>';
+  s+='<text class="axl" x="'+(m.l+iw)+'" y="'+(H-m.b+36)+'" text-anchor="end">chip load mm/tooth</text>';
+  s+='</svg>';
+  $('#ch-spread').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-DOC — depth derating
+   ============================================================ */
+(function(){
+  chart('#ch-doc',{w:520, h:250, x:[0.5,3.5], y:[0,110], ml:52,
+    xt:[1,2,3], yt:[0,25,50,75,100], xgrid:true,
+    xf:function(v){return v+'×D'}, yf:function(v){return v+'%'},
+    xl:'depth of cut', yl:'chip load multiplier',
+    zones:[{y0:0,y1:50,c:C.coral,o:.07},{y0:50,y1:75,c:C.amber,o:.07},{y0:75,y1:110,c:C.sage,o:.07}],
+    series:[{p:[[1,100],[2,75],[3,50]], c:C.amber, w:2.4, dots:true}],
+    aria:'Chip load multiplier falls from 100 percent at one diameter depth to 50 percent at three'});
+})();
+
+/* ============================================================
+   CH-FLOOR — the rubbing floor band
+   ============================================================ */
+(function(){
+  var W=760,H=200,m={l:24,r:24,t:78}, iw=W-m.l-m.r;
+  var xmax=0.7, X=function(v){return m.l+v/xmax*iw};
+  var bands=[
+    {a:0,    b:0.08, c:C.coral, t:'Plough zone',  lift:1},
+    {a:0.08, b:0.10, c:C.amber, t:'Marginal zone', lift:2},
+    {a:0.10, b:0.55, c:C.sage,  t:'Cut zone',    lift:0},
+    {a:0.55, b:0.70, c:C.cyan,  t:'Heavy zone', lift:0}
+  ];
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chip load regimes from ploughing through cutting">';
+  bands.forEach(function(b){
+    var x0=X(b.a), x1=X(b.b), cx=(x0+x1)/2;
+    s+='<rect x="'+x0+'" y="'+m.t+'" width="'+(x1-x0)+'" height="48" fill="'+b.c+'" opacity=".2"/>';
+    s+='<rect x="'+x0+'" y="'+m.t+'" width="'+(x1-x0)+'" height="48" fill="none" stroke="'+b.c+'" stroke-width="1"/>';
+    if(b.lift){
+      var ly=m.t-14-(b.lift-1)*22;
+      s+='<line x1="'+cx+'" y1="'+m.t+'" x2="'+cx+'" y2="'+(ly+5)+'" stroke="'+b.c+'" stroke-width="1"/>';
+      s+='<text class="sl" x="'+(cx+7)+'" y="'+(ly+4)+'" fill="'+b.c+'" style="font-weight:600">'+b.t+'</text>';
+    } else {
+      s+='<text class="sl" x="'+cx+'" y="'+(m.t+29)+'" text-anchor="middle" fill="'+b.c+'" style="font-weight:600">'+b.t+'</text>';
+    }
+  });
+  [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7].forEach(function(t){
+    s+='<line x1="'+X(t)+'" y1="'+(m.t+48)+'" x2="'+X(t)+'" y2="'+(m.t+54)+'" stroke="'+C.rule2+'"/>';
+    s+='<text class="axt" x="'+X(t)+'" y="'+(m.t+70)+'" text-anchor="middle">'+f(t,2)+'</text>';
+  });
+  s+='<line x1="'+X(0.10)+'" y1="'+(m.t+48)+'" x2="'+X(0.10)+'" y2="'+(m.t+62)+'" stroke="'+C.coral+'" stroke-width="1.6"/>';
+  s+='<text class="axt" x="'+(X(0.10)+8)+'" y="'+(m.t+70)+'" fill="'+C.coral+'">minimum</text>';
+  s+='<text class="axl" x="'+(m.l+iw)+'" y="'+(H-4)+'" text-anchor="end">chip load mm/tooth</text>';
+  s+='</svg>';
+  $('#ch-floor').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-WEAR — MDF vs radiata pine edge recession
+   ============================================================ */
+(function(){
+  var W=760,H=200,m={l:150,r:80,t:26,b:44}, iw=W-m.l-m.r;
+  var d=[{n:'MDF',v:0.040,c:C.coral},{n:'Radiata pine',v:0.007,c:C.sage}];
+  var X=function(v){return m.l+v/0.05*iw};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Edge recession per 4000 linear metres, MDF versus radiata pine">';
+  d.forEach(function(r,i){
+    var y=m.t+i*54;
+    s+='<text class="sl" x="'+(m.l-14)+'" y="'+(y+26)+'" text-anchor="end">'+r.n+'</text>';
+    s+='<rect x="'+m.l+'" y="'+(y+8)+'" width="'+(X(r.v)-m.l)+'" height="28" rx="2" fill="'+r.c+'" opacity=".85"/>';
+    s+='<text class="sl" x="'+(X(r.v)+10)+'" y="'+(y+27)+'" fill="'+r.c+'">'+f(r.v,3)+' mm</text>';
+  });
+  s+='<text class="axt" x="'+(m.l+ (X(0.040)-m.l)/2 )+'" y="'+(m.t+ 4)+'" text-anchor="middle" fill="'+C.dust2+'">6 times the wear rate at the same chip load</text>';
+  [0,0.01,0.02,0.03,0.04,0.05].forEach(function(t){
+    s+='<text class="axt" x="'+X(t)+'" y="'+(H-20)+'" text-anchor="middle">'+f(t,2)+'</text>';
+    s+='<line class="gr" x1="'+X(t)+'" y1="'+m.t+'" x2="'+X(t)+'" y2="'+(H-34)+'"/>';
+  });
+  s+='<text class="axl" x="'+(m.l+iw)+'" y="'+(H-4)+'" text-anchor="end">edge recession mm per 4,000 m</text>';
+  s+='</svg>';
+  $('#ch-wear').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-COMP — compression tool geometry
+   ============================================================ */
+(function(){
+  var W=760,H=330;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Compression tool up-cut and down-cut zones relative to panel thickness">';
+  function scene(ox, label, panelTop, ok, caption){
+    var toolX=ox+96, tw=34, tipY=250, upLen=68, dnLen=96;
+    // panel
+    s+='<rect x="'+ox+'" y="'+panelTop+'" width="220" height="'+(250-panelTop)+'" fill="'+C.bed2+'" stroke="'+C.rule2+'"/>';
+    s+='<rect x="'+ox+'" y="'+panelTop+'" width="220" height="5" fill="'+(ok?C.sage:C.coral)+'" opacity=".85"/>';
+    s+='<rect x="'+ox+'" y="245" width="220" height="5" fill="'+C.sage+'" opacity=".85"/>';
+    // tool shank
+    s+='<rect x="'+toolX+'" y="60" width="'+tw+'" height="'+(tipY-60-upLen-dnLen)+'" fill="'+C.rule2+'"/>';
+    // down zone
+    s+='<rect x="'+toolX+'" y="'+(tipY-upLen-dnLen)+'" width="'+tw+'" height="'+dnLen+'" fill="'+C.cyan+'" opacity=".55"/>';
+    // up zone
+    s+='<rect x="'+toolX+'" y="'+(tipY-upLen)+'" width="'+tw+'" height="'+upLen+'" fill="'+C.amber+'" opacity=".7"/>';
+    // transition line
+    s+='<line x1="'+(toolX-16)+'" y1="'+(tipY-upLen)+'" x2="'+(toolX+tw+22)+'" y2="'+(tipY-upLen)+'" stroke="'+C.chalk+'" stroke-width="1.4" stroke-dasharray="4 3"/>';
+    s+='<text class="axt" x="'+(toolX+tw+26)+'" y="'+(tipY-upLen+4)+'" fill="'+C.chalk+'">transition</text>';
+    // arrows
+    s+='<path d="M'+(toolX-9)+' '+(tipY-16)+' l0 -30 m-4 8 l4 -8 l4 8" stroke="'+C.amber+'" stroke-width="1.6" fill="none"/>';
+    s+='<path d="M'+(toolX+tw+9)+' '+(tipY-upLen-72)+' l0 30 m-4 -8 l4 8 l4 -8" stroke="'+C.cyan+'" stroke-width="1.6" fill="none"/>';
+    s+='<text class="sl" x="'+(ox+110)+'" y="'+(H-46)+'" text-anchor="middle" fill="'+(ok?C.sage:C.coral)+'" style="font-weight:600">'+label+'</text>';
+    s+='<text class="axt" x="'+(ox+110)+'" y="'+(H-26)+'" text-anchor="middle" style="font-size:10px">'+caption+'</text>';
+  }
+  scene(30,  'Correct. Transition covered', 120, true,  'The panel is deeper than the up-cut length.');
+  scene(290, 'Too shallow. Transition exposed', 200, false, 'The up-cut zone breaks the top face.');
+  // rule box
+  s+='<rect x="556" y="72" width="184" height="152" rx="3" fill="'+C.bed2+'" stroke="'+C.rule2+'"/>';
+  s+='<text class="axt" x="572" y="96" fill="'+C.amber+'" style="letter-spacing:.1em">MINIMUM DEPTH</text>';
+  s+='<text class="sl" x="572" y="124" style="font-size:13px">up-cut length</text>';
+  s+='<text class="sl" x="572" y="144" style="font-size:13px">+ ≈ 1.6 mm</text>';
+  s+='<line x1="572" y1="156" x2="724" y2="156" stroke="'+C.rule2+'"/>';
+  s+='<text class="axt" x="572" y="176" style="font-size:10px">Vortex: for a 0.5″ up-cut,</text>';
+  s+='<text class="axt" x="572" y="192" style="font-size:10px">cut minimum 0.563″ per pass</text>';
+  s+='<text class="axt" x="572" y="212" style="font-size:10px" fill="'+C.dust2+'">Up-cut length is usually 1×D</text>';
+  // legend
+  s+='<rect x="30" y="20" width="12" height="12" fill="'+C.amber+'" opacity=".7"/><text class="axt" x="48" y="30">up-cut zone. Lifts chips, cleans the bottom face</text>';
+  s+='<rect x="330" y="20" width="12" height="12" fill="'+C.cyan+'" opacity=".55"/><text class="axt" x="348" y="30">down-cut zone. Presses down, cleans the top face</text>';
+  s+='</svg>';
+  $('#ch-comp').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-POWER — spindle power and torque
+   ============================================================ */
+function drawPower(bp){
+  var rated=10, top=24000, lo=3000;
+  var pw=[], tq=[];
+  for(var n=lo;n<=top;n+=500){
+    var P = n<bp ? rated*n/bp : rated;
+    var T = P*60000/(2*Math.PI*n);
+    pw.push([n,P]); tq.push([n,T]);
+  }
+  var tqScaled = tq.map(function(p){return [p[0], p[1]/2]});
+  chart('#ch-power',{h:310, x:[lo,top], y:[0,12], mr:86,
+    xt:[3000,6000,9000,12000,15000,18000,21000,24000], yt:[0,2,4,6,8,10,12],
+    xf:function(v){return (v/1000)+'k'}, xl:'spindle rpm', yl:'power kW  ·  torque Nm ÷ 2',
+    vzones:[{x0:lo,x1:bp,c:C.coral,o:.06}],
+    series:[{p:pw,c:C.amber,w:2.6,tag:'kW'},{p:tqScaled,c:C.cyan,w:2.2,dash:'6 4',tag:'Nm/2'}],
+    marks:[{vx:bp,c:C.chalk,label:'breakpoint '+(bp/1000)+'k'},
+           {pt:[bp,rated],c:C.amber,label:''},
+           {pt:[bp/2,rated/2],c:C.coral,label:'half the rpm gives half the power'}],
+    aria:'Spindle power constant above the breakpoint, falling linearly below it; torque flat below and falling above'});
+  legend('#lg-power',[{c:C.amber,t:'Available power kW'},{c:C.cyan,t:'Torque Nm (plotted ÷2)'},
+                      {c:C.coral,t:'Constant-torque region, reduced power'}]);
+}
+(function(){
+  var box=$('#ct-bp');
+  [9000,12000,15000,18000].forEach(function(v,i){
+    box.innerHTML += '<button data-bp="'+v+'" aria-pressed="'+(v===12000)+'">breakpoint '+(v/1000)+'k</button>';
+  });
+  box.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    [].forEach.call(box.children,function(x){x.setAttribute('aria-pressed',x===b)});
+    drawPower(+b.dataset.bp);
+  });
+  drawPower(12000);
+})();
+
+/* ============================================================
+   CH-WORKED — the 2.5 kW slot
+   ============================================================ */
+(function(){
+  var W=700,H=300;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Worked example converting depth, width and feed into cutting power">';
+  var boxes=[
+    {t:'a\u209A  18 mm', d:'axial depth of cut', c:C.dust2},
+    {t:'a\u2091  12 mm', d:'radial, a full slot', c:C.dust2},
+    {t:'V\uFE5F  20,000 mm/min', d:'feed', c:C.dust2}
+  ];
+  boxes.forEach(function(b,i){
+    var y=18+i*52;
+    s+='<rect x="14" y="'+y+'" width="200" height="42" rx="3" fill="'+C.bed2+'" stroke="'+C.rule+'"/>';
+    s+='<text class="sl" x="28" y="'+(y+20)+'" style="font-size:13px">'+b.t+'</text>';
+    s+='<text class="axt" x="28" y="'+(y+34)+'" style="font-size:9.6px">'+b.d+'</text>';
+    s+='<path d="M222 '+(y+21)+' L262 '+(y+21)+'" stroke="'+C.rule2+'" stroke-width="1.2"/>';
+  });
+  s+='<path d="M262 39 L262 175 M262 91 L262 91 M262 143 L262 143" stroke="'+C.rule2+'" stroke-width="1.2"/>';
+  s+='<path d="M262 107 L292 107 m-8 -4 l8 4 l-8 4" stroke="'+C.rule2+'" stroke-width="1.2" fill="none"/>';
+  s+='<rect x="294" y="80" width="250" height="56" rx="3" fill="'+C.bed2+'" stroke="'+C.cyan+'"/>';
+  s+='<text class="axt" x="310" y="100" fill="'+C.cyan+'">MRR = a\u209A × a\u2091 × V\uFE5F</text>';
+  s+='<text class="sl" x="310" y="122" style="font-size:15px" fill="'+C.cyan+'">4.32 × 10⁶ mm³/min</text>';
+  s+='<path d="M419 138 L419 168 m-4 -8 l4 8 l4 -8" stroke="'+C.rule2+'" stroke-width="1.2" fill="none"/>';
+  s+='<rect x="294" y="172" width="250" height="50" rx="3" fill="'+C.bed2+'" stroke="'+C.rule+'"/>';
+  s+='<text class="axt" x="310" y="192" fill="'+C.dust+'">× k\u1D04 35 N/mm² ÷ 60,000</text>';
+  s+='<text class="axt" x="310" y="210" fill="'+C.dust2+'" style="font-size:9.6px">MDF and particleboard reference value</text>';
+  s+='<path d="M419 224 L419 244 m-4 -6 l4 6 l4 -6" stroke="'+C.rule2+'" stroke-width="1.2" fill="none"/>';
+  s+='<rect x="294" y="246" width="250" height="38" rx="3" fill="'+C.amber+'" opacity=".14"/>';
+  s+='<rect x="294" y="246" width="250" height="38" rx="3" fill="none" stroke="'+C.amber+'"/>';
+  s+='<text x="419" y="272" text-anchor="middle" fill="'+C.amber+'" style="font-family:Archivo,sans-serif;font-weight:800;font-size:21px;letter-spacing:-.02em">2.52 kW at the cutting edge</text>';
+  s+='<text class="axt" x="14" y="234" style="font-size:9.6px" fill="'+C.dust2+'">Excludes spindle efficiency.</text>';
+  s+='<text class="axt" x="14" y="250" style="font-size:9.6px" fill="'+C.dust2+'">Excludes the vacuum pump.</text>';
+  s+='<text class="axt" x="14" y="266" style="font-size:9.6px" fill="'+C.dust2+'">Assumes 20 m/min, not 30.</text>';
+  s+='</svg>';
+  $('#ch-worked').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-VAC — hold-down against cutting force
+   ============================================================ */
+(function(){
+  var kc=35, ap=18, fz=0.5, vac=83000, grip=0.4;
+  var Fc = kc*ap*fz; // N, first-order
+  var hold=[];
+  for(var L=20;L<=200;L+=5){ hold.push([L, grip*vac*(L/1000)*(L/1000)]) }
+  var Lx = Math.sqrt(Fc/(grip*vac))*1000;
+  chart('#ch-vac',{h:310, x:[20,200], y:[0,1400], mr:88,
+    xt:[20,50,80,110,140,170,200], yt:[0,350,700,1050,1400],
+    xl:'square part edge length mm', yl:'force N',
+    vzones:[{x0:20,x1:Lx,c:C.coral,o:.09}],
+    series:[
+      {p:hold,c:C.sage,w:2.6,tag:'hold-down'},
+      {p:[[20,Fc],[200,Fc]],c:C.coral,w:2.2,tag:'cutting force'}
+    ],
+    marks:[{vx:Lx,c:C.amber,label:'crossover ≈ '+Math.round(Lx)+' mm'}],
+    aria:'Vacuum hold-down force falls with the square of part size while cutting force stays constant'});
+  legend('#lg-vac',[
+    {c:C.sage,t:'Usable hold-down (83 kPa × area × grip factor 0.4)'},
+    {c:C.coral,t:'Estimated cutting force, 18 mm × 0.5 mm/tooth'},
+    {c:C.amber,t:'Below the crossover, use an onion skin or tabs'}
+  ]);
+})();
+
+/* ============================================================
+   CH-FLUTE — nominal vs runout-dominated insert loading
+   ============================================================ */
+(function(){
+  var W=760,H=272,m={t:62,l:24};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Chip distribution across four inserts, nominal versus runout dominated">';
+  function group(ox, title, vals, col, note){
+    s+='<text class="sl" x="'+ox+'" y="'+(m.t-16)+'" fill="'+col+'" style="font-weight:600">'+title+'</text>';
+    vals.forEach(function(v,i){
+      var x=ox+i*74, h=v*120;
+      s+='<rect x="'+x+'" y="'+(m.t+120-h)+'" width="52" height="'+h+'" rx="2" fill="'+col+'" opacity="'+(0.35+0.5*v)+'"/>';
+      s+='<text class="axt" x="'+(x+26)+'" y="'+(m.t+138)+'" text-anchor="middle">insert '+(i+1)+'</text>';
+      s+='<text class="axt" x="'+(x+26)+'" y="'+(m.t+114-h)+'" text-anchor="middle" fill="'+col+'">'+Math.round(v*100)+'%</text>';
+    });
+    s+='<text class="axt" x="'+ox+'" y="'+(m.t+166)+'" style="font-size:10px">'+note+'</text>';
+  }
+  group(30, 'Nominal, Z = 4', [0.25,0.25,0.25,0.25], C.sage, 'The assumption: every insert lifts an equal chip.');
+  group(400, 'With runout, effective Z = 1', [0.88,0.06,0.03,0.03], C.coral, 'The result: one insert does almost all the cutting.');
+  s+='<line x1="380" y1="40" x2="380" y2="244" stroke="'+C.rule+'"/>';
+  s+='<rect x="400" y="8" width="336" height="22" rx="2" fill="'+C.coral+'" opacity=".12"/>';
+  s+='<text class="axt" x="412" y="23" fill="'+C.coral+'">On the nominal Z, the feed per active insert is 4 times too high</text>';
+  s+='</svg>';
+  $('#ch-flute').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-ONION — pass strategy cross-section
+   ============================================================ */
+(function(){
+  var W=760,H=260;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cross section showing roughing pass, retained onion skin, and final through pass">';
+  function panel(ox,label,skin,cut,col,note){
+    var top=64, bot=180, th=bot-top;
+    s+='<text class="sl" x="'+(ox+110)+'" y="'+(top-24)+'" text-anchor="middle" fill="'+col+'" style="font-weight:600">'+label+'</text>';
+    s+='<rect x="'+ox+'" y="'+top+'" width="220" height="'+th+'" fill="'+C.bed2+'" stroke="'+C.rule2+'"/>';
+    if(cut>0){
+      var h=th*cut;
+      s+='<rect x="'+(ox+92)+'" y="'+top+'" width="36" height="'+h+'" fill="'+C.rule+'"/>';
+      s+='<rect x="'+(ox+92)+'" y="'+top+'" width="36" height="'+h+'" fill="'+col+'" opacity=".2"/>';
+    }
+    if(skin>0){
+      s+='<rect x="'+(ox+92)+'" y="'+(bot-th*skin)+'" width="36" height="'+(th*skin)+'" fill="'+C.amber+'" opacity=".55"/>';
+      s+='<line x1="'+(ox+128)+'" y1="'+(bot-th*skin)+'" x2="'+(ox+186)+'" y2="'+(bot-th*skin-22)+'" stroke="'+C.amber+'" stroke-width="1"/>';
+      s+='<text class="axt" x="'+(ox+190)+'" y="'+(bot-th*skin-24)+'" fill="'+C.amber+'">skin</text>';
+    }
+    s+='<text class="axt" x="'+(ox+110)+'" y="'+(bot+24)+'" text-anchor="middle" style="font-size:10px">'+note+'</text>';
+  }
+  panel(24,  'Roughing pass', 0.10, 0.90, C.cyan,  'A full slot. Spindle power limits it.');
+  panel(272, 'Skin retained', 0.10, 0.90, C.amber, 'The sheet still holds the part.');
+  panel(520, 'Through pass',  0,    1.00, C.sage,  'Reduced feed. Hold-down limits it.');
+  s+='<path d="M250 122 l14 0 m-6 -5 l6 5 l-6 5" stroke="'+C.rule2+'" stroke-width="1.4" fill="none"/>';
+  s+='<path d="M498 122 l14 0 m-6 -5 l6 5 l-6 5" stroke="'+C.rule2+'" stroke-width="1.4" fill="none"/>';
+  s+='<text class="axt" x="24" y="230" fill="'+C.dust2+'" style="font-size:10px">A typical skin is 0.2 to 0.5 mm, or 0.010 to 0.020″. Use tabs if the cut-through quality is not acceptable.</text>';
+  s+='</svg>';
+  $('#ch-onion').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-THIN — radial chip thinning factor
+   ============================================================ */
+(function(){
+  var p=[];
+  for(var r=0.04;r<=1.0001;r+=0.02){
+    var fct = r<0.5 ? 1/(2*Math.sqrt(r*(1-r))) : 1;
+    p.push([r*100, Math.min(fct,3)]);
+  }
+  chart('#ch-thin',{w:520, h:280, x:[4,100], y:[0.9,2.6], mr:34,
+    xt:[10,25,40,50,60,75,100], yt:[1.0,1.4,1.8,2.2,2.6],
+    xf:function(v){return v+'%'}, yf:function(v){return f(v,1)+'×'},
+    xl:'radial engagement aₑ / D', yl:'feed compensation factor',
+    vzones:[{x0:4,x1:50,c:C.amber,o:.07}],
+    series:[{p:p,c:C.amber,w:2.6}],
+    marks:[{pt:[50,1.0],c:C.sage,label:'1.00×'},{pt:[25,1.155],c:C.amber,label:'1.15×'},
+           {pt:[10,1.667],c:C.coral,label:'1.66×'},{vx:50,c:C.dust2,label:'compensation starts here'}],
+    aria:'Chip thinning compensation factor rises steeply below fifty percent radial engagement'});
+})();
+
+/* ============================================================
+   CH-DEFL — deflection vs L:D
+   ============================================================ */
+(function(){
+  var p=[]; for(var r=2;r<=10.01;r+=0.25){ p.push([r, Math.pow(r/3,3)]) }
+  chart('#ch-defl',{h:280, x:[2,10], y:[0,40], mr:26,
+    xt:[2,3,4,5,6,7,8,9,10], yt:[0,10,20,30,40], xgrid:true,
+    xf:function(v){return v+':1'}, yf:function(v){return v+'×'},
+    xl:'stick-out length : diameter', yl:'relative deflection',
+    zones:[{y0:0,y1:3,c:C.sage,o:.08,label:'acceptable'},{y0:3,y1:12,c:C.amber,o:.07,label:'reduce the depth and the feed'},{y0:12,y1:40,c:C.coral,o:.07,label:'chatter and poor edge quality'}],
+    series:[{p:p,c:C.cyan,w:2.6}],
+    marks:[{pt:[3,1],c:C.sage,label:'1.0× baseline'},{pt:[6,8],c:C.amber,label:'8×'},{pt:[9,27],c:C.coral,label:'27×'}],
+    aria:'Relative deflection rises with the cube of length to diameter ratio'});
+})();
+
+/* ============================================================
+   CH-CORNER — distance to reach programmed feed
+   ============================================================ */
+(function(){
+  var accs=[{a:0.5,c:C.coral,t:'0.5 m/s², light gantry'},
+            {a:2.0,c:C.amber,t:'2.0 m/s², typical nesting router'},
+            {a:5.0,c:C.sage, t:'5.0 m/s², high acceleration'}];
+  var ser=accs.map(function(A){
+    var p=[]; for(var v=2;v<=36.01;v+=0.5){ var ms=v/60, y=ms*ms/A.a*1000; if(y<=260) p.push([v,y]) }
+    return {p:p, c:A.c, w:2.4};
+  });
+  chart('#ch-corner',{w:520, h:290, x:[2,36], y:[0,250], mr:34,
+    xt:[5,10,15,20,25,30,35], yt:[0,50,100,150,200,250],
+    xl:'programmed feed m/min', yl:'distance to reach feed mm',
+    series:ser,
+    marks:[{pt:[20,55.5],c:C.amber,label:'20 m/min → 55 mm'},
+           {hy:120,c:C.dust2,label:'a 120 mm part side'},
+           {hy:40,c:C.dust2,label:'a 40 mm part side'}],
+    aria:'Distance required to accelerate to programmed feed at three acceleration classes'});
+  legend('#lg-corner', accs.map(function(A){return {c:A.c,t:A.t}}));
+})();
+
+/* ============================================================
+   CH-TREE — geometry selection
+   ============================================================ */
+(function(){
+  var W=760,H=290;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Decision tree for up-cut, down-cut and compression selection">';
+  function node(x,y,w,h,txt,sub,col,fillOp){
+    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="'+col+'" opacity="'+(fillOp||0.13)+'"/>';
+    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="none" stroke="'+col+'"/>';
+    s+='<text class="sl" x="'+(x+w/2)+'" y="'+(y+ (sub?22:h/2+5) )+'" text-anchor="middle" fill="'+col+'" style="font-weight:600">'+txt+'</text>';
+    if(sub) s+='<text class="axt" x="'+(x+w/2)+'" y="'+(y+40)+'" text-anchor="middle" style="font-size:10px">'+sub+'</text>';
+  }
+  function link(x1,y1,x2,y2,label){
+    s+='<path d="M'+x1+' '+y1+' C'+((x1+x2)/2)+' '+y1+', '+((x1+x2)/2)+' '+y2+', '+x2+' '+y2+'" stroke="'+C.rule2+'" stroke-width="1.3" fill="none"/>';
+    if(label) s+='<text class="axt" x="'+((x1+x2)/2)+'" y="'+((y1+y2)/2-6)+'" text-anchor="middle" style="font-size:9.6px">'+label+'</text>';
+  }
+  node(20,112,150,56,'Which faces','must be clean?',C.chalk,0.06);
+  node(268,20,150,52,'Bottom only','',C.sage);
+  node(268,114,150,52,'Top only','',C.cyan);
+  node(268,208,150,52,'Both faces','',C.amber);
+  link(170,140,268,46); link(170,140,268,140); link(170,140,268,234);
+  node(506,20,236,52,'Up-cut','Best chip removal. Lifts parts.',C.sage);
+  node(506,114,236,52,'Down-cut','Poor chip removal, more heat.',C.cyan);
+  node(506,208,236,52,'Compression','Sets a minimum depth.',C.amber);
+  link(418,46,506,46); link(418,140,506,140); link(418,234,506,234);
+  s+='</svg>';
+  $('#ch-tree').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-CHANGED — then and now
+   ============================================================ */
+(function(){
+  var rows=[
+    {k:'Carbide grade',   a:'Standard grades',              b:'Micrograin / sub-micrograin',      m:0.85},
+    {k:'Coatings',        a:'TiN, no benefit on wood',       b:'DLC and nACo-type standard',   m:0.75},
+    {k:'Geometry',        a:'Generic compression',          b:'3+3, 2+2, 3+1 nesting-specific',   m:0.8},
+    {k:'Spindle / holder',a:'ER collet, moderate power',    b:'HSK63F shrink fit, 10 kW+',        m:0.7},
+    {k:'CAM',             a:'Manual feed overrides',        b:'Chip thinning and corner feed', m:0.8},
+    {k:'Chip load data',  a:'Vendor charts, unverified',    b:'Vendor charts, unverified',        m:0.04}
+  ];
+  var W=760, rh=42, H=rows.length*rh+52, m={l:132,r:20,t:34};
+  var mid=(W-m.l-m.r)/2+m.l;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="What changed between then and now across six areas">';
+  s+='<text class="axt" x="'+(m.l+70)+'" y="'+(m.t-14)+'" text-anchor="middle" fill="'+C.dust2+'" style="letter-spacing:.14em">≈ 2011</text>';
+  s+='<text class="axt" x="'+(W-m.r-100)+'" y="'+(m.t-14)+'" text-anchor="middle" fill="'+C.amber+'" style="letter-spacing:.14em">2026</text>';
+  rows.forEach(function(r,i){
+    var y=m.t+i*rh, moved=r.m>0.2;
+    var col=moved?C.amber:C.coral;
+    s+='<text class="axt" x="'+(m.l-14)+'" y="'+(y+22)+'" text-anchor="end" fill="'+C.chalk+'" style="font-size:11px">'+r.k+'</text>';
+    s+='<text class="axt" x="'+m.l+'" y="'+(y+22)+'" style="font-size:10px">'+r.a+'</text>';
+    s+='<line x1="'+(mid-46)+'" y1="'+(y+18)+'" x2="'+(mid+34)+'" y2="'+(y+18)+'" stroke="'+col+'" stroke-width="'+(moved?1.8:1)+'" '+(moved?'':'stroke-dasharray="3 3"')+'/>';
+    s+='<path d="M'+(mid+34)+' '+(y+18)+' l-7 -4 l0 8 z" fill="'+col+'"/>';
+    s+='<text class="axt" x="'+(mid+50)+'" y="'+(y+22)+'" style="font-size:10px" fill="'+(moved?C.chalk:C.coral)+'">'+r.b+'</text>';
+    if(!moved) s+='<text class="axt" x="'+(mid-6)+'" y="'+(y+10)+'" text-anchor="middle" fill="'+C.coral+'" style="font-size:9px">no change</text>';
+    if(i<rows.length-1) s+='<line class="gr" x1="'+m.l+'" y1="'+(y+rh-8)+'" x2="'+(W-m.r)+'" y2="'+(y+rh-8)+'"/>';
+  });
+  s+='</svg>';
+  $('#ch-changed').innerHTML=s;
+})();
+
+/* ============================================================
+   CH-ARCH — calculator architecture
+   ============================================================ */
+(function(){
+  var W=760,H=340;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Two layer calculator structure from inputs through the limits to the active limit">';
+  function box(x,y,w,h,t,sub,col,op){
+    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="'+col+'" opacity="'+(op||0.12)+'"/>';
+    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3" fill="none" stroke="'+col+'" stroke-width="1"/>';
+    s+='<text class="sl" x="'+(x+11)+'" y="'+(y+ (sub?19:h/2+4))+'" fill="'+col+'" style="font-size:11.5px;font-weight:600">'+t+'</text>';
+    if(sub) s+='<text class="axt" x="'+(x+11)+'" y="'+(y+34)+'" style="font-size:9.6px">'+sub+'</text>';
+  }
+  s+='<text class="axl" x="14" y="16" fill="'+C.cyan+'">Layer 1, ideal feed</text>';
+  box(14,26,190,46,'Chip load lookup','material, diameter, vendor',C.cyan);
+  box(14,80,190,46,'Depth reduction','100 / 75 / 50% at 1 / 2 / 3×D',C.cyan);
+  box(14,134,190,46,'Chip thinning','when aₑ < D/2',C.cyan);
+  box(14,188,190,40,'Ideal feed','n × Z\u2091\uFE5F\uFE5F × f\u1D22',C.chalk,0.08);
+
+  s+='<path d="M109 72 L109 80 M109 126 L109 134 M109 180 L109 188" stroke="'+C.rule2+'" stroke-width="1.2"/>';
+  s+='<path d="M204 208 L246 208 m-8 -4 l8 4 l-8 4" stroke="'+C.rule2+'" stroke-width="1.4" fill="none"/>';
+
+  s+='<text class="axl" x="256" y="16" fill="'+C.amber+'">Layer 2, the limits</text>';
+  var lim=[['Minimum chip load','< 0.10 mm/tooth, increases the feed'],
+           ['Spindle power','k\u1D04 × MRR against the curve'],
+           ['Vacuum hold-down','grip × P × area v cutting force'],
+           ['Machine maximum feed','axis limit'],
+           ['Corner dynamics','v = √(a·L/2)']];
+  lim.forEach(function(l,i){
+    box(256,26+i*46,258,40,l[0],l[1],C.amber);
+    s+='<path d="M514 '+(26+i*46+20)+' L556 '+(26+i*46+20)+'" stroke="'+C.rule2+'" stroke-width="1"/>';
+  });
+  s+='<path d="M556 45 L556 233 M556 160 L590 160 m-8 -4 l8 4 l-8 4" stroke="'+C.rule2+'" stroke-width="1.2" fill="none"/>';
+
+  box(598,120,150,44,'min( )','the lowest value',C.sage);
+  box(598,180,150,56,'Active limit','shown in the output',C.sage,0.2);
+  s+='<path d="M673 164 L673 180" stroke="'+C.rule2+'" stroke-width="1.2"/>';
+
+  box(256,262,258,44,'Diagnostic rules','defect to correct action',C.violet);
+  box(598,262,150,44,'Test cut record','linear m per tool',C.violet);
+  s+='<path d="M514 284 L598 284 m-8 -4 l8 4 l-8 4" stroke="'+C.rule2+'" stroke-width="1.2" fill="none"/>';
+  s+='<path d="M204 208 L204 284 L256 284" stroke="'+C.rule2+'" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>';
+  s+='</svg>';
+  $('#ch-arch').innerHTML=s;
+})();
+
+})();
+</script>
+
+<script>
+(function(){
+"use strict";
+var C = {amber:'#F2A33C',cyan:'#4FC1D6',coral:'#EE6B5E',sage:'#6FBF8E',violet:'#A98CE0'};
+function $(s){return document.querySelector(s)}
+function f(n,d){ if(!isFinite(n)||n===null) return '—'; return n.toFixed(d===undefined?2:d) }
+function val(id){ return parseFloat($(id).value) }
+
+/* --- chip load sources, mm/tooth --- */
+var SRC = {
+  freud:{d:[3.175,6.35,9.525,12.7], m:{
+    mdf:[[0.10,0.18],[0.33,0.43],[0.46,0.53],[0.58,0.69]],
+    lam:[[0.08,0.15],[0.25,0.38],[0.36,0.46],[0.56,0.66]],
+    hard:[[0.05,0.13],[0.20,0.28],[0.36,0.41],[0.46,0.53]],
+    soft:[[0.10,0.15],[0.25,0.30],[0.41,0.48],[0.51,0.58]],
+    ply:[[0.08,0.13],[0.15,0.23],[0.38,0.46],[0.46,0.53]]}},
+  rennie:{d:[3.175,6.35,9.35,12.7], m:{
+    hard:[[0.076,0.127],[0.229,0.279],[0.381,0.457],[0.483,0.534]],
+    ply:[[0.102,0.153],[0.279,0.330],[0.432,0.508],[0.533,0.584]],
+    mdf:[[0.102,0.178],[0.330,0.406],[0.508,0.584],[0.635,0.686]],
+    hpl:[[0.076,0.127],[0.229,0.305],[0.381,0.457],[0.584,0.635]]}},
+  onsrud:{d:[3.175,6.35,9.525,12.7,19.05,25.4],
+    g:[[0.102,0.152],[0.127,0.178],[0.152,0.203],[0.178,0.229],[0.203,0.254],[0.229,0.279]]},
+  ita:{lam:[0.15,0.25], mdf:[0.10,0.20], hard:[0.15,0.30]}
+};
+var ITA_MAP = {mdf:'mdf', lam:'lam', hpl:'lam', ply:'lam', hard:'hard', soft:'hard'};
+var KC = {mdf:35, lam:36, hpl:40, ply:33, hard:40, soft:25};
+var PANEL = {mdf:1, lam:1, hpl:1, ply:1, hard:0, soft:0};
+var MATNAME = {mdf:'MDF / particleboard',lam:'laminated PB',hpl:'HPL-faced',ply:'plywood',hard:'hardwood',soft:'softwood'};
+
+function interpBand(ds, bands, x){
+  if(x<=ds[0]) return bands[0].slice();
+  if(x>=ds[ds.length-1]) return bands[bands.length-1].slice();
+  for(var i=0;i<ds.length-1;i++){
+    if(x>=ds[i] && x<=ds[i+1]){
+      var t=(x-ds[i])/(ds[i+1]-ds[i]);
+      return [bands[i][0]+t*(bands[i+1][0]-bands[i][0]), bands[i][1]+t*(bands[i+1][1]-bands[i][1])];
+    }
+  }
+  return bands[bands.length-1].slice();
+}
+
+function lookup(prof, mat, dia){
+  if(prof==='cons') return {band:interpBand(SRC.onsrud.d, SRC.onsrud.g, dia), src:'Onsrud 48-000 series'};
+  if(prof==='eu'){ var k=ITA_MAP[mat]; return {band:SRC.ita[k].slice(), src:'ITA Tools'+(k!==mat?', '+k+' used as the nearest match':'')}; }
+  var got=[], names=[];
+  if(SRC.freud.m[mat]){ got.push(interpBand(SRC.freud.d, SRC.freud.m[mat], dia)); names.push('Freud') }
+  if(SRC.rennie.m[mat]){ got.push(interpBand(SRC.rennie.d, SRC.rennie.m[mat], dia)); names.push('Rennie') }
+  if(!got.length){ return {band:interpBand(SRC.onsrud.d, SRC.onsrud.g, dia), src:'Onsrud values. No industrial data exists for this material'}; }
+  var lo=Math.min.apply(null,got.map(function(b){return b[0]}));
+  var hi=Math.max.apply(null,got.map(function(b){return b[1]}));
+  return {band:[lo,hi], src:names.join(' + ')};
+}
+
+var LIMS = [
+  {k:'ideal', n:'Chip load target', ic:'·'},
+  {k:'vmax',  n:'Machine max feed', ic:'01'},
+  {k:'pow',   n:'Spindle power',    ic:'02'},
+  {k:'vac',   n:'Vacuum hold-down', ic:'03'},
+  {k:'corn',  n:'Corner behaviour', ic:'04'}
+];
+
+function run(){
+  var mat=$('#i-mat').value, prof=$('#i-prof').value;
+  var D=val('#i-dia'), Z=Math.max(1,val('#i-z')), ap=val('#i-ap'), ae=Math.min(val('#i-ae'),D);
+  var rpm=val('#i-rpm'), kw=val('#i-kw'), bp=val('#i-bp'), vmax=val('#i-vmax'), acc=val('#i-acc');
+  var area=val('#i-area'), feat=val('#i-feat'), vac=val('#i-vac'), grip=val('#i-mu');
+  if([D,Z,ap,ae,rpm,kw,bp,vmax,acc,area,feat,vac,grip].some(function(v){return !isFinite(v)||v<=0})) return;
+
+  var kc=KC[mat];
+  var lk=lookup(prof,mat,D);
+  var fzBase=(lk.band[0]+lk.band[1])/2;
+
+  /* depth derating */
+  var docR=ap/D, derate;
+  if(docR<=1) derate=1; else if(docR<=2) derate=1-0.25*(docR-1);
+  else if(docR<=3) derate=0.75-0.25*(docR-2); else derate=0.5*(3/docR);
+  var fzTarget=fzBase*derate;
+
+  /* chip thinning */
+  var ctf = ae < D/2 ? D/(2*Math.sqrt(ae*(D-ae))) : 1;
+  var fzProg = fzTarget*ctf;
+
+  var ideal = rpm*Z*fzProg;                                   // mm/min
+  var capV  = vmax*1000;
+  var Pav   = kw*1000*(rpm<bp ? rpm/bp : 1);                  // W
+  var capP  = Pav*60000/(kc*ap*ae);
+  var Fall  = grip*vac*1000*(area/10000);                     // N
+  var capVac= Fall*rpm*Z/(kc*ap);
+  var capC  = Math.sqrt(acc*(feat/1000)/2)*60000;
+
+  var caps={ideal:ideal, vmax:capV, pow:capP, vac:capVac, corn:capC};
+  var final=Math.min(ideal,capV,capP,capVac,capC);
+  var bindKey='ideal';
+  ['vmax','pow','vac','corn'].forEach(function(k){ if(caps[k]<=final+1e-6) bindKey=k });
+  if(ideal<=final+1e-6) bindKey='ideal';
+
+  var fzDeliv=final/(rpm*Z);
+  var fzEff=fzDeliv/ctf;
+  var Pcut=kc*ap*ae*final/60000;
+  var floor=0.10, isPanel=PANEL[mat];
+
+  /* --- readout --- */
+  $('#o-feed').innerHTML=f(final/1000,1)+'<small>m/min</small>';
+  $('#o-fz').textContent=f(fzDeliv,3);
+  $('#o-ideal').textContent=f(ideal/1000,1);
+  $('#o-pw').textContent=f(Pcut/1000,2)+' / '+f(Pav/1000,1)+' kW';
+  $('#o-ctf').textContent=ctf>1.001 ? f(ctf,2)+'×' : 'not applied';
+
+  var bn=$('#o-bind'), msg, cls='';
+  if(bindKey==='ideal'){ cls='good'; msg='No limit applies. The chip load target is achievable. '+lk.src+' sets this feed.'; }
+  else if(bindKey==='vmax'){ msg='The machine maximum feed is the limit. The tool and the cut permit more, but the axes do not.'; }
+  else if(bindKey==='pow'){ cls='bad'; msg='Spindle power is the limit at '+rpm+' rpm. '+f(Pav/1000,1)+' kW is available.'+(rpm<bp?' The spindle is in the constant-torque region.':'')+' Reduce the depth, reduce the width, or increase the rpm into the constant-power range.'; }
+  else if(bindKey==='vac'){ cls='bad'; msg='Vacuum hold-down is the limit on a '+f(area,0)+' cm² footprint. Use an onion skin or tabs. More vacuum does not correct a small footprint.'; }
+  else { msg='Corner behaviour is the limit. On a '+f(feat,0)+' mm feature at '+f(acc,1)+' m/s², the machine cannot reach and hold a higher feed.'; }
+  bn.className='bindnote '+cls; bn.textContent=msg;
+
+  /* --- cascade --- */
+  var maxV=Math.max(ideal,capV,capP,capVac,capC);
+  var html='';
+  LIMS.forEach(function(L){
+    var v=caps[L.k], w=Math.max(1.5,Math.min(100, v/maxV*100));
+    var cls='casc-row'+(L.k===bindKey?' is-bind':'')+(L.k==='ideal'?' is-ideal':'')+(L.k!=='ideal'&&L.k!==bindKey&&v>final*2?' na':'');
+    html+='<div class="'+cls+'"><div class="cl"><i>'+L.ic+'</i>'+L.n+'</div>'+
+          '<div class="track"><div class="fill" style="width:'+w+'%"></div></div>'+
+          '<div class="cv">'+f(v/1000,1)+'</div></div>';
+  });
+  html+='<div class="casc-row is-bind" style="border-top:1px solid var(--rule);margin-top:8px;padding-top:10px">'+
+        '<div class="cl"><i>=</i>Feed</div><div class="track"><div class="fill" style="width:'+(final/maxV*100)+'%"></div></div>'+
+        '<div class="cv">'+f(final/1000,1)+'</div></div>';
+  $('#o-casc').innerHTML=html;
+
+  /* --- status chips --- */
+  var ch=[];
+  if(isPanel){
+    if(fzEff<0.08) ch.push(['hot','Chip '+f(fzEff,3)+', the tool ploughs and burns']);
+    else if(fzEff<floor) ch.push(['hot','Chip '+f(fzEff,3)+', below the 0.10 minimum']);
+    else if(fzEff<0.14) ch.push(['warm','Chip '+f(fzEff,3)+', close to the minimum']);
+    else ch.push(['cool','Chip '+f(fzEff,3)+', above the minimum']);
+  } else {
+    ch.push([fzEff<0.08?'warm':'cool','Effective chip '+f(fzEff,3)+' mm']);
+  }
+  ch.push([docR>3?'hot':docR>2?'warm':docR>1?'warm':'cool','Depth '+f(docR,1)+'×D gives '+Math.round(derate*100)+'% chip load']);
+  if(ctf>1.001) ch.push([ctf>1.5?'warm':'cool','Chip thinning '+f(ctf,2)+'× at '+Math.round(ae/D*100)+'% radial']);
+  var head=Pav>0?Pcut/Pav:9;
+  ch.push([head>0.95?'hot':head>0.75?'warm':'cool','Power '+Math.round(head*100)+'% of available']);
+  if(rpm<bp) ch.push(['warm','Constant-torque region, '+Math.round(rpm/bp*100)+'% of rated power']);
+  var Lmin=Math.pow(final/60000,2)/acc*1000;
+  ch.push([Lmin>feat?'hot':Lmin>feat*0.4?'warm':'cool','Needs '+f(Lmin,0)+' mm to reach the feed']);
+  ch.push([capVac<ideal?'hot':'cool','Hold-down '+f(Fall,0)+' N usable']);
+  ch.push(['','k\u1D04 '+kc+' N/mm² · '+MATNAME[mat]]);
+  ch.push(['','Band '+f(lk.band[0],3)+' to '+f(lk.band[1],3)+' · '+lk.src]);
+  $('#o-chips').innerHTML=ch.map(function(c){return '<span class="chip '+c[0]+'">'+c[1]+'</span>'}).join('');
+}
+
+['#i-mat','#i-prof','#i-dia','#i-z','#i-ap','#i-ae','#i-rpm','#i-kw','#i-bp','#i-vmax','#i-acc','#i-area','#i-feat','#i-vac','#i-mu']
+  .forEach(function(id){ var el=$(id); if(el){ el.addEventListener('input',run); el.addEventListener('change',run) } });
+run();
+
+/* --- scrollspy --- */
+var links=[].slice.call(document.querySelectorAll('#rail a'));
+var pairs=links.map(function(a){ return {a:a, s:document.querySelector(a.getAttribute('href'))} })
+               .filter(function(o){ return o.s });
+function spy(){
+  var y=window.scrollY+150, best=null;
+  pairs.forEach(function(o){
+    var t=o.s.getBoundingClientRect().top+window.scrollY;
+    if(t<=y && (!best || t>best.t)) best={o:o, t:t};
+  });
+  if(!best) best={o:pairs[0]};
+  links.forEach(function(a){ a.classList.toggle('on', a===best.o.a) });
+}
+window.addEventListener('scroll', spy, {passive:true});
+spy();
+})();
+</script>

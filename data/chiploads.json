@@ -1,0 +1,4003 @@
+{
+ "schema_version": "1.0",
+ "units": {
+  "chip_load": "mm/tooth",
+  "diameter": "mm"
+ },
+ "depth_derating": {
+  "1xD": 1.0,
+  "2xD": 0.75,
+  "3xD": 0.5,
+  "source": "onsrud-2017",
+  "agreement": "freud"
+ },
+ "profiles": {
+  "gentle": "lower edge of merged envelope",
+  "standard": "midpoint",
+  "aggressive": "upper edge",
+  "note": "bands over merged cross-vendor envelope per material+geometry; contributing vendor named in output"
+ },
+ "sources": {
+  "onsrud-2017": {
+   "document": "LMT Onsrud Production Cutting Tools Catalog 2017, pp.114-116",
+   "retrieved": "2026-08-18",
+   "notes": "per-tooth by series and diameter; SW/HW/MDF; HW chart covers ash beech birch cherry mahogany maple oak poplar teak walnut as one group; 68-100 PCD excluded (scope)"
+  },
+  "freud": {
+   "document": "Freud chip load chart",
+   "retrieved": "2026-08"
+  },
+  "rennie": {
+   "document": "Rennie Tool chip load chart",
+   "retrieved": "2026-08"
+  },
+  "vortex": {
+   "document": "Vortex Tool chart via Woodshop News / catalogue",
+   "retrieved": "2026-08"
+  },
+  "ita": {
+   "document": "ITA Tools distributor guide (Smarter Production)",
+   "retrieved": "2026-08",
+   "flute_convention": "total flutes reconciles published mm/tooth with 20 m/min @ 20k rpm reference point; upcut-only is the alternative reading - expose as user switch"
+  }
+ },
+ "analysis_notes": [
+  "Within-Onsrud spread by geometry, hardwood 12.7 mm: straight 48-000 0.152-0.203 vs compression chipbreaker 60-100C 0.533-0.584 (~3x). Tool geometry explains much of the session-1 vendor spread.",
+  "Onsrud 60-100C/60-300 tops sit at or above Vortex; conservative-Onsrud lore comes from their straight and plain-spiral series."
+ ],
+ "entries": [
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 11.112,
+   "diameter_display": "7/16\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 14.287,
+   "diameter_display": "9/16\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.33,
+   "fz_max_mm": 0.381,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".013-.015"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.381,
+   "fz_max_mm": 0.432,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".015-.017"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.559,
+   "fz_max_mm": 0.61,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".022-.024"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.33,
+   "fz_max_mm": 0.381,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".013-.015"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.559,
+   "fz_max_mm": 0.61,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".022-.024"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.61,
+   "fz_max_mm": 0.66,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".024-.026"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.66,
+   "fz_max_mm": 0.711,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".026-.028"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.61,
+   "fz_max_mm": 0.66,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".024-.026"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.66,
+   "fz_max_mm": 0.711,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".026-.028"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.711,
+   "fz_max_mm": 0.762,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".028-.030"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.762,
+   "fz_max_mm": 0.813,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".030-.032"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.61,
+   "fz_max_mm": 0.66,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".024-.026"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.66,
+   "fz_max_mm": 0.711,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".026-.028"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.711,
+   "fz_max_mm": 0.762,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".028-.030"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.762,
+   "fz_max_mm": 0.813,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".030-.032"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.533,
+   "fz_max_mm": 0.584,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".021-.023"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 11.112,
+   "diameter_display": "7/16\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-000",
+   "tool_geometry": "straight_o_flute",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.305,
+   "fz_max_mm": 0.356,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".012-.014"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.305,
+   "fz_max_mm": 0.356,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".012-.014"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 11.112,
+   "diameter_display": "7/16\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 14.287,
+   "diameter_display": "9/16\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 22.225,
+   "diameter_display": "7/8\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 25.4,
+   "diameter_display": "1\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.33,
+   "fz_max_mm": 0.381,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".013-.015"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.356,
+   "fz_max_mm": 0.406,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".014-.016"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.381,
+   "fz_max_mm": 0.432,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".015-.017"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.533,
+   "fz_max_mm": 0.584,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".021-.023"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.305,
+   "fz_max_mm": 0.356,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".012-.014"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.356,
+   "fz_max_mm": 0.406,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".014-.016"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.559,
+   "fz_max_mm": 0.61,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".022-.024"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.533,
+   "fz_max_mm": 0.584,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".021-.023"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.584,
+   "fz_max_mm": 0.635,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".023-.025"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.635,
+   "fz_max_mm": 0.686,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".025-.027"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.61,
+   "fz_max_mm": 0.66,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".024-.026"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.66,
+   "fz_max_mm": 0.711,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".026-.028"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.711,
+   "fz_max_mm": 0.762,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".028-.030"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.762,
+   "fz_max_mm": 0.813,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".030-.032"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.559,
+   "fz_max_mm": 0.635,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".022-.025"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.61,
+   "fz_max_mm": 0.66,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".024-.026"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "hardwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "hardwood",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 11.112,
+   "diameter_display": "7/16\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 14.287,
+   "diameter_display": "9/16\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "52-200/57-200",
+   "tool_geometry": "spiral_upcut",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 22.225,
+   "diameter_display": "7/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "48-000",
+   "tool_geometry": "straight",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 25.4,
+   "diameter_display": "1\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 3.969,
+   "diameter_display": "5/32\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 5.556,
+   "diameter_display": "7/32\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "56-200",
+   "tool_geometry": "straight",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.305,
+   "fz_max_mm": 0.356,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".012-.014"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.33,
+   "fz_max_mm": 0.381,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".013-.015"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.356,
+   "fz_max_mm": 0.406,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".014-.016"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-LH",
+   "tool_geometry": "hogger_low_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-000-HH",
+   "tool_geometry": "hogger_high_helix_chipbreaker",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.584,
+   "fz_max_mm": 0.635,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".023-.025"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.33,
+   "fz_max_mm": 0.381,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".013-.015"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.356,
+   "fz_max_mm": 0.406,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".014-.016"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100MW",
+   "tool_geometry": "compression_spiral",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-100C",
+   "tool_geometry": "compression_chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.584,
+   "fz_max_mm": 0.635,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".023-.025"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.102,
+   "fz_max_mm": 0.152,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".004-.006"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-200",
+   "tool_geometry": "finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.457,
+   "fz_max_mm": 0.508,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".018-.020"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.508,
+   "fz_max_mm": 0.559,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".020-.022"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-300",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.584,
+   "fz_max_mm": 0.635,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".023-.025"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.356,
+   "fz_max_mm": 0.406,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".014-.016"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.406,
+   "fz_max_mm": 0.457,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".016-.018"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.432,
+   "fz_max_mm": 0.483,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".017-.019"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "60-350",
+   "tool_geometry": "chipbreaker_finisher",
+   "flutes": 3,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".019-.021"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 4.762,
+   "diameter_display": "3/16\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 7.938,
+   "diameter_display": "5/16\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "onsrud-2017",
+   "vendor": "Onsrud",
+   "series": "61-200",
+   "tool_geometry": "straight",
+   "flutes": 1,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor"
+  },
+  {
+   "source": "freud",
+   "vendor": "Freud",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.58,
+   "fz_max_mm": 0.69,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "chart, solid carbide, DOC<=D"
+  },
+  {
+   "source": "freud",
+   "vendor": "Freud",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "laminated_pb",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.56,
+   "fz_max_mm": 0.66,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "freud",
+   "vendor": "Freud",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.46,
+   "fz_max_mm": 0.53,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "freud",
+   "vendor": "Freud",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.51,
+   "fz_max_mm": 0.58,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "freud",
+   "vendor": "Freud",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "plywood",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.46,
+   "fz_max_mm": 0.53,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "rennie",
+   "vendor": "Rennie Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.534,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "up/down cut only, NOT compression, 18k rpm"
+  },
+  {
+   "source": "rennie",
+   "vendor": "Rennie Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "softwood_ply",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.533,
+   "fz_max_mm": 0.584,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "rennie",
+   "vendor": "Rennie Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.635,
+   "fz_max_mm": 0.686,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "rennie",
+   "vendor": "Rennie Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "hpl",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.584,
+   "fz_max_mm": 0.635,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "vortex",
+   "vendor": "Vortex Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.483,
+   "fz_max_mm": 0.533,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "industrial machine assumption"
+  },
+  {
+   "source": "vortex",
+   "vendor": "Vortex Tool",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "fz_min_mm": 0.635,
+   "fz_max_mm": 0.686,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "ita",
+   "vendor": "ITA Tools",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "laminated_chipboard",
+   "diameter_mm": null,
+   "fz_min_mm": 0.15,
+   "fz_max_mm": 0.25,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total_user_switchable",
+   "data_class": "vendor",
+   "notes": "not diameter-resolved; total-flute reading"
+  },
+  {
+   "source": "ita",
+   "vendor": "ITA Tools",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "mdf",
+   "diameter_mm": null,
+   "fz_min_mm": 0.1,
+   "fz_max_mm": 0.2,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total_user_switchable",
+   "data_class": "vendor",
+   "notes": ""
+  },
+  {
+   "source": "ita",
+   "vendor": "ITA Tools",
+   "series": null,
+   "tool_geometry": "unspecified",
+   "flutes": null,
+   "material": "hardwood",
+   "diameter_mm": null,
+   "fz_min_mm": 0.15,
+   "fz_max_mm": 0.3,
+   "doc_basis": "1xD",
+   "flute_basis": "per_tooth_total_user_switchable",
+   "data_class": "vendor",
+   "notes": ""
+  }
+ ]
+}

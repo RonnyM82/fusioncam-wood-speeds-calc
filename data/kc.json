@@ -1,0 +1,320 @@
+{
+ "schema_version": "1.0",
+ "model": "Fc = (Ks*h + Int) * ap ; kc(h) = Ks + Int/h ; hm ~= fz*sqrt(ae/D)",
+ "units": {
+  "Ks": "N/mm2",
+  "Int": "N/mm",
+  "h": "mm"
+ },
+ "affine_models": [
+  {
+   "material": "plywood_poplar",
+   "tool": "spiral_30",
+   "direction": "conventional",
+   "Ks": 24,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "plywood_poplar",
+   "tool": "spiral_30",
+   "direction": "climb",
+   "Ks": 27,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "mdf",
+   "tool": "spiral_30",
+   "direction": "conventional",
+   "Ks": 19,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "mdf",
+   "tool": "spiral_30",
+   "direction": "climb",
+   "Ks": 21,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "particleboard",
+   "tool": "spiral_30",
+   "direction": "conventional",
+   "Ks": 13,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "particleboard",
+   "tool": "spiral_30",
+   "direction": "climb",
+   "Ks": 17,
+   "Int": 0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "plywood_poplar",
+   "tool": "straight",
+   "direction": "conventional",
+   "Ks": 32,
+   "Int": 4.0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "plywood_poplar",
+   "tool": "straight",
+   "direction": "climb",
+   "Ks": 36,
+   "Int": 4.0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "mdf",
+   "tool": "straight",
+   "direction": "conventional",
+   "Ks": 29,
+   "Int": 3.0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "mdf",
+   "tool": "straight",
+   "direction": "climb",
+   "Ks": 36,
+   "Int": 3.4,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "particleboard",
+   "tool": "straight",
+   "direction": "conventional",
+   "Ks": 17,
+   "Int": 3.0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "particleboard",
+   "tool": "straight",
+   "direction": "climb",
+   "Ks": 27,
+   "Int": 3.0,
+   "source": "iwms25",
+   "data_class": "measured_chart_read"
+  },
+  {
+   "material": "mdf",
+   "tool": "straight",
+   "direction": "conventional",
+   "Ks": 31.44,
+   "Int": 3.36,
+   "source": "goli2018",
+   "data_class": "measured",
+   "notes": "Ks SD 2.68; validation anchor for iwms25 chart reads"
+  }
+ ],
+ "defaults": {
+  "kc_flat_panels": 35,
+  "kc_softwood": 25,
+  "kc_dense_hardwood_hpl": 40,
+  "note": "legacy flat-kc defaults for quick mode; affine models preferred"
+ },
+ "osb": {
+  "modellable": false,
+  "reason": "Ks scattered 8-66 N/mm2 (voids, local density variation) - refuse to output a number"
+ },
+ "speed_caveat": {
+  "test_speed_m_s": 3.1,
+  "production_m_s": "40-60",
+  "uplift": "+15-20%",
+  "basis": "Palubicki 2021: PB specific force 32.0 @40 m/s -> 37.6 @60 m/s (+17.5%)"
+ },
+ "plywood_rules": {
+  "density_scaling": "INVALID - poplar ply (430 kg/m3) cuts harder than MDF (720) in all conditions; cross-laminated veneers always present cross-grain",
+  "orientation_input": "not needed (~\u00b125% around disk)",
+  "dense_ply_band": "birch/film-faced +15-20% estimate"
+ },
+ "solid_timber_model": {
+  "source": "curti2021",
+  "form": "Fc=(Ks_norm(GA)*h+Int_norm(GA))*ap*rho",
+  "validity_kg_m3": [
+   287,
+   1080
+  ],
+  "nrmse": "8-38%",
+  "example_coeff": "Ks15_up = -4e-6*GA^2 + 7e-4*GA + 32e-3 (GA deg, x rho)",
+  "species_anchors": [
+   {
+    "species": "paulownia",
+    "rho": 287.1,
+    "mc": 8.7,
+    "anisotropy": 1.7
+   },
+   {
+    "species": "lime",
+    "rho": 585.7,
+    "mc": 8.8,
+    "anisotropy": 1.87
+   },
+   {
+    "species": "maple",
+    "rho": 623.9,
+    "mc": 9.7,
+    "anisotropy": 1.68
+   },
+   {
+    "species": "oak_q_robur",
+    "rho": 737.8,
+    "mc": 11.2,
+    "anisotropy": 1.97
+   },
+   {
+    "species": "azobe",
+    "rho": 1079.5,
+    "mc": 11.5,
+    "anisotropy": 3.38
+   }
+  ],
+  "mapping_notes": [
+   "radiata pine ~515 kg/m3, Janka 3.15 kN -> low-Ks end, estimated from density (no direct radiata Ks)",
+   "force max ~110 deg grain angle, not 90",
+   "up-milling ~9% below down-milling (opposite of metal lore)"
+  ],
+  "grain_direction_feeds": {
+   "source": "ita",
+   "hardwood_along_m_min": [
+    8,
+    12
+   ],
+   "hardwood_across_m_min": [
+    5,
+    8
+   ],
+   "softwood_uplift": "20-30%"
+  }
+ },
+ "oak_validation": [
+  {
+   "source": "maderas2014",
+   "species": "Quercus petraea",
+   "rho": 660,
+   "mc": 13,
+   "vc_m_s": 29,
+   "tool": "K05 insert 1F, D40, rake 20",
+   "edge_radius_um": 4,
+   "fz_mm": 0.36,
+   "apx_mm": [
+    0.077,
+    0.134
+   ],
+   "fc_normalised_N_mm": {
+    "up": [
+     1.8,
+     3.6
+    ],
+    "down": [
+     1.0,
+     2.7
+    ]
+   },
+   "model": "Fc = e1 + e2*sin^2(phiV+e3) + e4*phiV^2 (phiV rad; coefficients in paper)",
+   "up": {
+    "e": [
+     1.76115,
+     1.16336,
+     27.03116,
+     0.2224
+    ],
+    "R2": 0.81
+   },
+   "down": {
+    "e": [
+     1.02903,
+     1.92949,
+     28.90508,
+     -0.10714
+    ],
+    "R2": 0.59
+   },
+   "extrema_deg": {
+    "fc_up": {
+     "max": 88,
+     "min": 27
+    },
+    "fc_down": {
+     "max": 56,
+     "min": 29
+    }
+   },
+   "notes": "asymmetry with/against grain confirmed; max NOT at 90 in all cases"
+  },
+  {
+   "source": "biores2021",
+   "species": "Quercus robur",
+   "rho": [
+    692,
+    785
+   ],
+   "mc": 7,
+   "vc_m_s": 38.35,
+   "tool": "straight 4F insert cutter D125, rake 16-25",
+   "edge_radius_um": 2,
+   "reference_point": {
+    "fz": 0.427,
+    "cD_mm": 3.25,
+    "rake_deg": 20.5,
+    "Fc_N": 60.14
+   },
+   "sensitivities": {
+    "dFc_per_0p1mm_fz_N": [
+     8,
+     12
+    ],
+    "method_of_coefficients_overestimate": "3-65%"
+   },
+   "notes": "industrial cutting speed; full 21-coefficient model in paper (Eqs 10-13), R2 0.987"
+  }
+ ],
+ "minimum_chip_thickness": {
+  "wood_specific_measurement": null,
+  "metal_ratio": "h_min ~= 0.2-0.3 x edge_radius",
+  "sharp_carbide_edge_radius_um": {
+   "brazed_H302": 2,
+   "K05_insert": 4,
+   "sources": [
+    "biores2021",
+    "maderas2014"
+   ]
+  },
+  "implication": "geometric h_min ~0.5-1 um << practical MDF minimum chip load 0.08-0.10 mm; the MDF floor is thermal/wear (glaze) driven, not geometric ploughing",
+  "worn_edge_radius": "not found - open gap"
+ },
+ "wear": {
+  "multiplier_vs_softwood": {
+   "radiata_pine": 1,
+   "mdf_particleboard": 5,
+   "melamine_hpl": "edge-chipping mode",
+   "plywood": "intermediate"
+  },
+  "anchor": "quality 12mm carbide bit 600-1000 linear m in laminated chipboard before edge quality fails",
+  "edge_recession_per_4000m_mm": {
+   "mdf": 0.04,
+   "radiata_pine": 0.007,
+   "source": "zc-tools",
+   "data_class": "vendor"
+  }
+ }
+}
