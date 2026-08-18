@@ -22,56 +22,62 @@
        schemes. The header and the footer sit on the page surface. -->
   <main id="app" class="lt-panel">
     <form id="inputs" onsubmit="return false">
-      <label class="field">Material
-        <select id="material"></select>
-      </label>
+      <div class="lt-field">
+        <label class="lt-field__label" for="material">Material</label>
+        <select class="lt-select" id="material"></select>
+      </div>
 
-      <fieldset class="field">
+      <fieldset class="lt-fieldset">
         <legend>Tool type</legend>
         <div id="tooltype" class="tool-grid"></div>
       </fieldset>
 
-      <div class="field-row">
-        <label class="field">Tool diameter
-          <select id="diameter"></select>
-        </label>
-        <label class="field">Flutes
-          <input id="flutes" type="number" inputmode="numeric" min="1" max="6" step="1">
-        </label>
+      <div class="lt-form-grid">
+        <div class="lt-field">
+          <label class="lt-field__label" for="diameter">Tool diameter</label>
+          <select class="lt-select" id="diameter"></select>
+        </div>
+        <lt-number-field id="f-flutes" input-id="flutes" label="Flutes"
+                         min="1" max="6" step="1" decimals="0"></lt-number-field>
       </div>
 
-      <div class="field-row">
-        <label class="field">Board thickness (mm)
-          <input id="thickness" type="number" inputmode="decimal" min="1" max="120" step="0.1">
-        </label>
-        <label class="field">Depth per pass (mm)
-          <input id="doc" type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="= thickness">
-        </label>
+      <div class="lt-form-grid">
+        <lt-number-field id="f-thickness" input-id="thickness" label="Board thickness"
+                         measure="length" decimals="1" min="1" max="120" step="1"></lt-number-field>
+        <lt-number-field id="f-doc" input-id="doc" label="Depth per pass"
+                         measure="length" decimals="1" min="0.1" step="0.5"
+                         hint="Leave empty to cut the full board thickness."></lt-number-field>
       </div>
 
-      <div class="field-row">
-        <label class="field">Width of cut (mm)
-          <input id="woc" type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="= diameter">
-        </label>
-        <label class="field">Spindle speed (rpm)
-          <input id="rpm" type="number" inputmode="numeric" min="1000" max="30000" step="500">
-        </label>
+      <div class="lt-form-grid">
+        <lt-number-field id="f-woc" input-id="woc" label="Width of cut"
+                         measure="length" decimals="1" min="0.1" step="0.5"
+                         hint="Leave empty to cut a full slot, one tool diameter wide."></lt-number-field>
+        <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
+                         measure="rotation" min="1000" max="30000" step="500"></lt-number-field>
       </div>
 
-      <label class="field">Machine
-        <select id="machine"></select>
-        <span class="hint" id="machine-note"></span>
-      </label>
+      <div class="lt-field">
+        <label class="lt-field__label" for="machine">Machine</label>
+        <select class="lt-select" id="machine" aria-describedby="machine-note"></select>
+        <span class="lt-field__hint" id="machine-note"></span>
+      </div>
 
-      <fieldset class="field">
-        <legend>How hard to run it</legend>
-        <div id="profile" class="segmented"></div>
-      </fieldset>
+      <!-- The profile is a radio group drawn as a button group, which is how
+           <lt-unit-toggle> draws the same shape: role=radio buttons in an
+           .lt-btn-group, primary when on, secondary when off, arrow keys per
+           the APG radiogroup pattern. -->
+      <div class="lt-field">
+        <span class="lt-field__label" id="profile-label">How hard to run it</span>
+        <div id="profile" class="lt-btn-group profile-group" role="radiogroup" aria-labelledby="profile-label"></div>
+      </div>
 
-      <label class="field check-field">
-        <input type="checkbox" id="firstcut">
-        <span id="firstcut-label">First cut: run a reduced feed until the cut proves good</span>
-      </label>
+      <div class="lt-field">
+        <label class="lt-check">
+          <input type="checkbox" id="firstcut">
+          <span id="firstcut-label">First cut: run a reduced feed until the cut proves good</span>
+        </label>
+      </div>
 
       <details id="advanced">
         <summary>Advanced</summary>
@@ -99,6 +105,10 @@
     <p>No warranty of any kind. You are responsible for making sure the settings are safe for your machine, tooling and material. Sources and data live in the <a class="lt-link" href="https://github.com/RonnyM82/fusioncam-wood-speeds-calc">repository</a>.</p>
   </footer>
 
+  <!-- Elements before the app, so every custom element is defined by the time
+       app.js writes to a .value property. A property set on an element that has
+       not upgraded yet shadows the class accessor and is never read again. -->
+  <script type="module" src="components/lt-elements.js"></script>
   <script type="module" src="js/ui/app.js"></script>
 </body>
 </html>

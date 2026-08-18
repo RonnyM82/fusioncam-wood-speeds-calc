@@ -100,45 +100,43 @@ function buildForm() {
   fillSelect($('material'), MATERIALS.map((m) => ({ value: m.id, label: m.label })), state.material);
   $('material').addEventListener('change', (e) => { state.material = e.target.value; recalc(); });
 
+  // The card is the hit area and the radio inside it is a real .lt-check, so
+  // the control is visible and its focus ring is too. The old card hid the
+  // radio with opacity, which left a keyboard user with nothing to see.
   const toolBox = $('tooltype');
   toolBox.innerHTML = TOOL_TYPES.map((t) => `
-    <label class="tool-card">
-      <input type="radio" name="tooltype" value="${t.id}" ${t.id === state.toolType ? 'checked' : ''}>
-      <span class="tool-name">${t.label}</span>
-      <span class="tool-hint">${t.hint}</span>
+    <label class="tool-card lt-check">
+      <input type="radio" name="tooltype" value="${t.id}" ${t.id === state.toolType ? 'checked' : ''} aria-describedby="tool-${t.id}-hint">
+      <span class="tool-body">
+        <span class="tool-name">${t.label}</span>
+        <span class="tool-hint" id="tool-${t.id}-hint">${t.hint}</span>
+      </span>
     </label>`).join('');
   toolBox.addEventListener('change', (e) => { state.toolType = e.target.value; recalc(); });
 
   fillSelect($('diameter'), DIAMETERS.map((d) => ({ value: String(d), label: diameterLabel(d) })), String(state.diameterMm));
   $('diameter').addEventListener('change', (e) => { state.diameterMm = Number(e.target.value); recalc(); });
 
-  $('thickness').value = state.thicknessMm;
-  $('thickness').addEventListener('input', (e) => { state.thicknessMm = Number(e.target.value); recalc(); });
-
-  $('flutes').value = state.flutes;
-  $('flutes').addEventListener('input', (e) => {
-    const n = Number(e.target.value);
-    state.flutes = Number.isFinite(n) && n >= 1 ? Math.round(n) : 2;
-    recalc();
+  // <lt-number-field> carries the metric base value on .value and reports it
+  // on lt-change. It also owns its own error chip and aria-invalid, set in one
+  // pass, so the two can never disagree.
+  numberField('f-thickness', state.thicknessMm, (v) => {
+    state.thicknessMm = Number.isFinite(v) ? v : 0;
   });
 
-  $('rpm').value = state.rpm;
-  $('rpm').addEventListener('input', (e) => {
-    const n = Number(e.target.value);
-    state.rpm = Number.isFinite(n) && n > 0 ? n : 18000;
-    recalc();
+  numberField('f-flutes', state.flutes, (v) => {
+    state.flutes = Number.isFinite(v) && v >= 1 ? Math.round(v) : 2;
   });
 
-  const optionalMm = (id, key) => {
-    if (state[key] != null) $(id).value = state[key];
-    $(id).addEventListener('input', (e) => {
-      const n = Number(e.target.value);
-      state[key] = e.target.value !== '' && Number.isFinite(n) && n > 0 ? n : null;
-      recalc();
-    });
-  };
-  optionalMm('doc', 'apMm');
-  optionalMm('woc', 'aeMm');
+  numberField('f-rpm', state.rpm, (v) => {
+    state.rpm = Number.isFinite(v) && v > 0 ? v : 18000;
+  });
+
+  const optionalMm = (id, key) => numberField(id, state[key], (v) => {
+    state[key] = Number.isFinite(v) && v > 0 ? v : null;
+  });
+  optionalMm('f-doc', 'apMm');
+  optionalMm('f-woc', 'aeMm');
 
   fillSelect($('machine'), presets.map((p, i) => ({ value: String(i), label: p.label })), String(state.machineIdx));
   const machineNote = () => { $('machine-note').textContent = presets[state.machineIdx].notes ?? ''; };
@@ -150,16 +148,7 @@ function buildForm() {
     recalc();
   });
 
-  const profBox = $('profile');
-  profBox.innerHTML = PROFILES.map((p) => `
-    <label class="seg ${p.id === state.profile ? 'is-active' : ''}">
-      <input type="radio" name="profile" value="${p.id}" ${p.id === state.profile ? 'checked' : ''}>${p.label}
-    </label>`).join('');
-  profBox.addEventListener('change', (e) => {
-    state.profile = e.target.value;
-    profBox.querySelectorAll('.seg').forEach((s) => s.classList.toggle('is-active', s.querySelector('input').value === state.profile));
-    recalc();
-  });
+  buildProfile();
 
   const fc = $('firstcut');
   fc.checked = state.firstCut;
@@ -170,6 +159,55 @@ function buildForm() {
 
   buildAdvanced();
   applyMachineToAdvanced({ keepExisting: true });
+}
+
+// Wire one <lt-number-field>. The element carries the metric base value on
+// .value whatever unit is on screen, and reports it on lt-change.
+function numberField(hostId, initial, apply) {
+  const el = $(hostId);
+  if (initial != null) el.value = initial;
+  el.addEventListener('lt-change', (e) => { apply(e.detail.value); recalc(); });
+  return el;
+}
+
+// The profile picker, built the way <lt-unit-toggle> builds the same shape:
+// role=radio buttons in an .lt-btn-group, primary when on and secondary when
+// off, arrow keys per the APG radiogroup pattern. State is toggled on the
+// existing buttons rather than re-rendered, so arrow-key focus survives.
+function buildProfile() {
+  const box = $('profile');
+  box.innerHTML = PROFILES.map((p) =>
+    `<button type="button" role="radio" data-profile="${p.id}" class="lt-btn">${p.label}</button>`).join('');
+  const buttons = [...box.querySelectorAll('[data-profile]')];
+
+  const apply = (id, { recalculate = true } = {}) => {
+    state.profile = id;
+    buttons.forEach((b) => {
+      const on = b.dataset.profile === id;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+      b.classList.toggle('lt-btn--primary', on);
+      b.classList.toggle('lt-btn--secondary', !on);
+    });
+    if (recalculate) recalc();
+  };
+
+  box.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-profile]');
+    if (btn) apply(btn.dataset.profile);
+  });
+  box.addEventListener('keydown', (e) => {
+    const i = buttons.findIndex((b) => b.tabIndex === 0);
+    let next = null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (i + 1) % buttons.length;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (i - 1 + buttons.length) % buttons.length;
+    if (next === null) return;
+    e.preventDefault();
+    buttons[next].focus();
+    apply(buttons[next].dataset.profile);
+  });
+
+  apply(state.profile, { recalculate: false });
 }
 
 const ADV_FIELDS = [

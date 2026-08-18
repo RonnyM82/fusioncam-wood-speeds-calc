@@ -58,72 +58,29 @@ main {
   border-radius: var(--lt-radius-lg);
 }
 
-.field { display: block; margin: var(--lt-space-4) 0; font-weight: var(--lt-weight-semibold); }
-.field-row { display: grid; gap: var(--lt-space-4); grid-template-columns: 1fr 1fr; }
-.field-row .field { margin: var(--lt-space-3) 0; }
-.field .hint {
-  display: block;
-  font-weight: var(--lt-weight-regular);
-  font-size: var(--lt-text-sm);
-  line-height: var(--lt-leading-sm);
-  color: var(--lt-text-secondary);
-  margin-top: var(--lt-space-2);
-}
-.check-field { display: flex; align-items: baseline; gap: var(--lt-space-3); font-weight: var(--lt-weight-regular); }
-.check-field input { width: auto; margin: 0; }
-fieldset.field { border: 0; padding: 0; }
-fieldset.field legend { font-weight: var(--lt-weight-semibold); padding: 0; margin-bottom: var(--lt-space-3); }
-
-select, input[type="number"] {
-  display: block;
-  width: 100%;
-  margin-top: var(--lt-space-2);
-  block-size: var(--lt-control-height);
-  padding: 0 var(--lt-control-padding-x);
-  font-size: var(--lt-density-font);
-  font-weight: var(--lt-weight-regular);
-  color: var(--lt-field-text);
-  background: var(--lt-field-bg);
-  border: var(--lt-border-width-thin) solid var(--lt-field-border);
-  border-radius: var(--lt-radius-md);
-}
-
-.tool-grid { display: grid; gap: var(--lt-space-3); grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); }
+/* The tool-type picker keeps its card grid, and the card is layout only: the
+   control inside every card is a real .lt-check radio. The old card hid its
+   radio with opacity, so a keyboard user had no focus ring to follow. */
+.tool-grid { display: grid; gap: var(--lt-space-3); grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
 
 .tool-card {
-  display: block;
   padding: var(--lt-space-4);
   background: var(--lt-field-bg);
   border: var(--lt-border-width-thin) solid var(--lt-field-border);
   border-radius: var(--lt-radius-md);
-  cursor: pointer;
-  font-weight: var(--lt-weight-regular);
 }
 .tool-card:has(input:checked) {
   border-color: var(--lt-action-bg);
   outline: var(--lt-border-width-medium) solid var(--lt-action-bg);
 }
-.tool-card input { position: absolute; opacity: 0; }
-.tool-name { display: block; font-weight: var(--lt-weight-semibold); }
-.tool-hint { display: block; font-size: var(--lt-text-sm); line-height: var(--lt-leading-sm); color: var(--lt-text-secondary); }
+.tool-body { display: grid; gap: var(--lt-space-1); }
+.tool-name { font-weight: var(--lt-weight-semibold); }
+.tool-hint { font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
 
-.segmented {
-  display: flex;
-  border: var(--lt-border-width-thin) solid var(--lt-field-border);
-  border-radius: var(--lt-radius-md);
-  overflow: hidden;
-}
-.seg {
-  flex: 1;
-  text-align: center;
-  padding: var(--lt-space-3) 0;
-  background: var(--lt-field-bg);
-  cursor: pointer;
-  font-weight: var(--lt-weight-regular);
-}
-.seg + .seg { border-left: var(--lt-border-width-thin) solid var(--lt-field-border); }
-.seg.is-active { background: var(--lt-action-bg); color: var(--lt-action-text); font-weight: var(--lt-weight-semibold); }
-.seg input { position: absolute; opacity: 0; }
+/* The button group is inline-flex by default. The profile picker spans the
+   field, and its three options share the width evenly. */
+.profile-group { display: flex; }
+.profile-group > .lt-btn { flex: 1; }
 
 details#advanced, details.defects {
   margin: var(--lt-space-5) 0;
