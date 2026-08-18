@@ -1,0 +1,2396 @@
+/* =============================================================================
+   Livetools Design System, component layer
+   lt-components.css     requires lt-tokens.css to be loaded first
+
+   Version 0.3.0  (2026-07-28)
+
+   HOW TO USE THIS FILE
+   Load the tokens, then this, then your app CSS. Cascade layers keep the order
+   honest, so your app can override a component without a specificity fight and
+   without !important.
+
+       <link rel="stylesheet" href="tokens/lt-tokens.css">
+       <link rel="stylesheet" href="components/lt-components.css">
+       <link rel="stylesheet" href="app.css">
+
+   RULES THIS FILE FOLLOWS, AND SO SHOULD ANYTHING BUILT ON IT
+   1. No raw values. Every colour, space, radius and duration is a --lt-* token.
+      conformance.py fails the build on a raw hex or a hardcoded px font-size.
+   2. Interactive states live here, once. The reason is scar tissue: a demo button
+      got hand-styled inline, inline styles carry no :hover, and it shipped as the
+      only dead control on the page. If a component needs a state, it belongs in
+      this file, not in the markup.
+   3. Every control keeps a 24px minimum hit area (WCAG 2.2 SC 2.5.8) even in
+      compact density, where the visible box is smaller. Padding does the work.
+   4. Focus is never removed, only restyled, and always via :focus-visible.
+   5. Status is never colour alone (WCAG 1.4.1). The status components require an
+      icon slot and a text label; the colour is the third signal, not the only one.
+   6. Numbers that sit in a column get tabular figures. A spec table whose digits
+      wander is a spec table nobody trusts.
+   ============================================================================= */
+
+@layer lt.reset, lt.components, lt.utilities;
+
+@layer lt.reset {
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* Inherit the type stack into form controls, which do not do so by default. */
+  button, input, select, textarea, optgroup {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+
+  /* Native control accents follow the action colour, so checkboxes and radios
+     that we do NOT restyle still look like they belong. */
+  :root {
+    accent-color: var(--lt-action-bg);
+  }
+
+  :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd) { margin: 0; }
+  :where(ul, ol) { margin: 0; padding: 0; }
+
+  :where(img, svg, video, canvas) { display: block; max-inline-size: 100%; }
+}
+
+
+@layer lt.components {
+
+/* -----------------------------------------------------------------------------
+   ICONS
+   The icon standard, decided 2026-07-28 (ICONS-PROPOSAL.md). Two grids only:
+   24 (renders 16-24px, sized by --lt-icon-size) and 48 (renders 32-48px,
+   sized by --lt-pictogram-size). conformance.py fails any other viewBox.
+
+   An icon paints through these layer classes and nothing else - no literal
+   fills or strokes, no opacity. Ink is currentColor so the surface contexts
+   and forced colours work unaided; the accent reads --lt-icon-accent, a slot
+   each app pins to its own brand hue (Evolute: #2F8DCB in app-tokens.css).
+   The accent is reinforcement only: every icon must still read with the
+   accent collapsed to ink, which is exactly what an unpinned slot renders.
+
+     .lt-ic-ink          the tool, and any boundary that carries meaning
+     .lt-ic-tint         the stock cross-section; never load-bearing
+     .lt-ic-accent       the machined surface (the catalogues' red-highlight
+                         convention), normal weight
+     .lt-ic-emphasis     the engagement arc, double weight; its length is
+                         the radial engagement
+     .lt-ic-accent-fill  a solid accent region, e.g. HF's under-face segment
+
+   Usage: inline the set's sprite once per page, then
+     <svg class="lt-icon" aria-hidden="true" focusable="false">
+       <use href="#ev-ic-slot"/></svg>
+   -------------------------------------------------------------------------- */
+
+  .lt-icon {
+    inline-size: var(--lt-icon-size);
+    block-size: var(--lt-icon-size);
+    flex: none;
+  }
+  .lt-pictogram {
+    inline-size: var(--lt-pictogram-size);
+    block-size: var(--lt-pictogram-size);
+    flex: none;
+  }
+  /* Icons are sized, not fluid. The reset's fluid-media rule sets
+     max-inline-size: 100% on every svg, and max-inline-size is a DIFFERENT
+     property from inline-size, so the :where() zero specificity is beside the
+     point: the clamp applies on top of the definite size whenever the
+     container is narrower than the icon. The width is then capped while the
+     height is not, and the artwork honours preserveAspectRatio and paints
+     smaller than either — the first consumer (Evolute tool-manager,
+     2026-07-28) measured a 20px icon painting 15x15 in a table column, below
+     the 24-grid's 16px floor, with its 2-unit stroke at 1.25px. The trap
+     feeds itself: the column was narrow BECAUSE the icon was its only
+     content, and the icon was small because the column was narrow.
+     Every rule in this file that gives a replaced element a definite
+     inline-size must appear in this list; the smoke test measures each slot
+     at exactly its token so a missing entry cannot ship. */
+  .lt-icon,
+  .lt-pictogram,
+  .lt-btn > svg,
+  .lt-field__error > svg,
+  .lt-field__warning > svg,
+  .lt-alert > svg,
+  .lt-badge > svg,
+  .lt-menu__item > svg,
+  .lt-chip__remove > svg,
+  .lt-filter__trigger > svg,
+  .lt-empty > svg {
+    max-inline-size: none;
+  }
+  /* the inlined symbol library itself takes no layout space */
+  .lt-sprite {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+    overflow: hidden;
+  }
+
+  .lt-ic-ink {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .lt-ic-accent {
+    fill: none;
+    stroke: var(--lt-icon-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .lt-ic-emphasis {
+    fill: none;
+    stroke: var(--lt-icon-accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .lt-ic-tint {
+    fill: color-mix(in srgb, currentColor 12%, transparent);
+    stroke: none;
+  }
+  .lt-ic-accent-fill {
+    fill: var(--lt-icon-accent);
+    stroke: none;
+  }
+
+/* -----------------------------------------------------------------------------
+   BUTTON
+   .lt-btn plus one variant. Variants change colour only; size and shape come
+   from density, so a button in a compact table matches the table around it.
+
+   Variants:  primary (default action)  secondary (outlined)  danger
+              ghost (no chrome until hover)
+   Sizes:     inherits density. Add .lt-btn--lg for a deliberate step up,
+              or .lt-btn--icon for a square icon-only button.
+   -------------------------------------------------------------------------- */
+
+  .lt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lt-space-3);
+    block-size: var(--lt-control-height);
+    padding-inline: var(--lt-control-padding-x);
+    /* the hit area never drops below the WCAG minimum even when the box does */
+    min-block-size: var(--lt-target-min);
+    min-inline-size: var(--lt-target-min);
+    border: var(--lt-border-width-thin) solid transparent;
+    border-radius: var(--lt-radius-md);
+    font-size: var(--lt-density-font);
+    font-weight: var(--lt-weight-semibold);
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--lt-duration-fast) var(--lt-ease-standard),
+      border-color var(--lt-duration-fast) var(--lt-ease-standard),
+      color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+
+  .lt-btn:disabled,
+  .lt-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  /* Icons inside a button scale with density and never shrink the label. */
+  .lt-btn > svg,
+  .lt-btn > .lt-icon {
+    inline-size: var(--lt-icon-size);
+    block-size: var(--lt-icon-size);
+    flex: none;
+  }
+
+  .lt-btn--primary {
+    background: var(--lt-action-bg);
+    color: var(--lt-action-text);
+    border-color: var(--lt-action-bg);
+  }
+  .lt-btn--primary:hover:not(:disabled) {
+    background: var(--lt-action-bg-hover);
+    border-color: var(--lt-action-bg-hover);
+  }
+  .lt-btn--primary:active:not(:disabled) {
+    background: var(--lt-action-bg-active);
+    border-color: var(--lt-action-bg-active);
+  }
+
+  .lt-btn--secondary {
+    background: var(--lt-action-secondary-bg);
+    color: var(--lt-action-secondary-text);
+    border-color: var(--lt-action-secondary-border);
+  }
+  .lt-btn--secondary:hover:not(:disabled) {
+    background: var(--lt-action-secondary-bg-hover);
+  }
+
+  .lt-btn--danger {
+    background: var(--lt-danger-bg);
+    color: var(--lt-danger-on-fill);
+    border-color: var(--lt-danger-bg);
+  }
+  .lt-btn--danger:hover:not(:disabled) {
+    background: var(--lt-danger-bg-hover);
+    border-color: var(--lt-danger-bg-hover);
+  }
+
+  /* QUIET DANGER: the same hue at a lower weight, for a destructive action that
+     repeats down a list of rows.
+
+     This is a WEIGHT tier, not a new hue. Red still means identity and danger
+     (rule 2), and the filled --danger button above is unchanged and stays the
+     confirm step, where the loudest control on screen is the correct one.
+
+     ADDED 2026-07-28 (Scott Moyse), from the first consumer's UX review: the
+     Evolute tool-manager rendered 7-17 filled red deletes on a single
+     reference page, which made the rarest and most destructive action the
+     loudest element on every page, and left the confirm step with nothing
+     louder to escalate to. Weight is the signal that was missing. The app-side
+     rule that goes with it: rows with two or more actions collapse into an
+     lt-menu kebab, a single-action row gets one of these.
+
+     ALWAYS icon + word, never the icon alone. A bare red glyph in a row is
+     colour carrying meaning on its own (rule 3), and at this weight there is
+     no fill to reinforce it either.
+
+     Ink at rest is --lt-danger-text, which is the status ink for a NEUTRAL
+     surface and follows the scheme (verify-tokens.py holds it at 4.5:1 on the
+     panel and shell in both schemes). Hover fills with --lt-danger-surface,
+     which is a light card in every scheme, so the ink has to move to
+     --lt-danger-on-surface in the same rule: keeping the scheme-following ink
+     on that fill is precisely the 2026-07-27 defect, which measured 3.35:1 in
+     dark mode. The two always change together.
+
+     The border stays --lt-danger-border (red-9) in both states, because it is
+     the boundary against the PANEL, not against the hover fill: 4.38:1 on the
+     light panel and 3.26:1 on the dark one, clear of SC 1.4.11's 3:1. */
+  .lt-btn--danger-quiet {
+    background: transparent;
+    color: var(--lt-danger-text);
+    border-color: var(--lt-danger-border);
+  }
+  .lt-btn--danger-quiet:hover:not(:disabled) {
+    background: var(--lt-danger-surface);
+    color: var(--lt-danger-on-surface);
+  }
+  /* The text-only step down, for a row action sitting inside a menu or a
+     toolbar that already has a boundary of its own. No chrome until hover,
+     like --ghost, and the same ink pairing as above. */
+  .lt-btn--danger-text {
+    background: transparent;
+    color: var(--lt-danger-text);
+    border-color: transparent;
+  }
+  .lt-btn--danger-text:hover:not(:disabled) {
+    background: var(--lt-danger-surface);
+    color: var(--lt-danger-on-surface);
+  }
+
+  .lt-btn--ghost {
+    background: transparent;
+    color: var(--lt-action-text-on-light);
+    border-color: transparent;
+  }
+  .lt-btn--ghost:hover:not(:disabled) {
+    background: var(--lt-action-bg-subtle);
+  }
+
+  /* There is deliberately no brand-red button variant. Red is identity and
+     danger (rule 2 in the token file), so a positive action is blue whatever
+     size it is. A kiosk primary action is --primary with --lg, which is the
+     same control the desktop tools use, only bigger.
+     REMOVED 2026-07-26: .lt-btn--brand-kiosk. It existed to make brand red
+     legal on a CTA by forcing a 24px label past the large-text threshold, which
+     was solving the wrong problem. Delete-tool stays red under --danger. */
+
+  .lt-btn--lg {
+    block-size: auto;
+    padding: var(--lt-space-4) var(--lt-space-7);
+    font-size: var(--lt-text-lg);
+    line-height: var(--lt-leading-lg);
+  }
+
+  .lt-btn--icon {
+    padding-inline: 0;
+    inline-size: var(--lt-control-height);
+  }
+
+  .lt-btn--full { inline-size: 100%; }
+
+  /* A button group: one visual unit, shared borders, correct end radii. */
+  .lt-btn-group {
+    display: inline-flex;
+  }
+  .lt-btn-group > .lt-btn {
+    border-radius: 0;
+    margin-inline-start: calc(var(--lt-border-width-thin) * -1);
+  }
+  .lt-btn-group > .lt-btn:first-child {
+    border-start-start-radius: var(--lt-radius-md);
+    border-end-start-radius: var(--lt-radius-md);
+    margin-inline-start: 0;
+  }
+  .lt-btn-group > .lt-btn:last-child {
+    border-start-end-radius: var(--lt-radius-md);
+    border-end-end-radius: var(--lt-radius-md);
+  }
+  .lt-btn-group > .lt-btn:hover,
+  .lt-btn-group > .lt-btn:focus-visible { z-index: 1; }
+
+
+/* -----------------------------------------------------------------------------
+   CHIP
+   A removable token: one applied filter, one picked value in a multi-select,
+   one recipient in a "To:" line. Added 2026-08-10 with the filter component.
+
+   REMOVABLE IS THE DEFINITION. If it cannot be removed it is not a chip, it is
+   a .lt-badge with different padding - use the badge. That line is why this is
+   a component and not a badge variant, and it is drawn here rather than left
+   to taste: a badge is an inert mark and this carries a button, which is a
+   different KIND of object. The difference is load-bearing rather than
+   philosophical. Forced colours gives a control ButtonBorder and a badge
+   CanvasText. A control has focus, hover and disabled states a badge has no
+   concept of. Fold the two together and every future badge change has to stop
+   and ask whether it just broke a control.
+
+   NAMED .lt-chip, NOT .lt-filter-chip, for the reason .lt-swatch is not
+   .lt-iso-swatch: the object is general and the first consumer is not. A
+   multi-select field and a tag input want exactly this and would otherwise
+   clone it.
+
+   NEUTRAL, NEVER THE ACTION COLOUR. Blue acts (rule 2), and a chip's only
+   action is deleting itself; a row of blue chips reads as a row of calls to
+   action, which is the opposite of what an applied filter is.
+
+   THE KEY IS NOT DECORATION. A lone chip reading "3" is ambiguous and "Flutes:
+   3" is not, so the key is part of the component rather than an option the
+   consumer may skip - and it is what the remove button's accessible name is
+   built from.
+   -------------------------------------------------------------------------- */
+
+  .lt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    min-block-size: var(--lt-target-min);
+    padding-inline: var(--lt-space-3);
+    padding-block: var(--lt-space-1);
+    border: var(--lt-border-width-thin) solid var(--lt-border-interactive);
+    border-radius: var(--lt-radius-pill);
+    background: var(--lt-surface-subtle);
+    font-size: var(--lt-text-sm);
+    white-space: nowrap;
+  }
+  .lt-chip__key { color: var(--lt-text-secondary); }
+  .lt-chip__value {
+    color: var(--lt-text-primary);
+    font-weight: var(--lt-weight-medium);
+  }
+  /* The hit area is the full --lt-target-min square even though the glyph is
+     smaller, and the negative end margin pulls the chip's own padding back so
+     the button does not look inset. Pad the target, never shrink it. */
+  .lt-chip__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--lt-target-min);
+    block-size: var(--lt-target-min);
+    margin-inline-end: calc(var(--lt-space-2) * -1);
+    padding: 0;
+    border: 0;
+    border-radius: var(--lt-radius-full);
+    background: none;
+    color: var(--lt-text-secondary);
+    cursor: pointer;
+  }
+  .lt-chip__remove:hover {
+    background: var(--lt-action-bg-subtle);
+    color: var(--lt-text-primary);
+  }
+  /* the size is here, the max-inline-size release is in the list at the top of
+     this file, which is where every sized replaced element has to be named */
+  .lt-chip__remove > svg {
+    inline-size: var(--lt-icon-size-sm);
+    block-size: var(--lt-icon-size-sm);
+    flex: none;
+  }
+
+
+/* -----------------------------------------------------------------------------
+   FIELD
+   One wrapper for label, control, hint and error, so the vertical rhythm and the
+   accessible wiring are consistent. Labels sit above the control: fastest to
+   complete, survives translation, and no floating-label guesswork.
+   -------------------------------------------------------------------------- */
+
+  .lt-field {
+    display: grid;
+    gap: var(--lt-space-2);
+    margin-block-end: var(--lt-field-gap);
+    /* Rows keep their content size. Without this, align-content defaults to
+       stretch, so a field sitting in a taller grid row shares the surplus out
+       across its rows and the label-to-control gap grows. That would make the
+       spacing depend on whether the field happens to carry a hint or a message,
+       and two fields side by side would disagree. Surplus goes to the bottom. */
+    align-content: start;
+  }
+
+  .lt-field__label {
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--lt-text-primary);
+  }
+
+  /* Required marker. The asterisk is decorative; the accessible name carries
+     the requirement through the control's own required attribute. */
+  .lt-field__label[data-required]::after {
+    content: "*";
+    margin-inline-start: var(--lt-space-2);
+    color: var(--lt-danger-text);
+  }
+
+  /* The hint slot. Sentence case, under the control, and the place a
+     parenthetical qualifier belongs: an all-caps label carrying "(mm, at the
+     shank)" is a label nobody finishes reading, and uppercase is measurably
+     slower to scan. Wire it to the control with aria-describedby so it is
+     announced with the field rather than stranded after it.
+
+     Order inside .lt-field is label, control, hint, then error or warning. The
+     hint states what is always true; the message states what is wrong now, so
+     the message reads last and closest to where the eye lands.
+
+     The gap above it never changes the gap between label and control - see
+     align-content on .lt-field. That is the trap this slot walks into every
+     time it is re-implemented. */
+  .lt-field__hint {
+    font-size: var(--lt-text-xs);
+    color: var(--lt-text-secondary);
+  }
+
+  /* A hint under a checkbox or a switch lines up with the label TEXT, not with
+     the page edge. Flush left, the hint starts under the box, and a line of
+     grey text hanging beneath an empty tick reads as a second, unlabelled
+     option. The indent is computed from the control's own token, so it cannot
+     drift from the box it is aligning to. */
+  .lt-check + .lt-field__hint {
+    padding-inline-start: calc(var(--lt-check-size) + var(--lt-space-3));
+  }
+  .lt-switch + .lt-field__hint {
+    padding-inline-start: calc(var(--lt-switch-width) + var(--lt-space-3));
+  }
+
+  /* Error text is a chip, not bare coloured text. Colour plus icon plus words,
+     so it survives red-green colour vision deficiency and shop-floor glare. */
+  .lt-field__error {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    inline-size: fit-content;
+    padding: 2px var(--lt-space-3);
+    border: var(--lt-border-width-thin) solid var(--lt-danger-border);
+    border-radius: var(--lt-radius-sm);
+    background: var(--lt-danger-surface);
+    color: var(--lt-danger-text);
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-field__error > svg { inline-size: var(--lt-icon-size-sm); block-size: var(--lt-icon-size-sm); flex: none; }
+
+  .lt-field__warning {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    inline-size: fit-content;
+    padding: 2px var(--lt-space-3);
+    border: var(--lt-border-width-thin) solid var(--lt-warning-border);
+    border-radius: var(--lt-radius-sm);
+    background: var(--lt-warning-surface);
+    color: var(--lt-warning-text);
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-field__warning > svg { inline-size: var(--lt-icon-size-sm); block-size: var(--lt-icon-size-sm); flex: none; }
+
+  /* The app-pinnable width cap (see --lt-field-max-width in the token file).
+     Scoped to .lt-field: a labelled form control honours the cap, a bare
+     control sitting in a table cell or inline form sizes however the app
+     says. The list must name EVERY control kind a field can carry - the
+     defect this token replaces was an app capping input/textarea and
+     missing select. The input-group is in the list so an input with a unit
+     affix caps as one control rather than the input alone, which would
+     strand the affix mid-field. */
+  .lt-field .lt-input,
+  .lt-field .lt-select,
+  .lt-field .lt-textarea,
+  .lt-field .lt-input-group,
+  .lt-field lt-status-select { max-inline-size: var(--lt-field-max-width); }
+
+  /* Text-like controls. Uses the field surface tokens, never the page surface:
+     an input that follows the page turns into a dark well inside a light card
+     the moment the scheme flips. */
+  .lt-input,
+  .lt-select,
+  .lt-textarea {
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: var(--lt-control-height);
+    padding-inline: var(--lt-space-3);
+    background: var(--lt-field-bg);
+    color: var(--lt-field-text);
+    border: var(--lt-border-width-thin) solid var(--lt-field-border);
+    border-radius: var(--lt-radius-md);
+    font-size: var(--lt-density-font);
+    transition: border-color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+
+  .lt-textarea {
+    block-size: auto;
+    min-block-size: calc(var(--lt-control-height) * 2.5);
+    padding-block: var(--lt-space-3);
+    line-height: var(--lt-density-leading);
+    resize: vertical;
+    field-sizing: content;  /* progressive: grows with content where supported */
+  }
+
+  .lt-input::placeholder,
+  .lt-textarea::placeholder { color: var(--lt-text-placeholder); }
+
+  .lt-input:hover:not(:disabled),
+  .lt-select:hover:not(:disabled),
+  .lt-textarea:hover:not(:disabled) { border-color: var(--lt-border-strong); }
+
+  .lt-input:disabled,
+  .lt-select:disabled,
+  .lt-textarea:disabled {
+    background: var(--lt-surface-subtle);
+    color: var(--lt-text-disabled);
+    cursor: not-allowed;
+  }
+
+  /* Invalid styling is driven by the author, not by :invalid, so an untouched
+     empty required field is not screaming red before anyone has typed. */
+  .lt-input[aria-invalid="true"],
+  .lt-select[aria-invalid="true"],
+  .lt-textarea[aria-invalid="true"] {
+    border-color: var(--lt-danger-border);
+    border-width: var(--lt-border-width-medium);
+  }
+
+  /* Numbers line up. Right-aligned, tabular, slashed zero. */
+  .lt-input--numeric {
+    text-align: end;
+    font-feature-settings: var(--lt-font-feature-numeric);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  .lt-select {
+    appearance: none;
+    padding-inline-end: var(--lt-space-8);
+    /* chevron drawn with a gradient pair so there is no image dependency and it
+       recolours with the text token */
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - var(--lt-space-5)) center,
+      calc(100% - var(--lt-space-4) + 1px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+
+
+/* -----------------------------------------------------------------------------
+   INPUT GROUP
+   An input with an affix attached: a unit suffix (mm, rpm, mm/min), a prefix, or
+   a button. The affix is part of the field, so it takes field-family tokens.
+   -------------------------------------------------------------------------- */
+
+  .lt-input-group {
+    display: flex;
+    align-items: stretch;
+    inline-size: 100%;
+  }
+  /* The group is one control with internal divisions, so every seam is a single
+     shared border and only the two outer ends are round. Both parts of that have
+     to apply to EVERY child, not just the input: a stepper is button, input,
+     affix, button, and squaring only the input leaves each button's own radius
+     curving away from the seam, which reads as a notch at the join. Pulling only
+     the input back leaves the input's end border and the affix's start border
+     side by side, which reads as a double rule. Same construction as
+     .lt-btn-group above. */
+  .lt-input-group > * {
+    border-radius: 0;
+    margin-inline-start: calc(var(--lt-border-width-thin) * -1);
+  }
+  .lt-input-group > :first-child {
+    border-start-start-radius: var(--lt-radius-md);
+    border-end-start-radius: var(--lt-radius-md);
+    margin-inline-start: 0;
+  }
+  .lt-input-group > :last-child {
+    border-start-end-radius: var(--lt-radius-md);
+    border-end-end-radius: var(--lt-radius-md);
+  }
+  /* One control, one border colour, in both states.
+
+     The parts are three different components and they read different border
+     families by default: a field takes --lt-field-border, a secondary button
+     takes --lt-action-secondary-border. On a panel those are #868686 and
+     #565554, so the border changed shade partway along a control that is meant
+     to read as one object. The affix already resolves this by taking
+     field-family tokens (see the section note above); the group extends the same
+     rule to the buttons, because inside a group a button is part of the field
+     rather than a button that happens to sit next to one.
+
+     Hover is on the GROUP, not the part. Darkening only the element under the
+     pointer re-creates the mismatch this rule just removed, which is why hovering
+     the input used to make the seam agree: --lt-border-strong and
+     --lt-action-secondary-border happen to be the same value in every context
+     except the shell. The part under the pointer still identifies itself through
+     its own background. Disabled and invalid parts keep their own border, since
+     both carry meaning this rule has no business overwriting.
+
+     --lt-border-strong is the stronger contrast against the field background in
+     every context, so the pair holds up in all six: page, panel and shell, light
+     and dark. Static sits at 3.64:1 or better, clear of SC 1.4.11's 3:1. */
+  .lt-input-group > * { border-color: var(--lt-field-border); }
+  .lt-input-group:hover > :not(:disabled):not([aria-invalid="true"]) {
+    border-color: var(--lt-border-strong);
+  }
+  /* Now that every child overlaps its neighbour, whichever one is focused or
+     hovered has to paint above them, or the next sibling clips its focus ring
+     and its active border along the shared edge. */
+  .lt-input-group > :focus-visible,
+  .lt-input-group > :hover { z-index: 1; }
+
+  .lt-affix {
+    display: flex;
+    align-items: center;
+    /* A definite cross size, so the affix is NOT stretched by the group and its
+       border cannot add to the height. Matches .lt-input exactly, in any density. */
+    block-size: var(--lt-control-height);
+    padding-inline: var(--lt-space-3);
+    background: var(--lt-field-affix-bg);
+    color: var(--lt-field-affix-text);
+    border: var(--lt-border-width-thin) solid var(--lt-field-border);
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    white-space: nowrap;
+    /* a unit is read out as part of the value, so do not hide it from AT */
+  }
+  /* Stating the obvious on purpose: the flex above is an author display, so
+     it beats the UA's [hidden] { display: none } whatever the layer maths,
+     and every unitless lt-number-field showed an empty grey box between the
+     input and the stepper (first consumer report, 2026-08-05). This makes
+     hidden mean gone again. */
+  .lt-affix[hidden] { display: none; }
+
+
+/* -----------------------------------------------------------------------------
+   CHECKBOX AND RADIO
+   Native controls, restyled only where the native rendering is inconsistent.
+   The label is the hit area, and it clears 24px in every density.
+   -------------------------------------------------------------------------- */
+
+  .lt-check {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--lt-space-3);
+    min-block-size: var(--lt-target-min);
+    padding-block: var(--lt-space-2);
+    cursor: pointer;
+  }
+  .lt-check > input {
+    flex: none;
+    inline-size: var(--lt-check-size);
+    block-size: var(--lt-check-size);
+    margin: 0;
+    /* nudge the box onto the first line's optical centre */
+    margin-block-start: 0.0625rem;
+    accent-color: var(--lt-action-bg);
+    cursor: pointer;
+  }
+  .lt-check > span { font-size: var(--lt-density-font); }
+  .lt-check:has(> input:disabled) {
+    color: var(--lt-text-disabled);
+    cursor: not-allowed;
+  }
+  .lt-check:has(> input:disabled) > input { cursor: not-allowed; }
+
+  .lt-fieldset {
+    border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+    border-radius: var(--lt-radius-md);
+    padding: var(--lt-space-4) var(--lt-space-5);
+    margin: 0 0 var(--lt-field-gap);
+  }
+  .lt-fieldset > legend {
+    padding-inline: var(--lt-space-3);
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+
+/* -----------------------------------------------------------------------------
+   SWITCH
+   For a setting that takes effect immediately. If it needs a Save, use a
+   checkbox instead: a switch implies the change has already happened.
+   -------------------------------------------------------------------------- */
+
+  .lt-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    min-block-size: var(--lt-target-min);
+    cursor: pointer;
+  }
+  .lt-switch > input {
+    appearance: none;
+    flex: none;
+    inline-size: var(--lt-switch-width);
+    block-size: var(--lt-switch-height);
+    margin: 0;
+    background: var(--lt-grey-8);
+    border-radius: var(--lt-radius-pill);
+    position: relative;
+    cursor: pointer;
+    transition: background-color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-switch > input::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 3px;
+    inset-inline-start: 3px;
+    inline-size: 1rem;
+    block-size: 1rem;
+    background: var(--lt-white);
+    border-radius: var(--lt-radius-full);
+    transition: translate var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-switch > input:checked { background: var(--lt-action-bg); }
+  .lt-switch > input:checked::after { translate: 1.125rem 0; }
+  .lt-switch > input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+
+/* -----------------------------------------------------------------------------
+   TABLE
+   Dense by default, because the catalogue and spec views are the reason this
+   exists. Numeric columns are right-aligned with tabular figures.
+
+   Row separation uses light rules rather than zebra striping by default. The
+   evidence on striping is genuinely mixed: it tests as preferred but has not
+   been shown to reliably improve task accuracy or speed. Add .lt-table--zebra
+   on very wide tables where horizontal tracking is the real problem.
+   -------------------------------------------------------------------------- */
+
+  .lt-table-wrap {
+    overflow: auto;
+    border: var(--lt-border-width-thin) solid var(--lt-table-border);
+    border-radius: var(--lt-radius-md);
+    max-block-size: 70vh;
+  }
+
+  .lt-table {
+    inline-size: 100%;
+    border-collapse: separate;   /* separate, so sticky headers keep their border */
+    border-spacing: 0;
+    font-size: var(--lt-density-font);
+  }
+
+  .lt-table > caption {
+    caption-side: top;
+    text-align: start;
+    padding: var(--lt-cell-padding-y) var(--lt-cell-padding-x);
+    font-size: var(--lt-text-xs);
+    color: var(--lt-text-secondary);
+  }
+
+  .lt-table th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--lt-z-sticky);
+    background: var(--lt-table-header-bg);
+    color: var(--lt-text-primary);
+    text-align: start;
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: var(--lt-cell-padding-y) var(--lt-cell-padding-x);
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-border-interactive);
+    white-space: nowrap;
+  }
+
+  .lt-table td {
+    padding: var(--lt-cell-padding-y) var(--lt-cell-padding-x);
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-table-border);
+    block-size: var(--lt-row-height);
+  }
+
+  .lt-table tbody tr:last-child td { border-block-end: 0; }
+  .lt-table tbody tr:hover { background: var(--lt-table-row-bg-hover); }
+  .lt-table tbody tr[aria-selected="true"] { background: var(--lt-table-row-bg-selected); }
+
+  .lt-table--zebra tbody tr:nth-child(even) { background: var(--lt-table-row-bg-alt); }
+  .lt-table--zebra tbody tr:nth-child(even):hover { background: var(--lt-table-row-bg-hover); }
+
+  /* Numeric cells. Applied to th and td together so the header sits over its
+     column properly. */
+  .lt-table .lt-num {
+    text-align: end;
+    font-feature-settings: var(--lt-font-feature-numeric);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  /* Part numbers and codes. */
+  .lt-table .lt-code {
+    font-family: var(--lt-font-mono);
+    font-feature-settings: var(--lt-font-feature-mono);
+    white-space: nowrap;
+  }
+
+  /* A frozen first column for wide catalogues. */
+  .lt-table--freeze th:first-child,
+  .lt-table--freeze td:first-child {
+    position: sticky;
+    inset-inline-start: 0;
+    background: var(--lt-surface-panel);
+    z-index: 1;
+  }
+  .lt-table--freeze th:first-child { z-index: calc(var(--lt-z-sticky) + 1); }
+
+  /* Sortable header button. A real button, so it is keyboard reachable and
+     announces its state; the arrow is decorative. */
+  .lt-table th > .lt-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    color: inherit;
+    cursor: pointer;
+    min-block-size: var(--lt-target-min);
+  }
+  .lt-table th > .lt-sort::after {
+    content: "";
+    inline-size: 0;
+    block-size: 0;
+    border-inline: 4px solid transparent;
+    border-block-end: 5px solid currentColor;
+    opacity: 0;
+    transition: opacity var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-table th[aria-sort="ascending"] > .lt-sort::after { opacity: 1; }
+  .lt-table th[aria-sort="descending"] > .lt-sort::after {
+    opacity: 1;
+    rotate: 180deg;
+  }
+  .lt-table th > .lt-sort:hover::after { opacity: 0.45; }
+
+
+/* -----------------------------------------------------------------------------
+   SPEC LIST
+   Key-value pairs for tool specifications. A description list, so the pairing is
+   in the markup rather than implied by a two-column layout.
+   -------------------------------------------------------------------------- */
+
+  .lt-specs {
+    display: grid;
+    grid-template-columns: minmax(8rem, max-content) 1fr;
+    gap: var(--lt-space-3) var(--lt-space-5);
+    font-size: var(--lt-density-font);
+  }
+  .lt-specs > dt {
+    color: var(--lt-text-secondary);
+    font-size: var(--lt-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: var(--lt-weight-semibold);
+    align-self: center;
+  }
+  .lt-specs > dd {
+    font-feature-settings: var(--lt-font-feature-numeric);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+  .lt-specs--bordered > dt,
+  .lt-specs--bordered > dd {
+    padding-block: var(--lt-space-3);
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  }
+
+
+/* -----------------------------------------------------------------------------
+   STATUS: ALERT, BADGE
+   Colour is the third signal. Both require an icon and a text label, which is
+   why the icon is a required slot in the markup rather than an option.
+   -------------------------------------------------------------------------- */
+
+  .lt-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--lt-space-3);
+    padding: var(--lt-space-4);
+    border-radius: var(--lt-radius-md);
+    border-inline-start: var(--lt-border-width-thick) solid;
+    font-size: var(--lt-density-font);
+  }
+  .lt-alert > svg,
+  .lt-alert > .lt-icon {
+    inline-size: var(--lt-icon-size);
+    block-size: var(--lt-icon-size);
+    flex: none;
+    /* The alert top-aligns its children, so the icon must centre itself on
+       the FIRST LINE of the text beside it. 1lh is the inherited
+       line-height - exactly that first line's box - so this holds at every
+       density, where a fixed nudge cannot: a hand-tuned 0.0625rem sat right
+       only at one density and measured up to 3px low at spacious
+       (headless probe, 2026-07-28). Negative when the icon is taller than
+       the line, which is correct: the icon overshoots the line evenly. */
+    margin-block-start: calc((1lh - var(--lt-icon-size)) / 2);
+  }
+  .lt-alert__title {
+    display: block;
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-alert__body { font-size: var(--lt-text-sm); }
+
+  /* An alert is a light card in every scheme, so its ink is --lt-*-on-surface,
+     not --lt-*-text: the latter is the ink for a hint or an error on the PAGE
+     and the dark scheme lifts it for dark chrome, which put a pastel tone on a
+     pale surface at 3.35-3.44:1. See the token file, 2026-07-27.
+
+     The edge takes that same ink rather than --lt-*-border. Two reasons. It is
+     the only value that keeps working when the alert sits on a dark page: the
+     vivid tones are mid-to-dark and merge into the page behind them, so the bar
+     stopped reading as part of the alert. And the amber edge was 1.82:1 against
+     its own surface, under the 3:1 that SC 1.4.11 asks of a graphical object,
+     which the ink clears at 7.04:1. --lt-*-border keeps its other jobs, the
+     invalid-field boundary among them. */
+  .lt-alert--danger  { background: var(--lt-danger-surface);  border-color: var(--lt-danger-on-surface);  color: var(--lt-danger-on-surface); }
+  .lt-alert--warning { background: var(--lt-warning-surface); border-color: var(--lt-warning-on-surface); color: var(--lt-warning-on-surface); }
+  .lt-alert--success { background: var(--lt-success-surface); border-color: var(--lt-success-on-surface); color: var(--lt-success-on-surface); }
+  .lt-alert--info    { background: var(--lt-info-surface);    border-color: var(--lt-info-on-surface);    color: var(--lt-info-on-surface); }
+
+  /* A badge is INERT. If the thing you are drawing can be removed, it is a
+     .lt-chip and not a badge with a smaller radius - see the chip section. */
+  .lt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    padding: 1px var(--lt-space-3);
+    border-radius: var(--lt-radius-pill);
+    font-size: var(--lt-text-2xs);
+    font-weight: var(--lt-weight-semibold);
+    white-space: nowrap;
+    /* Beside running text the badge sits on the line's middle, not on its
+       baseline. An inline-flex box's baseline is its last line box's, and
+       since the glyphs landed (2026-07-28) the pill is taller than its own
+       2xs text, so baseline alignment parked the whole pill high of the
+       prose around it. The first consumer carried exactly this as a
+       documented app override; it belongs here. Inside flex/grid layouts
+       (toolbars, table cells, .lt-row) vertical-align does nothing, so the
+       chip-in-a-row cases are untouched. */
+    vertical-align: middle;
+  }
+  /* No optical nudge here, deliberately. The first consumer reported the 16px
+     glyph reading ~1px low beside 2xs text and blamed this flex centring; a
+     headless probe (2026-07-28) measured the icon's box dead on the text's
+     cap-band centre at all three densities - with Inter, (ascent-descent)/2
+     equals cap-height/2, so geometric centring IS optical centring. The
+     symptom was real but lived in the tilde glyph's artwork, drawn 3 grid
+     units low in its viewBox (fixed in icons/lt/sprite.svg the same day).
+     Do not add a nudge on the box: it would push every correctly drawn
+     glyph off to compensate for one bad drawing. */
+  .lt-badge > svg { inline-size: var(--lt-icon-size-xs); block-size: var(--lt-icon-size-xs); flex: none; }
+
+  /* Same reasoning as the alert above: a badge carries its own light surface in
+     every scheme, so it takes the on-surface ink. */
+  .lt-badge--danger  { background: var(--lt-danger-surface);  color: var(--lt-danger-on-surface); }
+  .lt-badge--warning { background: var(--lt-warning-surface); color: var(--lt-warning-on-surface); }
+  .lt-badge--success { background: var(--lt-success-surface); color: var(--lt-success-on-surface); }
+  .lt-badge--info    { background: var(--lt-info-surface);    color: var(--lt-info-on-surface); }
+  .lt-badge--neutral { background: var(--lt-surface-subtle);  color: var(--lt-text-secondary); }
+
+/* -----------------------------------------------------------------------------
+   SWATCH
+   A taxonomy code in a coloured box. Added 2026-07-29 from the Evolute
+   tool-manager's ISO 513 round; the palette it draws from is section 3b of
+   lt-tokens.css.
+
+   IT IS NOT A BADGE, and the distinction is the reason it exists rather than
+   being a badge variant. A badge is a pill, its five variants each pin surface
+   and ink as a measured pair under a never-recolour rule, and it means a
+   record's STATE — draft, active, retired. A swatch is square, takes its colour
+   from a caller-chosen palette entry, and means WHAT SOMETHING IS. "This job is
+   overdue" is a badge; "this material is group K" is a swatch. Putting an ISO
+   group in a badge would say a cast-iron row was in a state of danger.
+
+   The construction is .lt-steps__step::before's: a definite-size box, grid with
+   place-items:center, a short code inside. Sizing is --lt-swatch-size, named in
+   the token file for the same reason as --lt-check-size and --lt-switch-height,
+   so a table cell or a picker aligning to a swatch computes from the number the
+   swatch draws itself with.
+
+   SQUARE AT ONE CHARACTER, RECTANGLE AS THE CODE GROWS. min-inline-size holds
+   the square and padding-inline lets it grow, so P and P2.1 are the same
+   component and there is no wide variant to choose between. This is specified
+   here rather than left to each app because "the sub-group codes overflowed"
+   is a bug every consumer would otherwise find separately.
+
+   IT NEVER SHIPS EMPTY. There is no colour-only variant, no legend dot and no
+   bare key, and that is a measured constraint rather than a stylistic one:
+   under Brettel protanopia simulation the fills for K and W land within dE2000
+   2.1 of each other, and under deuteranopia O and P land within 4.7 while K, N
+   and S stay inside 5.4, one olive smear. SKILL.md rule 3 says colour never
+   carries meaning alone; here the numbers say a domain fill CANNOT carry it
+   alone even in principle, and roughly 8% of the men on a shop floor are the
+   people this decides for. The code is the signal. The colour is recognition
+   speed for everyone else. K and W at 2.1 is the closest pair this palette has
+   ever carried, and Scott accepted it knowingly on 2026-07-30 in exchange for a
+   richer walnut brown, which is a trade he could only make because of the rule
+   in this paragraph.
+   -------------------------------------------------------------------------- */
+
+  .lt-swatch {
+    display: inline-grid;
+    place-items: center;
+    block-size: var(--lt-swatch-size);
+    /* the square floor; padding is what lets a longer code grow past it */
+    min-inline-size: var(--lt-swatch-size);
+    padding-inline: var(--lt-space-2);
+    flex: none;
+    border-radius: var(--lt-radius-sm);
+    font-size: var(--lt-text-2xs);
+    font-weight: var(--lt-weight-semibold);
+    line-height: var(--lt-leading-2xs);
+    /* codes like P2.1 and M3.2 are read as columns down a table */
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    /* An inline grid takes its baseline from its last line box, so a box taller
+       than the text beside it parks high. .lt-badge carries the same fix for
+       the same reason; a new inline chip has to carry its own. */
+    vertical-align: middle;
+    /* Unset falls back to the neutral surface rather than to nothing, so a code
+       the app has no palette entry for still draws a box. Same shape of
+       fallback as .lt-badge--neutral. */
+    background: var(--lt-swatch-fill, var(--lt-surface-subtle));
+    color: var(--lt-swatch-ink, var(--lt-text-secondary));
+    /* THE BOUNDARY. A domain fill does not clear 3:1 against every surface it
+       can land on — yellow fails on every light surface, and the mid-tones fail
+       on the dark table-header band — so the edge is derived from the fill
+       instead of being left to luck or costing a token per colour per scheme.
+       Mixing toward --lt-text-primary darkens it on light surfaces and lifts it
+       on dark ones, which is exactly what a square needs to keep its corners in
+       both schemes. Inset, so it costs no layout. The ratio is certified in the
+       token file and swept by verify-tokens.py over every fill/surface pair;
+       do not retune it here. */
+    box-shadow: inset 0 0 0 var(--lt-border-width-thin)
+                color-mix(in srgb,
+                          var(--lt-swatch-fill, var(--lt-surface-subtle))
+                          var(--lt-swatch-edge-mix),
+                          var(--lt-text-primary));
+  }
+
+  /* Workpiece material groups, eight roots. Sub-groups take their root's
+     colour: P2.1 is a P, so it is .lt-swatch--iso-p with "P2.1" as its content.
+
+     Only the first six are ISO 513's, and the difference matters to anybody
+     reading these values as certified. The standard covers metals, it fixes the
+     six hues by trade convention, and all this system does for them is certify
+     digital values. W and O are Evolute's extension roots, decided 2026-07-30
+     by Scott Moyse, and no standards body or trade convention fixes a colour
+     for either: the letter O follows Sandvik Coromant's use of it for the same
+     scope, but Sandvik prints its own O column uncoloured and marked "Non-ISO",
+     so the brown and the purple are Evolute's own choices. */
+  .lt-swatch--iso-p { --lt-swatch-fill: var(--lt-iso-p); --lt-swatch-ink: var(--lt-iso-p-on); }
+  .lt-swatch--iso-m { --lt-swatch-fill: var(--lt-iso-m); --lt-swatch-ink: var(--lt-iso-m-on); }
+  .lt-swatch--iso-k { --lt-swatch-fill: var(--lt-iso-k); --lt-swatch-ink: var(--lt-iso-k-on); }
+  .lt-swatch--iso-n { --lt-swatch-fill: var(--lt-iso-n); --lt-swatch-ink: var(--lt-iso-n-on); }
+  .lt-swatch--iso-s { --lt-swatch-fill: var(--lt-iso-s); --lt-swatch-ink: var(--lt-iso-s-on); }
+  .lt-swatch--iso-h { --lt-swatch-fill: var(--lt-iso-h); --lt-swatch-ink: var(--lt-iso-h-on); }
+  .lt-swatch--iso-w { --lt-swatch-fill: var(--lt-iso-w); --lt-swatch-ink: var(--lt-iso-w-on); }
+  .lt-swatch--iso-o { --lt-swatch-fill: var(--lt-iso-o); --lt-swatch-ink: var(--lt-iso-o-on); }
+
+  /* A machine-state indicator, reading the way a control panel reads:
+     green running, amber attention, red fault, blue waiting on you. The dot is
+     backed up by the label, always. */
+  .lt-state {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    font-size: var(--lt-density-font);
+    font-weight: var(--lt-weight-medium);
+  }
+  .lt-state::before {
+    content: "";
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+    border-radius: var(--lt-radius-full);
+    flex: none;
+    background: currentColor;
+  }
+  /* ACCENT, not --lt-*-text. A state indicator sits on plain grey with no
+     coloured background behind it, so it needs the chromatic tone rather than
+     the one tuned for legibility on its own status surface. Using the latter is
+     what made "Low, 3 left" read brown instead of orange. */
+  .lt-state--running { color: var(--lt-success-accent); }
+  .lt-state--warning { color: var(--lt-warning-accent); }
+  .lt-state--fault   { color: var(--lt-danger-accent); }
+  .lt-state--waiting { color: var(--lt-info-accent); }
+  .lt-state--idle    { color: var(--lt-text-secondary); }
+
+
+/* -----------------------------------------------------------------------------
+   CARD, PANEL SECTION, TOOLBAR, EMPTY STATE
+   -------------------------------------------------------------------------- */
+
+  .lt-card {
+    border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+    border-radius: var(--lt-radius-lg);
+    padding: var(--lt-space-5);
+    background: var(--lt-surface-panel);
+  }
+  .lt-card__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--lt-space-4);
+    margin-block-end: var(--lt-space-4);
+  }
+  .lt-card__title {
+    font-size: var(--lt-text-lg);
+    line-height: var(--lt-leading-lg);
+    font-weight: var(--lt-weight-semibold);
+  }
+
+  .lt-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    flex-wrap: wrap;
+    padding-block: var(--lt-space-3);
+  }
+  .lt-toolbar__spacer { margin-inline-start: auto; }
+
+  .lt-empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--lt-space-4);
+    padding: var(--lt-space-10) var(--lt-space-5);
+    text-align: center;
+    color: var(--lt-text-secondary);
+  }
+  .lt-empty__title {
+    font-size: var(--lt-text-lg);
+    font-weight: var(--lt-weight-semibold);
+    color: var(--lt-text-primary);
+  }
+  .lt-empty > svg {
+    /* pictogram territory: the empty-state graphic is the one icon slot that
+       renders above 24px, so it takes the 48-grid tier's size token */
+    inline-size: var(--lt-pictogram-size);
+    block-size: var(--lt-pictogram-size);
+    color: var(--lt-text-placeholder);
+  }
+
+/* -----------------------------------------------------------------------------
+   LINK
+   Underlined by default. Removing the underline and relying on colour alone
+   fails WCAG 1.4.1 for anyone who cannot pick the link colour out of the
+   surrounding text, which on this palette is a real risk.
+   -------------------------------------------------------------------------- */
+
+  .lt-link {
+    color: var(--lt-text-link);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    text-decoration-thickness: from-font;
+    border-radius: var(--lt-radius-sm);
+  }
+  .lt-link:hover { color: var(--lt-text-link-hover); text-decoration-thickness: 2px; }
+  .lt-link:visited { color: var(--lt-text-link); }
+
+  /* An inline link inside running prose needs a bigger hit area than its text
+     box gives it, without disturbing the line height. */
+  .lt-link--standalone {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    min-block-size: var(--lt-target-min);
+  }
+
+  .lt-divider {
+    border: 0;
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+    margin-block: var(--lt-space-5);
+  }
+
+
+/* -----------------------------------------------------------------------------
+   PROSE
+   Default rhythm for ordinary written content: a page intro, help text, a
+   back-link paragraph above a heading, release notes.
+
+   WHY IT EXISTS (2026-07-28, from the first consumer's S9 pass). The reset
+   zeroes every text margin and only components restore their own, so written
+   content ships squished until someone hand-spaces it — the Evolute
+   tool-manager hit that three times in ONE day (a page intro, nine back-link
+   paragraphs, and a button row as a cousin), each patched with a bespoke
+   app.css rule. One wrapper class ends the category: wrap the written
+   content, get paragraphs, headings and lists back at sensible rhythm plus a
+   reading measure, and stop hand-rolling margins.
+
+   Every child rule is :where()-wrapped, so it has zero specificity beyond
+   the wrapper class and any app rule on the element itself wins without a
+   fight. Components inside the wrapper are unaffected: they set their own
+   margins at real specificity, and the trims only touch margins the
+   components do not carry.
+   -------------------------------------------------------------------------- */
+
+  .lt-prose {
+    /* the reading measure. 70ch of the running size, roughly the top of the
+       45-75 character band the readability literature agrees on; release a
+       full-width block with --full, or re-declare in app.css */
+    max-inline-size: 70ch;
+    font-size: var(--lt-density-font);
+    line-height: var(--lt-density-leading);
+  }
+  .lt-prose--full { max-inline-size: none; }
+
+  .lt-prose :where(p, ul, ol, dl, blockquote) {
+    margin-block: 0 var(--lt-space-4);
+  }
+  .lt-prose :where(h1, h2, h3, h4, h5, h6) {
+    margin-block: var(--lt-space-7) var(--lt-space-3);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-prose :where(h1) { font-size: var(--lt-text-2xl); line-height: var(--lt-leading-2xl); }
+  .lt-prose :where(h2) { font-size: var(--lt-text-xl);  line-height: var(--lt-leading-xl); }
+  .lt-prose :where(h3) { font-size: var(--lt-text-lg);  line-height: var(--lt-leading-lg); }
+  .lt-prose :where(h4, h5, h6) { font-size: var(--lt-text-md); line-height: var(--lt-leading-md); }
+
+  /* The reset stripped list padding, which leaves markers hanging outside the
+     text column (or clipped). Restore the indent and give items breathing
+     room; a nested list stays tight to its parent item. */
+  .lt-prose :where(ul, ol) { padding-inline-start: var(--lt-space-7); }
+  .lt-prose :where(li) { margin-block-end: var(--lt-space-2); }
+  .lt-prose :where(li > ul, li > ol) { margin-block: var(--lt-space-2) 0; }
+
+  /* The wrapper owns its own edges: no lead-in gap above the first child, no
+     trailing margin colliding with whatever follows the wrapper. */
+  .lt-prose > :where(:first-child) { margin-block-start: 0; }
+  .lt-prose > :where(:last-child) { margin-block-end: 0; }
+
+
+/* -----------------------------------------------------------------------------
+   FORM LAYOUT
+   -------------------------------------------------------------------------- */
+
+  .lt-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0 var(--lt-space-5);
+    align-items: start;
+  }
+
+  /* A single line of fields with the action that submits them: a filter bar,
+     an add-row, a set-status form. Exists because every consumer otherwise
+     reinvents it with align-items: flex-end, which breaks the day one field
+     gains a hint: the hinted field grows DOWNWARD, bottom-alignment floats
+     its control above its neighbours', and the row jumps when validation
+     adds a message. The first consumer hit exactly that twice in one
+     session (2026-07-28). Hint-safe means: tops align, so controls align
+     (every label is one line - see reference.md), and hints, errors and
+     warnings hang below their own field without moving anyone else. */
+  .lt-form-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--lt-space-3) var(--lt-space-4);
+    flex-wrap: wrap;
+  }
+  /* the row owns vertical rhythm; the field's own end margin would add to a
+     wrapped row's gap and make two rows disagree */
+  .lt-form-row > .lt-field { margin-block-end: 0; }
+
+  /* Trailing actions sit level with the CONTROLS, one label line down from
+     the top the row aligns on. The drop is 1lh + the field's label-to-control
+     gap: line-height inherits as a used px length, so 1lh here is exactly the
+     height of a one-line label box beside it, at any density. That makes this
+     the same box, not a guessed number - the consumer's first two attempts
+     approximated it with a space token and were each a few pixels off, and
+     off differently between densities. Buttons are control-height and centre
+     on the control line via align-items; a bare .lt-check gets the explicit
+     control-height line to centre in. */
+  .lt-form-row__action {
+    margin-block-start: calc(1lh + var(--lt-space-2));
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    min-block-size: var(--lt-control-height);
+  }
+
+  .lt-form-actions {
+    display: flex;
+    gap: var(--lt-space-3);
+    flex-wrap: wrap;
+    padding-block-start: var(--lt-space-5);
+    margin-block-start: var(--lt-space-3);
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  }
+
+
+/* -----------------------------------------------------------------------------
+   RESULT READOUT
+   The output half of a calculator. Large, tabular, unit always visible, and the
+   derivation available rather than hidden, because a machinist who cannot see
+   how a number was reached will not trust it.
+   -------------------------------------------------------------------------- */
+
+  .lt-readout {
+    display: grid;
+    gap: var(--lt-space-2);
+    padding: var(--lt-space-5);
+    background: var(--lt-surface-subtle);
+    border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+    border-radius: var(--lt-radius-md);
+  }
+  .lt-readout__label {
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--lt-text-secondary);
+  }
+  .lt-readout__value {
+    display: flex;
+    align-items: baseline;
+    gap: var(--lt-space-3);
+    font-size: var(--lt-text-3xl);
+    line-height: var(--lt-leading-3xl);
+    font-weight: var(--lt-weight-semibold);
+    font-feature-settings: var(--lt-font-feature-numeric);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+  .lt-readout__unit {
+    font-size: var(--lt-text-md);
+    font-weight: var(--lt-weight-medium);
+    color: var(--lt-text-secondary);
+  }
+  .lt-readout__formula {
+    font-family: var(--lt-font-mono);
+    font-feature-settings: var(--lt-font-feature-mono);
+    font-size: var(--lt-text-xs);
+    color: var(--lt-text-secondary);
+  }
+  .lt-readout--warning {
+    background: var(--lt-warning-surface);
+    border-color: var(--lt-warning-border);
+  }
+  .lt-readout--danger {
+    background: var(--lt-danger-surface);
+    border-color: var(--lt-danger-border);
+  }
+
+
+/* -----------------------------------------------------------------------------
+   FILTER
+   The catalogue filter: a bar carrying quick filters, search and one trigger
+   per facet; applied filters as removable chips below it; facet bodies that
+   open as popovers on a wide component and as one bottom sheet on a narrow
+   one. Added 2026-08-10 from Scott Moyse's mockup, which is the spec.
+
+   ONE STATE OBJECT IS THE POINT. Every control writes to the same serialisable
+   object and nothing reads any other control, which is what makes saved views,
+   URL persistence, grouping and any later natural-language layer cheap - they
+   all reduce to reading and writing that object. The presentation below is a
+   skin on it, which is also why the same markup can change shape.
+
+   THE BREAKPOINT IS A CONTAINER QUERY, on the component's own inline size and
+   never the viewport's, so a filter inside a narrow panel on a wide screen
+   collapses correctly. That is not a nicety: the first consumer's panels are
+   exactly that shape.
+
+   DECISIONS FROM THE MOCKUP, kept because each one was arrived at by looking
+   at the rendered thing:
+
+   - A value's count sits immediately AFTER the value, not right-aligned to the
+     container edge. Right-alignment buys a tidy column to compare down, and
+     costs the association: in a wide sheet the number ends up a screen away
+     from the label it belongs to and the eye has to track across empty space
+     to pair them up. The association is what is being read.
+   - Facets hug their content and cap at 24rem, with one gap token driving
+     every gutter. Uniform grid tracks made the gutters look uneven even though
+     they measured identical, because what the eye measures is the distance
+     from the last glyph of one column to the first of the next, not the track
+     boundary.
+   - The facet group centres as a block; the values inside each column stay
+     hard against the start edge, because a ragged start edge on a checkbox
+     list is far harder to scan than an off-centre block.
+   - A value that would return nothing is dimmed, never removed. Options that
+     appear and vanish as you tick are the classic faceted-filter complaint.
+   -------------------------------------------------------------------------- */
+
+  .lt-filter {
+    /* load-bearing, not tidiness: the host is a custom element and therefore
+       display:inline by default, and inline-size containment does not apply to
+       an inline box - the container query below would silently never match */
+    display: block;
+    container-type: inline-size;
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-lg);
+    background: var(--lt-surface-panel);
+  }
+
+  /* The quick strip: the two or three cuts that carry most of the traffic.
+     DELIBERATELY THE SAME TREATMENT AS A SELECTED TAB, and deliberately NOT
+     .lt-tabs__tab. A person reads an underline as "this one is current" and
+     that reading is correct here, so the visual language should agree. What
+     differs is everything underneath: a tab promises a panel, and selection
+     follows focus in lt-tabs because its panels are already in the DOM. Here
+     there is no panel, and arrowing across the strip with selection following
+     focus would fire one refetch per item. Three duplicated declarations are
+     cheaper than coupling two components that only look alike. */
+  .lt-filter__quick {
+    display: flex;
+    gap: var(--lt-space-2);
+    padding-inline: var(--lt-space-4);
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-border-default);
+    overflow-x: auto;
+  }
+  .lt-filter__quickitem {
+    background: none;
+    border: 0;
+    /* The underline sits ABOVE the strip's baseline rule rather than on it,
+       which is exactly what .lt-tabs__tab does and is the reason there is no
+       negative margin here. Pulling the item down onto the rule overflows the
+       container by one pixel, and since overflow-x:auto computes overflow-y to
+       auto as well, that raised a vertical scrollbar on the strip (seen on the
+       2026-08-10 render). Clamping overflow-y would have clipped the focus
+       ring, which offsets 2px outside the item. Matching the shipped tab is
+       both the cheaper fix and the more honest one. */
+    border-block-end: var(--lt-border-width-medium) solid transparent;
+    padding: var(--lt-space-3) var(--lt-space-4);
+    min-block-size: var(--lt-target-min);
+    font-size: var(--lt-density-font);
+    font-weight: var(--lt-weight-medium);
+    color: var(--lt-text-secondary);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--lt-duration-fast) var(--lt-ease-standard),
+                border-color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-filter__quickitem:hover { color: var(--lt-text-primary); }
+  /* aria-current for an anchor (the server rendered it), aria-checked for a
+     button (the element owns the state). Both, so a consumer that needs real
+     hrefs for ctrl-click and no-JS keeps them. */
+  .lt-filter__quickitem[aria-current="true"],
+  .lt-filter__quickitem[aria-current="page"],
+  .lt-filter__quickitem[aria-checked="true"] {
+    color: var(--lt-action-text-on-light);
+    border-block-end-color: var(--lt-action-bg);
+    font-weight: var(--lt-weight-semibold);
+  }
+
+  .lt-filter__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    flex-wrap: wrap;
+    padding: var(--lt-space-4);
+  }
+  .lt-filter__spacer { margin-inline-start: auto; }
+
+  /* The search field sits in a row of BUTTONS, not in a stack of fields, so it
+     drops the block-end margin every .lt-field carries: that margin spaces
+     stacked fields apart, and in a centre-aligned row it only makes the field
+     box taller than the buttons, which then floats the input above their line.
+     .lt-form-row is deliberately not used - it assumes every field carries a
+     visible one-line label, and this one's label is visually hidden, so its
+     trailing-action drop would push the buttons a label-line too low. */
+  .lt-filter__search {
+    flex: 1 1 18rem;
+    min-inline-size: 12rem;
+    margin-block-end: 0;
+  }
+
+  .lt-filter__triggers {
+    display: flex;
+    gap: var(--lt-space-2);
+    flex-wrap: wrap;
+  }
+  /* A trigger reports its own state in WORDS - "Coating", then "Coating 2" -
+     because a count survives greyscale and shop-floor glare where a coloured
+     dot does not. */
+  .lt-filter__trigger[data-lt-active] {
+    border-color: var(--lt-border-strong);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-filter__trigger > svg {
+    inline-size: var(--lt-icon-size);
+    block-size: var(--lt-icon-size);
+    flex: none;
+  }
+  .lt-filter__pip {
+    padding-inline: var(--lt-space-2);
+    border-radius: var(--lt-radius-pill);
+    background: var(--lt-action-bg-subtle);
+    color: var(--lt-action-text-on-light);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lt-filter__chips {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-2);
+    flex-wrap: wrap;
+    padding: 0 var(--lt-space-4) var(--lt-space-4);
+  }
+  .lt-filter__chips:empty { display: none; }
+
+  .lt-filter__summary {
+    padding: 0 var(--lt-space-4) var(--lt-space-4);
+    color: var(--lt-text-secondary);
+    font-size: var(--lt-text-sm);
+  }
+  .lt-filter__summary > strong {
+    color: var(--lt-text-primary);
+    font-weight: var(--lt-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The floating facet panel. Same construction as .lt-menu__list, and for the
+     same reasons: .lt-panel so it carries its own ink rather than inheriting
+     page ink onto a light card, and fixed position so a scrolling table
+     wrapper's overflow cannot clip it. Display is attached to [data-lt-open]
+     because the UA popover sheet owns the closed state. */
+  .lt-filter__pop {
+    inset: auto;
+    margin: 0;
+    z-index: var(--lt-z-dropdown);
+    padding: var(--lt-space-4);
+    max-block-size: min(28rem, calc(100vh - var(--lt-space-8)));
+    overflow: auto;
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-md);
+    box-shadow: var(--lt-shadow-overlay);
+  }
+  .lt-filter__pop[data-lt-open] {
+    display: block;
+    position: fixed;
+  }
+
+  /* THE SHEET IS A NATIVE <dialog>, which is the whole point: the top layer,
+     the focus trap and Escape come from the platform. A hand-rolled scrim and
+     a hidden attribute give you neither, and the missing one that bites is the
+     trap - tabbing walks straight out of the open sheet into the page behind
+     it, which is exactly what the mockup does today. lt-dialog makes the same
+     bargain; this is its geometry, not a second implementation. */
+  .lt-filter__sheet {
+    inline-size: 100%;
+    max-inline-size: none;
+    max-block-size: 88vh;
+    /* auto at the block start pins the sheet to the block end */
+    margin: auto auto 0;
+    padding: 0;
+    border: 0;
+    border-start-start-radius: var(--lt-radius-xl);
+    border-start-end-radius: var(--lt-radius-xl);
+    box-shadow: var(--lt-shadow-lg);
+  }
+  .lt-filter__sheet::backdrop { background: var(--lt-surface-scrim); }
+  .lt-filter__sheet[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .lt-filter__sheethead,
+  .lt-filter__sheetfoot {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    padding: var(--lt-space-4) var(--lt-space-5);
+    flex: none;
+  }
+  .lt-filter__sheethead {
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-border-default);
+  }
+  .lt-filter__sheetfoot {
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-default);
+  }
+  .lt-filter__sheettitle {
+    font-size: var(--lt-text-lg);
+    font-weight: var(--lt-weight-semibold);
+  }
+  /* Flex, not uniform grid tracks - see the gutter note in this section's
+     header. The columns hug their own content so the measured distance between
+     them IS the gap. */
+  .lt-filter__sheetbody {
+    overflow-y: auto;
+    padding: var(--lt-space-5);
+    display: flex;
+    flex-wrap: wrap;
+    align-content: start;
+    justify-content: center;
+    gap: var(--lt-space-6) var(--lt-space-8);
+  }
+  .lt-filter__sheetbody > .lt-facet {
+    flex: 0 1 auto;
+    /* released from the popover's floor: alone in a popover a facet needs one,
+       here it has neighbours to sit against */
+    min-inline-size: 0;
+  }
+
+  /* --- facet bodies, identical in the popover and the sheet -------------- */
+
+  .lt-facet {
+    min-inline-size: 16rem;
+    max-inline-size: 24rem;
+  }
+  .lt-facet__title {
+    font-size: var(--lt-text-sm);
+    font-weight: var(--lt-weight-semibold);
+    margin-block-end: var(--lt-space-2);
+  }
+  .lt-facet__list {
+    display: grid;
+    max-block-size: 18rem;
+    overflow-y: auto;
+  }
+  /* The option is a .lt-check, not a parallel implementation of one. Cloning
+     it forks checkbox styling the first time either moves. */
+  .lt-facet__list > .lt-check { padding-block: var(--lt-space-1); }
+  .lt-facet__n {
+    margin-inline-start: var(--lt-space-2);
+    color: var(--lt-text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--lt-text-sm);
+  }
+  .lt-facet__list > .lt-check[data-empty] { color: var(--lt-text-disabled); }
+
+  .lt-facet__range {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--lt-space-3);
+  }
+  /* A diameter is one or two digits and maybe a decimal. The cap goes through
+     --lt-field-max-width rather than a max-inline-size on the input, because
+     that token is the system's mechanism for exactly this and it reaches every
+     control kind at once - so the unit affix caps together with its input as
+     one control instead of being stranded mid-field. */
+  .lt-facet__range > .lt-field {
+    flex: 0 0 auto;
+    margin-block-end: 0;
+    --lt-field-max-width: 7rem;
+  }
+  .lt-facet__dash {
+    padding-block-end: var(--lt-space-3);
+    color: var(--lt-text-secondary);
+  }
+
+  /* --- the collapse ------------------------------------------------------
+     One breakpoint, on the component's own inline size. Above it, facets are
+     popovers off the bar. Below it, they are one button and one sheet. */
+  @container (max-width: 54rem) {
+    .lt-filter__bar > .lt-filter__triggers { display: none; }
+    /* SCOPED TO THE BAR, and that is not tidiness. The sheet is a descendant
+       of the component, so it is inside the query container too, and an
+       unscoped rule hid the sheet header's spacer as well - which collapsed
+       "Filters | Clear all | close" into one bunched row at the start edge,
+       on exactly the narrow component the sheet exists for. Seen on the
+       2026-08-10 render. Any rule added here needs the same scope. */
+    .lt-filter__bar > .lt-filter__spacer { display: none; }
+    .lt-filter__search { flex: 1 1 100%; }
+    .lt-filter__all { flex: 1 1 auto; }
+  }
+
+
+/* -----------------------------------------------------------------------------
+   TABS, STEPPER
+   Presentation only. Behaviour lives in the web components, which own the
+   keyboard handling and the ARIA state.
+   -------------------------------------------------------------------------- */
+
+  .lt-tabs__list {
+    display: flex;
+    gap: var(--lt-space-2);
+    border-block-end: var(--lt-border-width-thin) solid var(--lt-border-default);
+    overflow-x: auto;
+  }
+  .lt-tabs__tab {
+    background: none;
+    border: 0;
+    border-block-end: var(--lt-border-width-medium) solid transparent;
+    padding: var(--lt-space-3) var(--lt-space-4);
+    min-block-size: var(--lt-target-min);
+    font-size: var(--lt-density-font);
+    font-weight: var(--lt-weight-medium);
+    color: var(--lt-text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--lt-duration-fast) var(--lt-ease-standard),
+                border-color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-tabs__tab:hover { color: var(--lt-text-primary); }
+  .lt-tabs__tab[aria-selected="true"] {
+    color: var(--lt-action-text-on-light);
+    border-block-end-color: var(--lt-action-bg);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-tabs__panel { padding-block-start: var(--lt-space-5); }
+
+  .lt-steps {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    flex-wrap: wrap;
+    list-style: none;
+  }
+  .lt-steps__step {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    font-size: var(--lt-text-sm);
+    color: var(--lt-text-secondary);
+  }
+  .lt-steps__step::before {
+    content: counter(list-item);
+    display: grid;
+    place-items: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    flex: none;
+    border-radius: var(--lt-radius-full);
+    border: var(--lt-border-width-thin) solid var(--lt-border-interactive);
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    font-variant-numeric: tabular-nums;
+  }
+  .lt-steps__step[aria-current="step"] {
+    color: var(--lt-text-primary);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-steps__step[aria-current="step"]::before {
+    background: var(--lt-action-bg);
+    border-color: var(--lt-action-bg);
+    color: var(--lt-action-text);
+  }
+  /* A completed step is a solid green disc with a tick. The tick is two borders
+     on ::after rather than a gradient stripe: a single 45deg stripe across the
+     whole disc reads as a prohibition sign, not an achievement. If ::after is
+     ever unavailable the disc still reads as complete on its own. */
+  .lt-steps__step[data-complete] { position: relative; }
+  .lt-steps__step[data-complete]::before {
+    content: "";
+    background: var(--lt-success-bg);
+    border-color: var(--lt-success-bg);
+  }
+  .lt-steps__step[data-complete]::after {
+    content: "";
+    position: absolute;
+    /* centred inside the 1.5rem disc, nudged up 1px so the tick sits on the
+       optical centre rather than the geometric one */
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.4375rem;
+    inline-size: 0.625rem;
+    block-size: 0.3125rem;
+    border-inline-start: var(--lt-border-width-medium) solid var(--lt-white);
+    border-block-end: var(--lt-border-width-medium) solid var(--lt-white);
+    transform: rotate(-45deg);
+    pointer-events: none;
+  }
+  .lt-steps__sep {
+    inline-size: var(--lt-space-7);
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-default);
+  }
+
+/* -----------------------------------------------------------------------------
+   DIALOG
+   Native <dialog>, so the top layer, the backdrop and the focus trap come from
+   the platform. lt-elements.js adds focus return and backdrop dismissal.
+   -------------------------------------------------------------------------- */
+
+  /* The dialog takes .lt-panel and paints nothing of its own, same as
+     .lt-menu__list and for the same two reasons. FIXED 2026-07-28, both
+     halves measured in a headless probe rather than reasoned about:
+
+     1. It used to wrap its content in a .lt-card carrying border:0;padding:0
+        inline — a wrapper with every visible property switched off except the
+        one that broke it. The card still painted --lt-surface-panel while the
+        dialog painted --lt-surface-overlay. In the light scheme both are
+        white and nothing showed; in dark they are #DEDEDE and #FDFDFD, so
+        every dialog rendered a grey slab floating inside a white frame. The
+        wrapper is gone.
+     2. background: --lt-surface-overlay with color: --lt-text-primary is only
+        safe when the dialog happens to sit inside a panel. Authored at page
+        level in the dark scheme it is #FDFDFD under #EBEBEB ink: 1.09:1. The
+        card is scheme-independent and the ink is not — the 2026-07-27 split
+        again. A surface context settles both, and verify-tokens.py already
+        holds the panel to AA in every scheme.
+
+     What this costs: a dialog is now panel grey rather than near-white on a
+     dark page. It is the same surface every control in it already assumed. */
+  .lt-dialog {
+    max-inline-size: min(32rem, calc(100vw - var(--lt-space-8)));
+    max-block-size: calc(100vh - var(--lt-space-9));
+    padding: var(--lt-space-7);
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-lg);
+    box-shadow: var(--lt-shadow-overlay);
+  }
+
+  .lt-dialog__title {
+    font-size: var(--lt-text-lg);
+    line-height: var(--lt-leading-lg);
+    font-weight: var(--lt-weight-semibold);
+    margin-block-end: var(--lt-space-4);
+  }
+
+  .lt-dialog::backdrop {
+    background: var(--lt-surface-scrim);
+    /* backdrop-filter is progressive; without it the scrim alone is enough */
+    backdrop-filter: blur(2px);
+  }
+
+  .lt-dialog__body { color: var(--lt-text-secondary); }
+
+  .lt-dialog[open] {
+    animation: lt-dialog-in var(--lt-duration-base) var(--lt-ease-entrance);
+  }
+  @keyframes lt-dialog-in {
+    from { opacity: 0; translate: 0 -0.5rem; }
+    to   { opacity: 1; translate: 0 0; }
+  }
+
+
+/* -----------------------------------------------------------------------------
+   ROW ACTIONS MENU
+   The kebab. Presentation only; <lt-menu> in lt-elements.js owns the menu-button
+   keyboard and ARIA behaviour.
+
+   WHY IT IS A SYSTEM COMPONENT, decided 2026-07-28 with the quiet-danger tier.
+   The app rule it serves is "a row with two or more actions collapses to one
+   kebab, a row with one action keeps a quiet inline button". Hand-rolled, that
+   costs an app the full APG menu-button pattern (roving tabindex, arrow keys,
+   Home/End, Escape with focus return, light dismiss), a hit area that survives
+   compact density, and an overlay that is not clipped by the scrolling table
+   wrapper it sits inside. Every one of those is a system-level answer, so the
+   system owns it once.
+
+   THE OVERFLOW TRAP, which is why the list is fixed rather than absolute.
+   A row menu lives inside .lt-table-wrap, which is overflow: auto. An
+   absolutely positioned panel inside it is clipped by the wrapper and, in a
+   dense table, most of the menu is simply not on screen. A fixed element is
+   positioned against the viewport and is NOT clipped by an ancestor's overflow,
+   so the coordinates are computed from the trigger on open. Where the browser
+   has the popover API the list also takes the top layer, which additionally
+   puts it above sticky headers and any z-index an app has invented.
+
+   Deliberately NOT display: none here for the closed state. The UA sheet is
+   what hides a closed popover ([popover]:not(:popover-open)) and a hidden
+   attribute, and both live in the UA origin, so ANY author display declaration
+   on this element beats them and the menu hangs open. The display value is
+   therefore attached to [data-lt-open], which the element sets only while the
+   menu is showing.
+   -------------------------------------------------------------------------- */
+
+  /* Before the script upgrades it, the authored items are direct children and
+     render as a small stack of plain controls: every action still visible and
+     operable with no JS. That is the light-DOM bargain. */
+  lt-menu { display: inline-block; }
+
+  .lt-menu__list {
+    /* the UA popover sheet sets inset: 0 and margin: auto, which would stretch
+       the list across the viewport once only top and left are set from JS */
+    inset: auto;
+    margin: 0;
+    z-index: var(--lt-z-dropdown);
+    gap: 1px;
+    min-inline-size: 11rem;
+    max-inline-size: min(20rem, calc(100vw - var(--lt-space-7)));
+    max-block-size: min(24rem, calc(100vh - var(--lt-space-8)));
+    overflow: auto;
+    padding: var(--lt-space-2);
+    /* No background and no ink here ON PURPOSE. The element puts .lt-panel on
+       this list and lets the surface context paint it, which is the system's
+       own answer (put the class on the container, let components inherit) and
+       the only one that holds up in the dark scheme.
+
+       The tempting pair is background: var(--lt-surface-overlay) with
+       color: var(--lt-text-primary). Measured in the dark scheme, 2026-07-28:
+       the overlay resolves to #FDFDFD while page ink resolves to #EBEBEB,
+       because the overlay is a light card in every scheme and the ink follows
+       the scheme up to the shell ladder. That is 1.09:1 — the same shape of
+       defect as the alert/badge ink split of 2026-07-27, and a menu is the
+       last place to re-make it. Reading the panel context instead means the
+       ink, the borders, the fields and color-scheme all come from a set
+       verify-tokens.py already holds to AA in both schemes. */
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-md);
+    box-shadow: var(--lt-shadow-overlay);
+  }
+  .lt-menu__list[data-lt-open] {
+    display: grid;
+    position: fixed;
+  }
+
+  /* An item is a real <a> or <button>, so it keeps its own semantics, posts its
+     own form, and works with a middle click where it is a link. */
+  .lt-menu__item {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    inline-size: 100%;
+    /* the visible box may be shorter than a control; the hit area may not */
+    min-block-size: var(--lt-target-min);
+    padding: var(--lt-space-2) var(--lt-space-3);
+    background: none;
+    border: 0;
+    border-radius: var(--lt-radius-sm);
+    font: inherit;
+    font-size: var(--lt-density-font);
+    letter-spacing: inherit;
+    color: inherit;
+    text-align: start;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .lt-menu__item > svg,
+  .lt-menu__item > .lt-icon {
+    inline-size: var(--lt-icon-size);
+    block-size: var(--lt-icon-size);
+    flex: none;
+  }
+  .lt-menu__item:hover:not(:disabled) { background: var(--lt-action-bg-subtle); }
+  .lt-menu__item:disabled,
+  .lt-menu__item[aria-disabled="true"] { color: var(--lt-text-disabled); cursor: not-allowed; }
+
+  /* The quiet-danger tier again, one step further down: inside a menu the
+     boundary is the menu's own, so the item needs no outline of its own. Ink
+     and fill move together for the reason recorded on .lt-btn--danger-quiet. */
+  .lt-menu__item--danger { color: var(--lt-danger-text); }
+  .lt-menu__item--danger:hover:not(:disabled) {
+    background: var(--lt-danger-surface);
+    color: var(--lt-danger-on-surface);
+  }
+
+  /* The separator's whole job is to explain the gap it creates. It introduces
+     ~10px between two items that otherwise sit flush, so a rule too faint to
+     see leaves the group break reading as unexplained whitespace, and the menu
+     just looks badly spaced. Reported exactly that way on 2026-07-28.
+
+     --lt-border-interactive, and the reason is arithmetic. Computed against
+     the panel tones this list actually paints on:
+
+       --lt-border-subtle   grey-6 #D2D2D2   1.51 white   1.12 grey-5
+       --lt-border-default  grey-8 #A8A8A8   2.38 white   1.77 grey-5
+       --lt-border-interactive              >= 3.00 both, by policy
+
+     The first two are decorative-grade and neither survives the dark scheme's
+     grey-5 panel. --lt-border-interactive is the one border family the system
+     holds to 3:1 on every surface, and verify-tokens.py checks it there.
+     Strictly, SC 1.4.11 does not demand 3:1 of a group divider - the items are
+     readable without it - but a divider nobody can see is not a divider, and
+     this is the only token guaranteed visible on all four tones.
+
+     Full-bleed, cancelling the list's own padding, so it reads as a structural
+     break across the menu rather than a short line floating between two rows. */
+  .lt-menu__sep {
+    border: 0;
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-interactive);
+    margin-block: var(--lt-space-2);
+    margin-inline: calc(var(--lt-space-2) * -1);
+  }
+
+  /* Inside a table the kebab compacts to the accessibility floor,
+     automatically — no variant to remember, because every consumer with row
+     kebabs wants the same thing (decided 2026-07-28, from the first
+     consumer's S9 pass). At the default 36px control height the trigger's
+     dots ride visibly below a top-aligned row's first text line, reading as
+     misalignment down the whole actions column; at --lt-target-min the icon
+     centres on that first line and the hit area still meets SC 2.5.8.
+
+     Done by re-declaring the height TOKEN on the element rather than
+     hard-sizing the trigger box: the trigger keeps reading
+     --lt-control-height like every other control, so the smoke test's
+     "every control paints at its token" contract stays true inside the
+     cell, and everything that derives from the control height follows
+     together. An app that wants the full-size trigger back re-declares the
+     token on its own selector (e.g. .my-table lt-menu
+     { --lt-control-height: 2.25rem } to restore the comfortable height).
+
+     The coarse block below MUST follow this rule in source order: same
+     specificity, and it is what keeps the compact trigger honest on touch
+     hardware, where 24px under a gloved thumb is a support call. This is a
+     plain re-declaration from a different token, not the max(var(--x))
+     self-reference conformance.py bans as token-self-cycle. */
+  .lt-table lt-menu {
+    --lt-control-height: var(--lt-target-min);
+  }
+  @media (pointer: coarse) {
+    .lt-table lt-menu {
+      --lt-control-height: var(--lt-target-touch);
+    }
+  }
+
+
+/* -----------------------------------------------------------------------------
+   STATUS SELECT
+   The chip combobox. Presentation only; <lt-status-select> in lt-elements.js
+   owns the APG select-only-combobox keyboard and ARIA behaviour, wrapped
+   around a native <select> that stays in the page as the form value.
+
+   WHY IT IS A SYSTEM COMPONENT, decided 2026-07-28 from the first consumer's
+   rating matrices: Scott wants pickers whose closed face and option list
+   render real status chips — glyph + colour + word, the Linear/GitHub status
+   picker pattern. A native select cannot render markup in its face or its
+   options, and the moment the face is custom the whole APG combobox keyboard
+   contract comes with it, which is exactly the class of work lt-menu exists
+   to keep out of app hand-rolls.
+
+   TWO DECISIONS ON THE RECORD from the consumer's own iteration, so neither
+   is re-proposed:
+   - A FULL-FACE BADGE TINT ON THE CLOSED FACE WAS TRIED AND REJECTED as too
+     loud (Scott, 2026-07-28): a column of rating selects each painted in its
+     status surface out-shouted the data around it. The face stays a plain
+     field control; the chip INSIDE it is the colour, at chip size.
+   - The interim it replaces was a plain select with a status-accent glyph
+     overlaid at the start edge, state carried on a data-rating attribute.
+     This element renders the real chip instead and mirrors the value onto
+     its own data-value attribute for app CSS.
+
+   The face is field furniture, so it reads the field tokens and the select's
+   own chevron drawing; the floating list is .lt-menu__list's construction
+   again — .lt-panel for its surface, fixed position against the viewport so
+   .lt-table-wrap's overflow cannot clip it, display attached to
+   [data-lt-open] so the UA popover sheet keeps owning the closed state.
+   -------------------------------------------------------------------------- */
+
+  /* Before the script upgrades it, the authored child is a labelled native
+     <select class="lt-select">: it posts, it drops down, it just has no
+     chips. That is the light-DOM bargain again. */
+  lt-status-select { display: block; }
+
+  .lt-status-select__face {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: var(--lt-control-height);
+    min-block-size: var(--lt-target-min);
+    padding-inline: var(--lt-space-3) var(--lt-space-8);
+    background-color: var(--lt-field-bg);
+    color: var(--lt-field-text);
+    border: var(--lt-border-width-thin) solid var(--lt-field-border);
+    border-radius: var(--lt-radius-md);
+    font: inherit;
+    font-size: var(--lt-density-font);
+    letter-spacing: inherit;
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color var(--lt-duration-fast) var(--lt-ease-standard);
+    /* the same chevron pair .lt-select draws, so the upgraded face and the
+       degraded native select are the same control to a passing glance */
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - var(--lt-space-5)) center,
+      calc(100% - var(--lt-space-4) + 1px) center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+  /* :not([aria-invalid="true"]) is load-bearing, not tidiness. The hover
+     selector scores (0,3,0) against the invalid rule's (0,2,0), so without it
+     pointing at an invalid combobox repainted its danger border plain grey and
+     the field stopped looking wrong while it was still wrong. */
+  .lt-status-select__face:hover:not(:disabled):not([aria-invalid="true"]) {
+    border-color: var(--lt-border-strong);
+  }
+  /* The face is the control once the element upgrades, so it takes the invalid
+     boundary the native select can no longer show: the select is hidden, and
+     the .lt-select[aria-invalid] rule above paints an element nobody sees.
+     <lt-status-select> copies the attribute across at upgrade for exactly this
+     rule to catch (2026-07-29). Same tokens as the field rule, deliberately:
+     an invalid combobox and an invalid input must not read differently. */
+  .lt-status-select__face[aria-invalid="true"] {
+    border-color: var(--lt-danger-border);
+    border-width: var(--lt-border-width-medium);
+  }
+  .lt-status-select__face:disabled {
+    background-color: var(--lt-surface-subtle);
+    color: var(--lt-text-disabled);
+    cursor: not-allowed;
+  }
+  /* THE FACE IS AS WIDE AS ITS WIDEST OPTION, not as wide as the chip that
+     happens to be showing. A native select does this for free and everyone
+     relies on it: the control holds still while you change the selection, and
+     a column of them lines up.
+
+     A custom face does not, and the cost was real. Both consumers hit it and
+     both patched it the same wrong way — by pinning a width in app CSS, read
+     off whatever the database happened to contain that week ("sized to the
+     longest value, 13rem was greedy"). That constant is wrong the moment the
+     data changes, and the data is the one thing an app does not control.
+
+     So the element renders a hidden GHOST of every option into the same grid
+     cell as the live one, and the browser takes the max. No measurement, no
+     JS, no constant: it re-resolves on font load, density change, and whatever
+     the rows say today. Ghosts are aria-hidden and inert; the live chip paints
+     on top of them. --lt-field-max-width still caps the result, and the value
+     still clips rather than overflowing when something constrains it. */
+  .lt-status-select__value {
+    display: grid;
+    min-inline-size: 0;
+    overflow: hidden;
+  }
+  .lt-status-select__value > * {
+    grid-area: 1 / 1;
+    display: inline-flex;
+    align-items: center;
+    /* A badge option is one element and needs no gap; a taxonomy option is a
+       swatch followed by its label, and without this they touch on the closed
+       face. The option rows already carry the same gap. */
+    gap: var(--lt-space-3);
+    min-inline-size: 0;
+    white-space: nowrap;
+  }
+  .lt-status-select__value > [data-ghost] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .lt-status-select__list {
+    /* the UA popover sheet sets inset: 0 and margin: auto — same trap as
+       .lt-menu__list, same answer */
+    inset: auto;
+    margin: 0;
+    z-index: var(--lt-z-dropdown);
+    min-inline-size: 9rem;
+    max-inline-size: min(20rem, calc(100vw - var(--lt-space-7)));
+    max-block-size: min(24rem, calc(100vh - var(--lt-space-8)));
+    overflow: auto;
+    padding: var(--lt-space-2);
+    /* No background and no ink ON PURPOSE: the element puts .lt-panel on the
+       list and the surface context paints it. The overlay-plus-page-ink pair
+       measures 1.09:1 in the dark scheme — the full record is on
+       .lt-menu__list. */
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-md);
+    box-shadow: var(--lt-shadow-overlay);
+  }
+  .lt-status-select__list[data-lt-open] {
+    display: grid;
+    gap: 1px;
+    position: fixed;
+  }
+
+  .lt-status-select__option {
+    display: flex;
+    align-items: center;
+    gap: var(--lt-space-3);
+    min-block-size: var(--lt-target-min);
+    padding: var(--lt-space-2) var(--lt-space-3);
+    border-radius: var(--lt-radius-sm);
+    font-size: var(--lt-density-font);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .lt-status-select__option:hover { background: var(--lt-action-bg-subtle); }
+  /* the currently saved value, so reopening the list says where you are */
+  .lt-status-select__option[aria-selected="true"] { background: var(--lt-table-row-bg-selected); }
+  /* the keyboard cursor (aria-activedescendant target); declared after the
+     selected rule so moving the cursor visibly leaves the saved value */
+  .lt-status-select__option[data-lt-active] { background: var(--lt-action-bg-subtle); }
+
+
+/* -----------------------------------------------------------------------------
+   TOASTS
+   Stacked bottom-end. Danger toasts do not auto-dismiss, because a fault that
+   disappears on a timer is a fault nobody dealt with.
+   -------------------------------------------------------------------------- */
+
+  .lt-toast-stack {
+    position: fixed;
+    inset-block-end: var(--lt-space-5);
+    inset-inline-end: var(--lt-space-5);
+    z-index: var(--lt-z-toast);
+    display: grid;
+    gap: var(--lt-space-3);
+    max-inline-size: min(26rem, calc(100vw - var(--lt-space-7)));
+    pointer-events: none;
+  }
+
+  .lt-toast {
+    pointer-events: auto;
+    background: var(--lt-surface-overlay);
+    border: var(--lt-border-width-thin) solid;
+    border-inline-start-width: var(--lt-border-width-thick);
+    box-shadow: var(--lt-shadow-lg);
+    animation: lt-toast-in var(--lt-duration-base) var(--lt-ease-entrance);
+  }
+  .lt-toast > [data-dismiss] { margin-inline-start: auto; }
+
+  @keyframes lt-toast-in {
+    from { opacity: 0; translate: 0 0.75rem; }
+    to   { opacity: 1; translate: 0 0; }
+  }
+
+  /* Toast surfaces need their own background rather than the translucent status
+     tint, since they float over arbitrary content. */
+  .lt-toast.lt-alert--danger  { background: var(--lt-danger-surface); }
+  .lt-toast.lt-alert--warning { background: var(--lt-warning-surface); }
+  .lt-toast.lt-alert--success { background: var(--lt-success-surface); }
+  .lt-toast.lt-alert--info    { background: var(--lt-info-surface); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lt-dialog[open], .lt-toast { animation: none; }
+  }
+
+}  /* end lt.components */
+
+
+@layer lt.utilities {
+
+  .lt-numeric,
+  [data-lt-numeric] {
+    font-feature-settings: var(--lt-font-feature-numeric);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  .lt-mono {
+    font-family: var(--lt-font-mono);
+    font-feature-settings: var(--lt-font-feature-mono);
+  }
+
+  /* Visually hidden but available to assistive tech. Used for the accessible
+     names of icon-only controls and for live-region announcements. */
+  .lt-sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .lt-stack     { display: grid; gap: var(--lt-stack-gap); }
+  .lt-stack--sm { display: grid; gap: var(--lt-space-3); }
+  .lt-row       { display: flex; align-items: center; gap: var(--lt-space-3); flex-wrap: wrap; }
+  .lt-truncate  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+
+/* -----------------------------------------------------------------------------
+   FORCED COLOURS
+   Windows High Contrast Mode. Hand control to the system rather than fighting
+   it: the tokens already map to system colours, this just restores the borders
+   that carry meaning once backgrounds are overridden.
+   -------------------------------------------------------------------------- */
+
+@media (forced-colors: active) {
+  .lt-btn,
+  .lt-input,
+  .lt-select,
+  .lt-textarea,
+  .lt-affix { border: var(--lt-border-width-thin) solid ButtonBorder; }
+
+  .lt-btn--primary { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+
+  /* Forced colours discards the gradient-pair chevron, which left both the
+     native select and the upgraded face indistinguishable from a text input
+     (first consumer report, 2026-08-05). The url() marker survives where the
+     gradient cannot; the dark-palette variant is swapped in below. Both
+     controls are covered because they draw the same chevron on purpose. */
+  .lt-select,
+  .lt-status-select__face {
+    background-image: var(--lt-select-marker-forced-light);
+    background-position: calc(100% - var(--lt-space-4)) center;
+    background-size: 10px 6px;
+    background-repeat: no-repeat;
+  }
+
+  .lt-alert,
+  .lt-badge,
+  .lt-readout { border: var(--lt-border-width-thin) solid CanvasText; }
+
+  /* Forced colours discards the fill AND the inset edge derived from it, so the
+     swatch would dissolve into the surface and the code would be left floating.
+     The box is the component, so it gets a real border here. Nothing is lost
+     that mattered: the code was always the signal. */
+  .lt-swatch { border: var(--lt-border-width-thin) solid CanvasText; }
+
+  /* Forced colours drop every background, so the outlined danger tiers lose the
+     only thing separating them from a plain button. The border is what carries
+     them here, exactly as it does for the other controls above. */
+  .lt-btn--danger-quiet,
+  .lt-btn--danger-text { border: var(--lt-border-width-thin) solid ButtonBorder; }
+
+  .lt-menu__list { border: var(--lt-border-width-thin) solid CanvasText; }
+  .lt-menu__item:hover:not(:disabled) { background: Highlight; color: HighlightText; }
+
+  /* The chip carries a control, so its boundary is ButtonBorder rather than
+     the CanvasText an inert mark like .lt-badge takes - the distinction the
+     chip section argues for, made real here. */
+  .lt-chip { border: var(--lt-border-width-thin) solid ButtonBorder; }
+  .lt-chip__remove:hover { background: Highlight; color: HighlightText; }
+
+  .lt-filter__pop,
+  .lt-filter__sheet { border: var(--lt-border-width-thin) solid CanvasText; }
+  /* the pip is a subtle FILL, which forced colours discards outright, so the
+     count would vanish and the trigger would stop reporting its own state */
+  .lt-filter__pip { border: var(--lt-border-width-thin) solid CanvasText; }
+  /* same treatment as the selected tab below: idle underlines are transparent
+     and stay honoured, the current one takes the system selection colour */
+  .lt-filter__quickitem[aria-current="true"],
+  .lt-filter__quickitem[aria-current="page"],
+  .lt-filter__quickitem[aria-checked="true"] { border-block-end-color: Highlight; }
+
+  .lt-status-select__face { border: var(--lt-border-width-thin) solid ButtonBorder; }
+  /* This block is UNLAYERED, so it beats every rule inside @layer lt.components
+     no matter how specific they are. Without this line the rule above erased the
+     invalid boundary in forced colours entirely, which is the one mode where a
+     colour cue is already gone and the shape has to carry it. */
+  .lt-status-select__face[aria-invalid="true"] {
+    border: var(--lt-border-width-medium) solid LinkText;
+  }
+  .lt-status-select__list { border: var(--lt-border-width-thin) solid CanvasText; }
+  /* forced colours drop the subtle fills, so the keyboard cursor and the
+     hover need the system pair or the list reads as inert */
+  .lt-status-select__option:hover,
+  .lt-status-select__option[data-lt-active] { background: Highlight; color: HighlightText; }
+
+  .lt-state::before { forced-color-adjust: none; }
+
+  .lt-switch > input { border: var(--lt-border-width-thin) solid ButtonBorder; }
+  .lt-switch > input:checked { background: Highlight; }
+
+  .lt-tabs__tab[aria-selected="true"] { border-block-end-color: Highlight; }
+}
+
+/* The dark half of the forced-colours chevron pair. An SVG-as-image cannot
+   read currentColor or the forced palette, so the marker is pinned per tone:
+   prefers-color-scheme still reports the High Contrast theme's tone while
+   forced colours is active, which is the one signal available out here. */
+@media (forced-colors: active) and (prefers-color-scheme: dark) {
+  .lt-select,
+  .lt-status-select__face { background-image: var(--lt-select-marker-forced-dark); }
+}

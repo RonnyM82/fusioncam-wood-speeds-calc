@@ -1,0 +1,205 @@
+<!-- =========================================================================
+  Livetools Design System - starter UI glyphs (tier 1, 24 grid)
+  icons/lt/sprite.svg
+
+  The system-owned icon set: generic UI glyphs, promoted from the component
+  gallery's inline icons, which are the reference implementation of the icon
+  standard (ICONS-PROPOSAL.md, decided 2026-07-28).
+
+  The contract every symbol in this file honours, and verify-icons.py checks:
+    - viewBox is "0 0 24 24" (renders 16-24px via --lt-icon-size)
+    - every element paints through a layer class (lt-ic-*), never a literal
+      fill/stroke/opacity attribute
+    - integer coordinates, halves only for stroke centres, one decimal max
+    - reads in single ink: ink-only here, by construction
+
+  Usage: inline this file once per page (it is display-less via .lt-sprite),
+  then reference symbols:
+    <svg class="lt-icon" aria-hidden="true" focusable="false">
+      <use href="#lt-ic-add"/></svg>
+  Requires lt-components.css for the layer classes and .lt-icon sizing.
+  ========================================================================= -->
+<svg class="lt-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- add: the primary "new thing" affordance -->
+  <symbol id="lt-ic-add" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M12 5v14"/>
+    <path class="lt-ic-ink" d="M5 12h14"/>
+  </symbol>
+  <!-- settings: hub and cross-ticks -->
+  <symbol id="lt-ic-settings" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="3"/>
+    <path class="lt-ic-ink" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+  </symbol>
+  <!-- alert: the danger/error mark; pairs with words, never colour alone -->
+  <symbol id="lt-ic-alert" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+    <path class="lt-ic-ink" d="M12 8v4"/>
+    <path class="lt-ic-ink" d="M12 16h.01"/>
+  </symbol>
+  <!-- warning: the caution triangle -->
+  <symbol id="lt-ic-warning" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+    <path class="lt-ic-ink" d="M12 9v4"/>
+    <path class="lt-ic-ink" d="M12 17h.01"/>
+  </symbol>
+  <!-- success: check in a circle -->
+  <symbol id="lt-ic-success" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+    <path class="lt-ic-ink" d="m8 12 2.5 2.5L16 9"/>
+  </symbol>
+  <!-- info -->
+  <symbol id="lt-ic-info" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+    <path class="lt-ic-ink" d="M12 16v-4"/>
+    <path class="lt-ic-ink" d="M12 8h.01"/>
+  </symbol>
+  <!-- box: the empty-state crate -->
+  <symbol id="lt-ic-box" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M3 7h18v13H3z"/>
+    <path class="lt-ic-ink" d="M8 7V4h8v3"/>
+    <path class="lt-ic-ink" d="M9 13h6"/>
+  </symbol>
+
+  <!-- ===========================================================
+    STATUS GLYPHS  (added 2026-07-28, Scott Moyse)
+
+    A badge is colour plus a word today. Rule 3 asks for colour plus a
+    word plus an icon, and the first consumer's vocabulary collapses
+    fourteen application states onto the system's five severities, so
+    colour distinguishes far fewer states than the app actually has:
+    draft and retired are both grey, active and default are both green.
+    The glyph is what tells them apart, and it is the signal that
+    survives red-green colour vision deficiency, shop-floor glare and a
+    photocopy.
+
+    These are system-generic - a draft is a draft in any Livetools tool -
+    so they live in the lt set rather than an app's own.
+
+    Ink only, by construction. A badge sets its own ink from
+    --lt-*-on-surface and the glyph inherits it through currentColor, so
+    one drawing works on all five badge variants with no per-variant
+    rule and nothing to keep in step.
+
+    THE ACCEPTANCE TEST these were drawn against: rendered at
+    --lt-icon-size-xs (16px, the 24-grid floor) inside a badge, in single
+    ink, with --lt-icon-accent collapsed - which is exactly what an app
+    that pins nothing renders. Every pair has to be tellable apart there,
+    not at 24px on a white page. What that forced:
+
+      - the marks that separate check / dash-circle / slash are the
+        WHOLE glyph, not a detail added to a shared circle, because a
+        3-unit detail is 2px at the floor and a 1-unit one is invisible
+      - dash-circle keeps the circle and slash keeps the circle, but one
+        bar is horizontal and the other runs corner to corner at 45
+        degrees: at 16px the angle is the difference, and it reads
+      - check is a bare tick, never a tick in a circle, so it cannot be
+        confused with lt-ic-success above it in this file
+      - tilde is drawn full width with a 6-unit swing, because a shallow
+        wave at 16px is a straight line
+      - flask keeps its neck bar and its fill line, three units apart,
+        so the silhouette is not just a triangle
+
+    The role each carries in the first consumer, recorded so a second
+    consumer reaches for the same glyph rather than inventing one:
+      pencil      draft, seeded         check    active, signed off,
+      dash-circle retired, not suitable           ideal, default
+      slash       banned                bookmark reserved
+      tilde       capable               flask    experimental
+    =========================================================== -->
+
+  <!-- pencil: a draft, something started and not yet ruled on -->
+  <symbol id="lt-ic-pencil" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M4 20v-4L16 4l4 4L8 20Z"/>
+    <path class="lt-ic-ink" d="M13 7l4 4"/>
+  </symbol>
+  <!-- check: settled and in force. A BARE tick; the circled tick is
+       lt-ic-success and means an outcome, not a state. -->
+  <symbol id="lt-ic-check" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M4 13l5.5 5.5L20 6"/>
+  </symbol>
+  <!-- dash-circle: withdrawn. Ruled out by a decision, not forbidden. -->
+  <symbol id="lt-ic-dash-circle" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+    <path class="lt-ic-ink" d="M7.5 12h9"/>
+  </symbol>
+  <!-- slash: banned. The prohibition sign, and the only glyph here that
+       carries a 45-degree bar, which is what separates it from
+       dash-circle at 16px. -->
+  <symbol id="lt-ic-slash" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+    <path class="lt-ic-ink" d="M5.6 5.6l12.8 12.8"/>
+  </symbol>
+  <!-- bookmark: reserved. Held for a purpose, in use by nobody yet. -->
+  <symbol id="lt-ic-bookmark" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M6 3h12v18l-6-5-6 5Z"/>
+  </symbol>
+  <!-- tilde: capable. Allowed, not recommended - the "approximately"
+       sense, and the one glyph in the set with no enclosure.
+       The wave is drawn about y=12 so its ink band (~5.75-18.25 with
+       stroke) centres in the viewBox. The first cut was drawn about
+       y=15, which put the painted ink 3 grid units (2px at the 16px
+       floor) below centre - the "badge glyph reads low" report from the
+       first consumer (2026-07-28) measured back to exactly this
+       artwork, not to the badge's flex centring, which is correct. -->
+  <symbol id="lt-ic-tilde" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M3 12c3-7 6-7 9 0c3 7 6 7 9 0"/>
+  </symbol>
+  <!-- flask: experimental. Under trial, results not in. -->
+  <symbol id="lt-ic-flask" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M9 3v7l-5 9a1 1 0 0 0 1 2h14a1 1 0 0 0 1-2l-5-9V3"/>
+    <path class="lt-ic-ink" d="M8 3h8"/>
+    <path class="lt-ic-ink" d="M7 16h10"/>
+  </symbol>
+
+  <!-- ===========================================================
+    UI GLYPHS  (added 2026-08-10, with the filter component)
+
+    Four generic controls glyphs the set was missing. They are here
+    rather than in an app's own sprite for the same reason the status
+    glyphs are: a search field is a search field in any Livetools tool.
+
+    lt-ic-close EARNS ITS PLACE IN SHIPPED CODE, not just in the new
+    component: toast()'s dismiss button carries a literal multiplication
+    sign as its label today, which is a non-ASCII string literal reaching
+    the DOM. An inlined module takes the DOCUMENT's encoding, so on a page
+    with no charset declaration that character mis-decodes - the same
+    failure that rendered the angle field's degree sign as a mojibake pair
+    on the 2026-08-10 proof page. A sprite reference cannot mis-decode.
+
+    THE PAIR TO WATCH is close against lt-ic-add: an X is a rotated plus,
+    and at the 16px floor orientation is the whole difference. That is the
+    dash-circle/slash argument again (horizontal bar against a 45-degree
+    one), and it reads for the same reason - both marks span the full
+    glyph, so the angle is carried by 12 grid units rather than by a
+    detail. Do not add a third member to that family without re-running
+    the acceptance test.
+    =========================================================== -->
+
+  <!-- search: known-item lookup. Circle and handle, so the silhouette
+       cannot be confused with the funnel below. -->
+  <symbol id="lt-ic-search" viewBox="0 0 24 24">
+    <circle class="lt-ic-ink" cx="10" cy="10" r="6"/>
+    <path class="lt-ic-ink" d="M14.5 14.5L20 20"/>
+  </symbol>
+  <!-- filter: narrowing a set. The funnel, not the three-bar mark, which
+       at 16px is indistinguishable from a list or a menu. -->
+  <symbol id="lt-ic-filter" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M3 5h18l-7 8v6l-4 2v-8Z"/>
+  </symbol>
+  <!-- close: dismiss. One glyph for every dismissal - a drawer, a dialog,
+       a toast, a removable chip - the way lt-ic-check serves every
+       settled state. -->
+  <symbol id="lt-ic-close" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M6 6l12 12"/>
+    <path class="lt-ic-ink" d="M18 6L6 18"/>
+  </symbol>
+  <!-- chevron-down: this control opens something below it.
+       DRAW ANY SIBLING CHEVRON TO AGREE WITH THIS ONE. The select draws
+       the same mark through a url() marker in lt-tokens.css instead of a
+       <use>, because a background-image cannot reference a sprite, so the
+       two are the same glyph in two mechanisms. A trigger and a select
+       sitting in one bar must not point differently. -->
+  <symbol id="lt-ic-chevron-down" viewBox="0 0 24 24">
+    <path class="lt-ic-ink" d="M6 9l6 6 6-6"/>
+  </symbol>
+</svg>

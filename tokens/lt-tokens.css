@@ -1,0 +1,1543 @@
+/* =============================================================================
+   Livetools Design System, token layer
+   lt-tokens.css
+
+   Version 0.1.0  (2026-07-26)
+   Source of truth for every colour, size, space and timing value in a
+   Livetools application. Nothing downstream should contain a raw hex value,
+   a raw px font-size, or a hand-rolled shadow.
+
+   THE FOUR RULES
+   1. Never write a raw colour. Use a --lt-* token. If no token fits, the token
+      set is wrong; fix it here rather than working around it in a component.
+   2. Red is identity and danger only. Blue is the action colour. Livetools Red
+      on white measures 4.38:1, which fails WCAG 2.2 AA for normal text, so it
+      cannot carry body copy, small labels, or a normal-size button label.
+      DECIDED 2026-07-26 by Scott Moyse, after reviewing the three options in
+      red-decision.html. Blue acting and red identifying was chosen over a
+      red-action scheme. Do not quietly revert this: it also aligns with what
+      blue already means on a machine control panel, mandatory action.
+      ONE NAMED EXCEPTION, and it is named rather than general: ISO 513's
+      cast-iron K fill in section 3b, approved 2026-07-29 for that palette
+      alone and pinned by name in verify-tokens.py. Nothing inherits it.
+   3. Colour never carries meaning alone (WCAG 1.4.1). Around 8% of men have
+      red-green colour vision deficiency, and Livetools' users are mostly men
+      on a shop floor, so every status needs icon plus colour plus text. The
+      same rule is why .lt-swatch requires its code as content: the ISO fills
+      for K, N and S are one colour under deuteranopia (dE2000 5.4).
+   4. Interactive borders use --lt-border-interactive or darker. The lighter
+      grey border tokens measure under 3:1 and are decorative only, which does
+      not satisfy WCAG 2.2 SC 1.4.11 for a control boundary.
+
+   All contrast figures in the comments below were computed against the WCAG 2.2
+   relative-luminance formula, not estimated. Ramps were generated in OKLCH so
+   the steps are perceptually even, and every step is monotonically darker than
+   the one before it (light scheme) so a step number means the same thing in
+   every hue.
+
+   Target: WCAG 2.2 AA. WCAG 3.0 is still a Working Draft and APCA is still
+   exploratory, so AA is the bar we certify against.
+   ============================================================================= */
+
+
+/* -----------------------------------------------------------------------------
+   1. TYPEFACES
+   Inter substitutes for Univers Next Pro, which Livetools does not licence for
+   software. The brand manual scopes Univers to print and promotional work and
+   names Arial as the web-safe font, so Arial stays as the fallback.
+
+   The fallback @font-face below re-metrics Arial to match Inter's advance
+   widths, which stops the layout shifting when the webfont loads. size-adjust
+   was measured from Inter 4.1 and Liberation Sans (metric-compatible with
+   Arial) over a 66-glyph sample: 104.62%. Note that deriving it from the OS/2
+   xAvgCharWidth field instead gives 110.45%, which is wrong; that field is
+   unreliable across fonts. Re-measure if you upgrade Inter.
+   -------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/InterVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;          /* wght axis, measured from the font */
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/InterVariable-Italic.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Re-metricked Arial, so the fallback occupies the same space as Inter. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("Helvetica Neue"), local("Helvetica");
+  size-adjust: 104.62%;
+  ascent-override: 92.60%;
+  descent-override: 23.06%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/JetBrainsMono-Variable.woff2") format("woff2-variations");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+
+/* -----------------------------------------------------------------------------
+   2. PRIMITIVES
+   Raw values. Components should almost never reference these directly; use the
+   semantic tokens in section 3. The exception is a genuinely one-off decorative
+   surface, and even then prefer adding a semantic token.
+   -------------------------------------------------------------------------- */
+
+:root {
+
+  /* @generated:light  --  run generate-ramps.py, do not hand-edit */
+  /* Red. Brand identity and danger. Step 9 is Livetools Red exactly. */
+  /* Step 9 fails AA as normal text. Identity and large type only. */
+  --lt-red-1:       #FFFBF9;  /*  1.03:1  app background */
+  --lt-red-2:       #FFF5F3;  /*  1.07:1  subtle background */
+  --lt-red-3:       #FFECE9;  /*  1.14:1  component background */
+  --lt-red-4:       #FFE1DD;  /*  1.23:1  component hover */
+  --lt-red-5:       #FFD5CF;  /*  1.34:1  component active */
+  --lt-red-6:       #FFC5BD;  /*  1.50:1  subtle border */
+  --lt-red-7:       #FFABA1;  /*  1.81:1  decorative border */
+  --lt-red-8:       #FF7C70;  /*  2.51:1  strong border */
+  --lt-red-9:       #ED1C24;  /*  4.38:1  solid fill  UI only, 3:1 */
+  --lt-red-10:      #D9000A;  /*  5.31:1  fill hover / pressed  AA text */
+  --lt-red-11:      #D00F1B;  /*  5.58:1  text  AA text */
+  --lt-red-12:      #8D1F1D;  /*  8.95:1  text, high contrast  AA text */
+
+  /* Blue. The action colour. Step 9 is Livetools Blue exactly. */
+  --lt-blue-1:      #FBFDFF;  /*  1.02:1  app background */
+  --lt-blue-2:      #F5F9FF;  /*  1.06:1  subtle background */
+  --lt-blue-3:      #ECF1FF;  /*  1.13:1  component background */
+  --lt-blue-4:      #E1EAFF;  /*  1.21:1  component hover */
+  --lt-blue-5:      #D5E1FF;  /*  1.31:1  component active */
+  --lt-blue-6:      #C5D5FF;  /*  1.46:1  subtle border */
+  --lt-blue-7:      #AFC3FF;  /*  1.74:1  decorative border */
+  --lt-blue-8:      #89A5FF;  /*  2.36:1  strong border */
+  --lt-blue-9:      #1F1BAB;  /* 11.65:1  solid fill  AA text */
+  --lt-blue-10:     #180098;  /* 14.07:1  fill hover / pressed  AA text */
+  --lt-blue-11:     #17058F;  /* 14.44:1  text  AA text */
+  --lt-blue-12:     #07004B;  /* 18.91:1  text, high contrast  AA text */
+
+  /* Grey. The three brand greys land on steps 3, 11 and 12. */
+  /* Steps 6-8 are under 3:1 and are decorative rules only. */
+  --lt-grey-1:      #FDFDFD;  /*  1.02:1  app background */
+  --lt-grey-2:      #F8F8F8;  /*  1.06:1  subtle background */
+  --lt-grey-3:      #EEEEEE;  /*  1.16:1  component background */
+  --lt-grey-4:      #E6E6E6;  /*  1.25:1  component hover */
+  --lt-grey-5:      #DEDEDE;  /*  1.35:1  component active */
+  --lt-grey-6:      #D2D2D2;  /*  1.51:1  subtle border */
+  --lt-grey-7:      #C2C2C2;  /*  1.78:1  decorative border */
+  --lt-grey-8:      #A8A8A8;  /*  2.38:1  strong border */
+  --lt-grey-9:      #868686;  /*  3.64:1  solid fill  UI only, 3:1 */
+  --lt-grey-10:     #6C6C6C;  /*  5.25:1  fill hover / pressed  AA text */
+  --lt-grey-11:     #565554;  /*  7.44:1  text  AA text */
+  --lt-grey-12:     #2A2A2A;  /* 14.35:1  text, high contrast  AA text */
+
+  /* Amber. Warning. Not in the brand palette; added because the */
+  /* palette has no warning colour. Amber fills take DARK text. */
+  --lt-amber-1:     #FFFCF2;  /*  1.03:1  app background */
+  --lt-amber-2:     #FFF7E7;  /*  1.07:1  subtle background */
+  --lt-amber-3:     #FFEED4;  /*  1.14:1  component background */
+  --lt-amber-4:     #FFE5C1;  /*  1.22:1  component hover */
+  --lt-amber-5:     #FEDBAF;  /*  1.32:1  component active */
+  --lt-amber-6:     #F9CE97;  /*  1.47:1  subtle border */
+  --lt-amber-7:     #F8C37D;  /*  1.60:1  decorative border */
+  --lt-amber-8:     #F8B65A;  /*  1.78:1  strong border */
+  --lt-amber-9:     #F5A300;  /*  2.07:1  solid fill */
+  --lt-amber-10:    #E29100;  /*  2.54:1  fill hover / pressed */
+  --lt-amber-11:    #9E6600;  /*  4.82:1  text  AA text */
+  --lt-amber-12:    #724700;  /*  8.03:1  text, high contrast  AA text */
+
+  /* Green. Success, and running/normal on a machine panel. */
+  /* Step 9 is darkened until a white label passes. */
+  --lt-green-1:     #F7FFF8;  /*  1.02:1  app background */
+  --lt-green-2:     #EFFDF0;  /*  1.05:1  subtle background */
+  --lt-green-3:     #E1F9E4;  /*  1.11:1  component background */
+  --lt-green-4:     #D4F4D7;  /*  1.19:1  component hover */
+  --lt-green-5:     #C6EECA;  /*  1.27:1  component active */
+  --lt-green-6:     #B3E5B9;  /*  1.42:1  subtle border */
+  --lt-green-7:     #9AD8A2;  /*  1.65:1  decorative border */
+  --lt-green-8:     #72C07E;  /*  2.20:1  strong border */
+  --lt-green-9:     #0B8535;  /*  4.75:1  solid fill  AA text */
+  --lt-green-10:    #007424;  /*  5.96:1  fill hover / pressed  AA text */
+  --lt-green-11:    #00722A;  /*  6.10:1  text  AA text */
+  --lt-green-12:    #0D4A1E;  /* 10.42:1  text, high contrast  AA text */
+
+  --lt-red-fill-strong: #E6091C;  /*  4.75:1 with a white label */
+  
+
+  /* Shell ladder, the dark chrome. Present in both schemes so a component can
+     reference it without knowing which scheme is active. */
+  /* Dark shell. Chrome, nav and page background only. Content sits on a */
+  /* light panel, so the chromatic ramps above are used unchanged and every */
+  /* brand colour stays exact. Ratios are against the shell background. */
+  /* @generated:shell -- run generate-ramps.py, do not hand-edit */
+  /* Dark shell. Chrome, nav and page background only. Content sits on a */
+  /* light panel, so the chromatic ramps above are used unchanged and every */
+  /* brand colour stays exact. Ratios are against the shell background. */
+  --lt-shell-1:       #0D0D0D;  /*  1.05:1  deepest chrome */
+  --lt-shell-2:       #141414;  /*  1.00:1  shell background */
+  --lt-shell-3:       #1D1D1D;  /*  1.09:1  raised chrome */
+  --lt-shell-4:       #262626;  /*  1.22:1  chrome hover */
+  --lt-shell-5:       #303030;  /*  1.40:1  chrome active */
+  --lt-shell-6:       #3D3D3D;  /*  1.70:1  subtle shell border */
+  --lt-shell-7:       #4E4E4E;  /*  2.21:1  shell border */
+  --lt-shell-8:       #6C6C6C;  /*  3.51:1  strong shell border */
+  --lt-shell-9:       #8C8C8C;  /*  5.48:1  disabled on shell */
+  --lt-shell-10:       #A1A1A1;  /*  7.13:1  placeholder on shell */
+  --lt-shell-11:       #BEBEBE;  /*  9.91:1  muted text on shell */
+  --lt-shell-12:       #EBEBEB;  /* 15.45:1  text on shell */
+  
+  /* Status text for content sitting directly on shell surfaces: toasts,
+  /* hints and links on dark chrome. The shell is dark in BOTH schemes but
+  /* at two tones: grey-12 in the light scheme, shell-1 in the dark. Solved
+  /* against grey-12, the lighter and therefore binding tone; the darker
+  /* dark-scheme tones only raise the ratio. The first version solved
+  /* against the dark tone alone and landed at 3.75:1 out on the
+  /* light-scheme shell. Both ratios are printed so nobody has to guess
+  /* which tone a figure was measured against. */
+  --lt-shell-danger-text:   #FF5F56;  /* 4.80:1 on grey-12, 6.50:1 on shell-1 */
+  --lt-shell-warning-text:   #CB8810;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+  --lt-shell-success-text:   #53A762;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+  --lt-shell-info-text:   #708FFF;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+  
+  /* @end:shell */
+    
+
+  --lt-white: #FFFFFF;
+  --lt-black: #000000;
+  /* @end:light */
+
+  /* --- Spacing. 4px grid. Named by size, not by purpose. --- */
+  --lt-space-0:  0;
+  --lt-space-1:  0.125rem;  /*  2px */
+  --lt-space-2:  0.25rem;   /*  4px */
+  --lt-space-3:  0.5rem;    /*  8px */
+  --lt-space-4:  0.75rem;   /* 12px */
+  --lt-space-5:  1rem;      /* 16px */
+  --lt-space-6:  1.25rem;   /* 20px */
+  --lt-space-7:  1.5rem;    /* 24px */
+  --lt-space-8:  2rem;      /* 32px */
+  --lt-space-9:  2.5rem;    /* 40px */
+  --lt-space-10: 3rem;      /* 48px */
+  --lt-space-11: 4rem;      /* 64px */
+
+  /* --- Radius. The brand manual asks for straight lines and no elaborate
+     curvature, but its own graphic devices use rounded containers, pill
+     buttons and full circles. Squared but not sharp: small radii on controls,
+     pill reserved for the "Learn More" style CTA, full for the circular
+     brand arcs and avatars. --- */
+  --lt-radius-none: 0;
+  --lt-radius-sm:   2px;
+  --lt-radius-md:   4px;
+  --lt-radius-lg:   8px;
+  --lt-radius-xl:   12px;
+  --lt-radius-pill: 9999px;
+  --lt-radius-full: 50%;
+
+  /* --- Type families. --- */
+  --lt-font-sans: "Inter", "Inter Fallback", Arial, Helvetica, sans-serif;
+  --lt-font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
+
+  /* --- OpenType features, read off Inter 4.1 rather than guessed. ---
+     ss02 is Inter's "Disambiguation" set and bundles all three fixes that
+     matter for engineering data: slashed zero, tailed lowercase l, and a
+     serifed capital I. tnum is tabular figures.
+     Apply --lt-font-feature-text globally, and --lt-font-feature-numeric to
+     anything where digits must line up in a column: table cells, number
+     inputs, calculator output, part numbers. */
+  --lt-font-feature-text:    "ss02" 1;
+  --lt-font-feature-numeric: "ss02" 1, "tnum" 1;
+
+  /* Mono needs its OWN feature list. JetBrains Mono has no tnum (it is
+     monospace, so figures are already fixed-width) and its ss02 is a different
+     feature from Inter's, so reusing the numeric token above would switch on
+     the wrong thing. It does have a slashed zero, which is all we need.
+     x-height/upm is 0.550 against Inter's 0.546, so the two sit inline together
+     without a size adjustment. */
+  --lt-font-feature-mono: "zero" 1;
+
+  /* --- Weights. Inter's wght axis runs 100-900; these are the five we use. --- */
+  --lt-weight-regular:  400;
+  --lt-weight-medium:   500;
+  --lt-weight-semibold: 600;
+  --lt-weight-bold:     700;
+  --lt-weight-black:    900;   /* headline only, echoes the logo's weight */
+
+  /* --- Type scale. 14px base, the productive-UI convention, with 16px
+     available for reading-length prose. Each size ships with its line-height
+     so the pair cannot drift apart. --- */
+  --lt-text-2xs:      0.6875rem; /* 11px */  --lt-leading-2xs:      1rem;      /* 16px */
+  --lt-text-xs:       0.75rem;   /* 12px */  --lt-leading-xs:       1rem;      /* 16px */
+  --lt-text-sm:       0.8125rem; /* 13px */  --lt-leading-sm:       1.125rem;  /* 18px */
+  --lt-text-base:     0.875rem;  /* 14px */  --lt-leading-base:     1.25rem;   /* 20px */
+  --lt-text-md:       1rem;      /* 16px */  --lt-leading-md:       1.5rem;    /* 24px */
+  --lt-text-lg:       1.125rem;  /* 18px */  --lt-leading-lg:       1.5rem;    /* 24px */
+  --lt-text-xl:       1.25rem;   /* 20px */  --lt-leading-xl:       1.75rem;   /* 28px */
+  --lt-text-2xl:      1.5rem;    /* 24px */  --lt-leading-2xl:      2rem;      /* 32px */
+  --lt-text-3xl:      2rem;      /* 32px */  --lt-leading-3xl:      2.5rem;    /* 40px */
+  --lt-text-4xl:      2.5rem;    /* 40px */  --lt-leading-4xl:      3rem;      /* 48px */
+  --lt-text-5xl:      3.25rem;   /* 52px */  --lt-leading-5xl:      3.75rem;   /* 60px */
+
+  /* 24px regular, or 18.66px bold, is the WCAG threshold for "large text",
+     which is the point at which Livetools Red becomes usable on white. Keep
+     this token next to any red text decision. */
+  --lt-text-large-threshold: 1.5rem; /* 24px */
+
+  /* --- Motion. Restrained. Every consumer must honour prefers-reduced-motion;
+     see section 7. --- */
+  --lt-duration-instant: 0ms;
+  --lt-duration-fast:    120ms;
+  --lt-duration-base:    180ms;
+  --lt-duration-slow:    280ms;
+  --lt-ease-standard:    cubic-bezier(0.2, 0, 0.38, 1);
+  --lt-ease-entrance:    cubic-bezier(0, 0, 0.38, 1);
+  --lt-ease-exit:        cubic-bezier(0.2, 0, 1, 1);
+
+  /* --- Elevation. Flat brand, so layering comes from borders first and a
+     shadow only where something genuinely floats above the page. --- */
+  --lt-shadow-none: none;
+  --lt-shadow-sm:   0 1px 2px rgb(0 0 0 / 0.06);
+  --lt-shadow-md:   0 2px 4px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --lt-shadow-lg:   0 8px 16px rgb(0 0 0 / 0.10), 0 2px 4px rgb(0 0 0 / 0.06);
+  --lt-shadow-overlay: 0 16px 32px rgb(0 0 0 / 0.16);
+
+  --lt-border-width-thin:   1px;
+  --lt-border-width-medium: 2px;
+  --lt-border-width-thick:  3px;
+
+  /* --- Layering. --- */
+  --lt-z-base:     0;
+  --lt-z-sticky:   100;
+  --lt-z-dropdown: 200;
+  --lt-z-overlay:  300;
+  --lt-z-modal:    400;
+  --lt-z-toast:    500;
+
+  /* --- Minimum hit targets. 24px is the WCAG 2.2 AA floor (SC 2.5.8).
+     44px is the AAA / touch figure (SC 2.5.5) and what a kiosk should use. --- */
+  --lt-target-min:   24px;
+  --lt-target-touch: 44px;
+
+  /* --- The two controls whose box is a fixed glyph rather than a density
+     step: the checkbox/radio square and the switch track. They are named so
+     that anything aligning to them - a hint line under a checkbox, say -
+     computes from the same number the control draws itself with, instead of
+     repeating a literal that then drifts. Density does not move them; the
+     .lt-check and .lt-switch labels carry the hit area, and both clear
+     --lt-target-min through padding. --- */
+  --lt-check-size:    1.125rem;  /* 18px */
+  --lt-switch-width:  2.5rem;    /* 40px */
+  --lt-switch-height: 1.375rem;  /* 22px */
+
+  /* The swatch is the third fixed glyph box, and named for the same reason:
+     a table cell sizing its column to a swatch, or a picker aligning one
+     against a chip, computes from this number instead of repeating 22px.
+     22px clears --lt-text-2xs with room and matches the switch track, so a
+     swatch and a switch in the same row are the same height. It is the
+     MINIMUM inline size, not a fixed width: one character is a square and a
+     longer code grows into a rectangle, because P and P2.1 are the same
+     component. Non-interactive, so --lt-target-min does not apply. */
+  --lt-swatch-size: 1.375rem;    /* 22px */
+
+  /* How far the swatch's inset edge is mixed from its own fill toward the
+     surface's --lt-text-primary. A domain fill does not clear the 3:1
+     graphical floor against every surface it can land on (yellow on a light
+     panel, mid-tones on the dark table-header band), and the alternative was
+     a second token per colour per scheme. Mixing toward the ink darkens the
+     edge on light surfaces and lifts it on dark ones, which is exactly what a
+     square needs to keep its corners in both schemes.
+
+     50% is measured, not chosen: verify-tokens.py sweeps every ISO fill
+     against every surface either scheme can put behind it — 192 fill/surface
+     pairs — and the highest ratio at which all eight clear 3:1 is 57%, bound by
+     yellow on a table header inside a panel (grey-4) at 3.02. 50% takes the
+     same headroom over the floor that generate-ramps.py's 4.80 takes over 4.5
+     — yellow lands at 3.54 — and "half the fill, half the ink" is a rule
+     somebody can hold in their head.
+     The two extension roots added 2026-07-30 grew that sweep from 144 pairs at
+     six fills to 192 at eight, and the ceiling came back unmoved: 57% is still
+     the limit and yellow on the panel table header is still what binds it. W and
+     O clear with room at 5.18 and 5.35 against their own worst surface, which
+     for both of them is --lt-surface-shell in the light scheme.
+     The consumer's original 82% is what this replaces: it looked right and
+     left yellow's edge at 1.84:1, failing for the one colour that needed the
+     edge most. */
+  --lt-swatch-edge-mix: 50%;
+}
+
+
+/* -----------------------------------------------------------------------------
+   3. SEMANTIC TOKENS
+   This is the layer components consume. A component asks for
+   --lt-action-bg, never --lt-blue-9, so retheming happens here and nowhere else.
+   -------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --lt-surface-page:     var(--lt-white);
+  --lt-surface-subtle:   var(--lt-grey-2);
+  /* The panel is where work happens: forms, tables, results, controls. It stays
+     LIGHT in every scheme, which is what lets brand blue and brand red keep their
+     exact values instead of being lifted to survive a dark background. */
+  --lt-surface-panel:    var(--lt-panel-bg);
+  /* The shell is brand chrome: top bars, nav, hero bands. Dark in both schemes,
+     matching the manual, whose website and EDM samples both use a dark header. */
+  --lt-surface-shell:    var(--lt-grey-12);
+  --lt-text-on-shell:    var(--lt-grey-3);
+  --lt-text-on-shell-muted: var(--lt-grey-8);
+  --lt-border-on-shell:  var(--lt-grey-10);
+  --lt-surface-overlay:  var(--lt-white);
+  --lt-surface-scrim:    rgb(42 42 42 / 0.55);
+
+  /* Text. Every one of these passes AA on --lt-surface-page. */
+  --lt-text-primary:     var(--lt-grey-12);   /* 14.35:1 */
+  --lt-text-secondary:   var(--lt-grey-11);   /*  7.44:1 */
+  --lt-text-placeholder: var(--lt-grey-10);   /*  5.25:1 */
+  --lt-text-disabled:    var(--lt-grey-9);    /*  3.64:1, non-text use only */
+  --lt-text-on-fill:     var(--lt-white);
+  --lt-text-inverse:     var(--lt-grey-3);
+  --lt-text-link:        var(--lt-blue-11);
+  --lt-text-link-hover:  var(--lt-blue-12);
+
+  /* Borders. Decorative rules may be light; anything that defines a control
+     boundary must be --lt-border-interactive or darker to satisfy SC 1.4.11. */
+  --lt-border-subtle:      var(--lt-grey-5);
+  --lt-border-default:     var(--lt-grey-7);
+  --lt-border-interactive: var(--lt-grey-9);   /* 3.64:1, the minimum for a control */
+  --lt-border-strong:      var(--lt-grey-11);
+
+  /* Action. Blue, not red. */
+  --lt-action-bg:            var(--lt-blue-9);
+  --lt-action-bg-hover:      var(--lt-blue-10);
+  --lt-action-bg-active:     var(--lt-blue-12);
+  --lt-action-bg-subtle:     var(--lt-blue-3);
+  --lt-action-text:          var(--lt-white);
+  --lt-action-text-on-light: var(--lt-blue-11);
+  --lt-action-border:        var(--lt-blue-9);
+
+  /* Secondary action: outlined, neutral. */
+  --lt-action-secondary-bg:       transparent;
+  --lt-action-secondary-bg-hover: var(--lt-grey-3);
+  --lt-action-secondary-text:     var(--lt-grey-12);
+  --lt-action-secondary-border:   var(--lt-border-interactive);
+
+  /* Brand. Identity surfaces only: logo lockups, brand bars, the circular arc
+     devices, large display type. Do NOT reach for this to style a control. */
+  /* Brand. Identity surfaces only: logo lockups, brand bars, the circular arc
+     devices, large display type. Do NOT reach for these to style a control.
+
+     These are pinned to the literal brand values rather than aliased to a ramp
+     step, because the dark scheme lifts blue step 9 to #4F6AF0 so it can carry a
+     white label against a dark surface. A logo must not shift with the theme, so
+     identity does not follow the ramp. */
+  --lt-brand-red:        #ED1C24;   /* PMS 185C  */
+  --lt-brand-blue:       #1F1BAB;   /* PMS 2736C */
+  --lt-brand-grey:       #565554;   /* PMS 4294C */
+  --lt-brand-red-on:     var(--lt-white);  /* only at >=24px regular / >=18.66px bold */
+
+  /* Status. Always paired with an icon and a text label, never colour alone. */
+  --lt-danger-bg:       var(--lt-red-fill-strong);
+  --lt-danger-bg-hover: var(--lt-red-10);
+  --lt-danger-surface:  var(--lt-red-2);
+  --lt-danger-border:   var(--lt-red-9);
+  --lt-danger-text:     var(--lt-red-11);
+  --lt-danger-on-fill:  var(--lt-white);
+
+  --lt-warning-bg:      var(--lt-amber-9);
+  --lt-warning-surface: var(--lt-amber-2);
+  --lt-warning-border:  var(--lt-amber-9);
+  /* amber-12, not amber-11. Warning is the one status whose step-11 text misses
+     AA on its own surface: #9E6600 on amber-3 #FFEED4 is 4.23:1. Danger,
+     success and info all clear it at step 11 (4.89, 5.49, 12.78). The dark
+     scheme already reached for step 12 here; this makes light agree. */
+  --lt-warning-text:    var(--lt-amber-12);
+  --lt-warning-on-fill: var(--lt-grey-12);   /* dark on amber, per ANSI CAUTION */
+
+  --lt-success-bg:      var(--lt-green-9);
+  --lt-success-surface: var(--lt-green-2);
+  --lt-success-border:  var(--lt-green-9);
+  --lt-success-text:    var(--lt-green-11);
+  --lt-success-on-fill: var(--lt-white);
+
+  /* STATUS ACCENT: a status colour used as text or as a dot on a NEUTRAL
+     surface (panel or page), where there is no coloured background to sit on.
+     This is a different job from --lt-*-text, which is tuned for text on the
+     matching --lt-*-surface. Getting the two confused is what made a "low
+     stock" chip read as brown: amber-11/12 are tuned to be legible on amber-3,
+     and out on plain grey they lose their hue and just look muddy.
+
+     DECISION 2026-07-27, Scott Moyse. Danger and warning use the vivid step-9
+     fill tones, and they do NOT meet WCAG 2.2 AA as text. This was chosen with
+     the numbers in hand, after viewing both rows side by side on a panel and on
+     shell chrome:
+
+       --lt-danger-accent  red-9   #ED1C24   4.38 white  3.26 grey-5
+       --lt-warning-accent amber-9 #F5A300   2.07 white  1.54 grey-5
+
+     Rejected: #C4000A and #9E4A00, the most chromatic tones that DO clear 4.5:1
+     on both panel tones. They were judged too muddy, and the warning tone read
+     brown rather than orange, which is the complaint the accents existed to fix
+     in the first place. The trade is legibility for hue fidelity, made
+     deliberately and with the failing ratios known.
+
+     What this costs, so nobody has to rediscover it: amber at 1.54:1 on the
+     grey-5 panel the dark scheme uses is below the 3:1 graphical-object floor as
+     well as the 4.5:1 text floor. Treat these two as decorative reinforcement of
+     a status that is ALREADY carried by an icon and a word (rule 3), never as
+     the only signal, and never as the sole carrier of small body text. Success
+     and info are unchanged and still clear AA on both tones. */
+  --lt-danger-accent:  var(--lt-red-9);    /* 4.38 white, 3.26 grey-5, FAILS AA, see above */
+  --lt-warning-accent: var(--lt-amber-9);  /* 2.07 white, 1.54 grey-5, FAILS AA, see above */
+  --lt-success-accent: var(--lt-green-11);  /* 6.10 / 4.54 */
+  --lt-info-accent:    var(--lt-blue-9);    /* 11.65 / 8.66 */
+
+  /* STATUS ON SURFACE: ink and edge for content sitting ON its own status
+     surface, the alert, badge and toast case. The other half of the accent
+     above: accent is status colour on neutral grey, this is status colour on
+     the matching --lt-*-surface.
+
+     These are deliberately declared ONCE and never overridden per scheme,
+     because --lt-*-surface is itself the same value in every scheme: an alert is
+     a light card whether the page around it is light or dark, exactly like
+     .lt-panel. Ink on a surface that does not change must not change either.
+
+     ADDED 2026-07-27. --lt-*-text was doing two incompatible jobs, and the
+     second one was breaking the first. It is the ink for a field error or a hint
+     sitting on the PAGE, so the dark scheme correctly lifts it to the shell
+     tones for legibility on dark chrome. Alerts and badges were reading the same
+     token while keeping their light surface, so in dark mode every one of them
+     put a lifted, near-pastel tone on a pale surface:
+
+       danger  #EA4841 on #FFECE9  3.35     info  #5D7AF0 on #ECF1FF  3.38
+       warning #B47500 on #FFEED4  3.36     success #3E934F on #E1F9E4  3.44
+
+     all below the 4.5:1 they clear in the light scheme. Splitting the token
+     fixes all four and leaves the field-error job untouched. Measured on the
+     status surfaces, which are scheme-independent, so one figure each. */
+  --lt-danger-on-surface:  var(--lt-red-11);    /*  4.89 on red-2    */
+  --lt-warning-on-surface: var(--lt-amber-12);  /*  7.04 on amber-2  */
+  --lt-success-on-surface: var(--lt-green-11);  /*  5.49 on green-2  */
+  --lt-info-on-surface:    var(--lt-blue-11);   /* 12.78 on blue-2   */
+
+  --lt-info-bg:      var(--lt-blue-9);
+  --lt-info-surface: var(--lt-blue-3);
+  --lt-info-border:  var(--lt-blue-9);
+  --lt-info-text:    var(--lt-blue-11);
+  --lt-info-on-fill: var(--lt-white);
+
+  /* Icon accent. A slot, not a colour: the system ships no icon-accent hue
+     of its own. It defaults to currentColor, so an app that pins nothing
+     renders icons exactly as the single-ink gate certifies them, and each
+     app pins its own brand hue in its app-tokens.css (the sanctioned home
+     for brand literals, exempt in conformance.py like lt-tokens.css).
+
+     DECIDED 2026-07-28 by Scott Moyse (ICONS-PROPOSAL.md, D2 and D5): the
+     accent marks the machined surface and the engagement in domain icon
+     sets; it is reinforcement of geometry that already reads in single ink,
+     never the signal. Livetools action blue was considered and set aside so
+     icon accents can never read as links.
+
+     Evolute pins #2F8DCB (confirmed by Scott the same day): 3.62 on white,
+     4.65 on #1D1D1D, 3.96 / 5.36 on the shells; 2.69 on the dark-scheme
+     panel grey-5, below the 3:1 graphical floor — the same recorded
+     hue-fidelity trade as the danger/warning accents, with same-hue
+     #0082D5 (3.03 on grey-5) on file if compliance is ever preferred. */
+  --lt-icon-accent: currentColor;
+
+  /* Focus. One ring, everywhere, always visible. Two-tone so it survives on
+     both light and dark surfaces. */
+  --lt-focus-ring-color:  var(--lt-blue-9);
+  --lt-focus-ring-offset: var(--lt-white);
+  --lt-focus-ring-width:  var(--lt-border-width-medium);
+  --lt-focus-ring-gap:    2px;
+
+  /* Theme knobs for the dark scheme. Both themes darken, but not to the same
+     place: commercial keeps a slightly lifted page and bright panels, the
+     showroom under low light; operational drops the page to the deepest chrome
+     and mutes the panels, the HMI night shift. The dark blocks read these
+     rather than hardcoding a single dark. */
+  --lt-theme-dark-page:   var(--lt-shell-2);
+  --lt-theme-dark-subtle: var(--lt-shell-3);
+  --lt-theme-dark-panel:  var(--lt-grey-2);
+  --lt-theme-dark-panel-border-i:    var(--lt-grey-9);
+  --lt-theme-dark-panel-placeholder: var(--lt-grey-10);
+
+  /* Panel knobs. The panel context reads these, and the dark scheme retunes
+     them as a set. A panel is a surface, and a surface is a background plus the
+     text, border and weight values that hold up on it, so they travel together. */
+  --lt-panel-bg:          var(--lt-white);
+  --lt-panel-placeholder: var(--lt-grey-10);
+  --lt-panel-border-i:    var(--lt-grey-9);
+  --lt-panel-weight:      var(--lt-weight-regular);
+  --lt-panel-danger-text:  var(--lt-red-11);
+  /* amber-12 for the same reason as --lt-warning-text above: amber-11 on the
+     amber-3 warning surface is 4.23:1 and misses AA. The dark scheme already
+     used step 12 here. */
+  --lt-panel-warning-text: var(--lt-amber-12);
+  --lt-panel-success-text: var(--lt-green-11);
+
+  /* Fields. Inputs read this, never --lt-surface-page. An input following the
+     page surface turns into a dark well inside a light card the moment the
+     scheme flips, which is exactly what happened. */
+  --lt-field-bg:     var(--lt-white);
+  --lt-field-text:   var(--lt-grey-12);
+  --lt-field-border: var(--lt-border-interactive);
+  /* the affix is the unit suffix or prefix attached to an input: mm, rpm,
+     mm/min. It is part of the field, so it takes field-family tokens, never the
+     page's sunken surface, which is exactly the mistake that turned the unit
+     boxes near-black inside a light card. */
+  --lt-field-affix-bg:   var(--lt-grey-3);
+  --lt-field-affix-text: var(--lt-grey-11);
+
+  /* The select's dropdown marker for forced colours (Windows High Contrast),
+     added 2026-08-10 from the first consumer's report: forced colours
+     discards the gradient-pair chevron (backgrounds drop unless they are
+     url() images), so every select rendered as a plain bordered rectangle,
+     indistinguishable from a text input, on exactly the machines this file
+     says matter. A url() SVG survives. currentColor cannot reach into an
+     SVG-as-image, so the glyph colour is literal - a hex is this file's job -
+     and lt-components.css pairs the two to the forced palette's tone via
+     prefers-color-scheme, the documented pattern for this gap. The %23 is a
+     URL-encoded #. Custom High Contrast themes with a mid-tone canvas could
+     mismatch either pin; the stock Windows themes are all firmly light or
+     dark, and a wrong-tone chevron degrades to exactly today's behaviour,
+     invisible, never to unreadable. */
+  --lt-select-marker-forced-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23000000' stroke-width='1.6'/%3E%3C/svg%3E");
+  --lt-select-marker-forced-dark:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23FFFFFF' stroke-width='1.6'/%3E%3C/svg%3E");
+
+  /* How wide a labelled field's control may grow (consumed by
+     lt-components.css on every control kind inside .lt-field: input,
+     select, textarea, input-group). `none` by default - controls fill
+     their column, which is right inside .lt-form-grid, dialogs and other
+     bounded layouts. An app whose forms sit in wide panels pins a cap
+     once, in its app layer:
+
+         :root { --lt-field-max-width: 26rem; }
+
+     and releases individual fields by re-declaring the token on them
+     (a full-width notes field: .my-notes { --lt-field-max-width: none }).
+     The token exists because the first consumer hand-rolled this cap as
+     .lt-input/.lt-textarea selectors, selects fell through to their 100%
+     default, and a yes/no dropdown rendered 700px wide (2026-07-28).
+     Every app would re-make that mistake: whoever owns the cap must own
+     the complete list of control kinds, and that is the system. */
+  --lt-field-max-width: none;
+
+  /* Data display */
+  --lt-table-header-bg:    var(--lt-grey-3);
+  --lt-table-row-bg:       var(--lt-surface-page);
+  --lt-table-row-bg-alt:   var(--lt-grey-2);
+  --lt-table-row-bg-hover: var(--lt-blue-2);
+  --lt-table-row-bg-selected: var(--lt-blue-3);
+  --lt-table-border:       var(--lt-border-subtle);
+
+  /* Body defaults */
+  --lt-font-body:    var(--lt-font-sans);
+  --lt-font-size-body: var(--lt-text-base);
+  --lt-leading-body: var(--lt-leading-base);
+}
+
+
+/* -----------------------------------------------------------------------------
+   3b. DOMAIN PALETTES
+   A THIRD JOB FOR COLOUR, added 2026-07-29 from the Evolute tool-manager's ISO
+   513 round. The system had two kinds of colour and a domain taxonomy is
+   neither of them:
+
+     brand identity   who we are          logotype, brand bars, arcs
+     status severity  how something IS    danger, warning, success, info
+     domain palette   WHAT something IS   an externally-fixed trade taxonomy
+
+   The distinction is not academic. Status colour is ours to choose and we tune
+   it for legibility. A domain palette's hues are normally fixed OUTSIDE this
+   system by a standards body or a trade convention, and where they are, our job
+   is only to certify digital values for them. That is why these are literals
+   rather than ramp steps, and why generate-ramps.py does not produce them: the
+   generator derives ramps from brand inputs, and none of these hues is ours to
+   derive.
+
+   THAT CLAIM IS NOT UNIFORM ACROSS A PALETTE, and since 2026-07-30 this section
+   proves it. The ISO 513 entry below now carries eight fills: the six roots the
+   trade fixed, and two EXTENSION ROOTS, W and O, added by Scott Moyse because
+   the consumer needed codes for wood and for plastics and nobody outside Evolute
+   fixes a colour for either one. W's brown and O's purple are Evolute's own
+   choice. Certifying a value the trade did NOT fix is a weaker claim than
+   certifying one it did: for P through H this file can say the hue is the
+   industry's and only the number is ours, while for W and O the hue is ours as
+   well, and all certification establishes there is that the choice is legible
+   against its ink and separable from its neighbours. An extension root clears
+   exactly the same measured floors as a root that was handed to us. What it
+   cannot borrow is that root's authority, so it must be labelled as an extension
+   wherever it is documented, and nobody should quote its fill as though the
+   trade stood behind it.
+
+   THE CONTRACT, which every domain palette in this section obeys:
+
+   1. FILL + INK, nothing else. No surface, border or text tokens, and no
+      12-step ramp. A domain palette colours a code box and does no other job.
+      Add a ramp only when something genuinely needs domain-hued surfaces, and
+      argue it then — an orange ramp shipped "for completeness" is how orange
+      becomes a fifth status.
+   2. NEVER THE SOLE SIGNAL, and this one is measured, not assumed. Under
+      Brettel protanopia simulation the fills for K and W converge to
+      dE2000 2.1, the closest pair this palette has ever carried, and under
+      deuteranopia O and P converge to 4.7 while K, N and S still smear into
+      one olive at 5.4 (#7C6D1E, #736733, #887700). SKILL.md's rule 3 says
+      colour never carries meaning alone; here the numbers say a domain fill
+      cannot carry meaning alone even in principle. So .lt-swatch requires its
+      code as content and there is no empty-swatch variant, no colour-only
+      legend key and no bare dot. The letter is the signal; the colour is
+      recognition speed. The extension roots added 2026-07-30 made this
+      argument sharper rather than different: at 2.1 a protanope sees cast iron
+      and wood as one colour, and the K and the W are the whole of what tells
+      them apart.
+   3. OUTSIDE THE STATUS VOCABULARY. A domain fill is never read as severity,
+      because by (2) it never appears without a taxonomy code on it, and a
+      status is never a bare colour either (it carries a glyph and a word).
+      The two cannot be confused because neither one ever speaks alone.
+   4. CERTIFIED HERE, by verify-tokens.py, which is the argument for the
+      palette living upstream at all: the first consumer solved these by hand
+      because the checker is not vendored into a consumer app.
+
+   --------------------------------------------------------------------------
+   ISO 513 workpiece material groups, and two extension roots.
+   Requested by the Evolute tool-manager 2026-07-29; values certified here.
+   Extension roots W and O added 2026-07-30 by Scott Moyse.
+
+   Six of the eight roots are ISO 513's own. ISO 513 has coloured those six for
+   decades and the whole trade reads them — P blue, M yellow, K red, N green,
+   S orange, H grey. Every insert box and catalogue page in the industry carries
+   them, and a machinist recognises the colour before they read the letter. The
+   standard assigns the hues but defines NO DIGITAL VALUES: it was written for
+   physical colour marking on carbide inserts, and every toolmaker prints a
+   slightly different shade (confirmed against Sandvik Coromant, Dormer Pramet,
+   Machining Doctor and PMPA cribsheet 133). So for those six the hues are fixed
+   by the trade and the values are ours. Sub-groups inherit their root's colour;
+   there are no source colours below the main-group level.
+
+   The other two are Evolute extensions in the style of Sandvik Coromant's
+   non-ISO O column, and their provenance differs in kind from the six above and
+   from each other, so read each one for what it actually claims:
+
+     O  plastics, resins and composites — thermoplastics, thermosets, GFRP,
+        CFRP, aramid-reinforced materials, hard rubber and graphite. The LETTER
+        follows Sandvik Coromant, who use O for exactly this scope, which is why
+        Evolute did not invent a letter of its own. The COLOUR follows nobody:
+        Sandvik publishes none, their grade charts leave the O column uncoloured
+        and marked "Non-ISO", so the purple #6A3FA0 is Evolute's choice.
+     W  wood and wood-based materials. This one is Evolute's own extension
+        outright. No standards body and no trade convention fixes a colour for
+        wood, so the brown #6B4423 is a choice rather than a record.
+
+   The consumer renamed ISO N on the same day. It read "Non-ferrous metals
+   (aluminium, copper, plastics)" while plastics had nowhere else to live, and it
+   now reads "Non-ferrous metals (aluminium, copper)", because O owns them.
+
+   Pairwise separation held on both new fills: W's tightest neighbour is S at
+   dE2000 18.4 and O's is H at 18.7, W and O sit 40.4 apart from each other, and
+   the palette's own worst pair is still K/S at 16.8. All of that clears the 15.0
+   floor verify-tokens.py enforces inside a palette.
+
+   W's brown was chosen with open eyes over a duller #5D4037. The duller walnut
+   separates from K under protanopia at dE2000 8.6 where #6B4423 manages only
+   2.1, and Scott took the richer colour anyway, on the footing contract rule 2
+   already rests on: a swatch never ships empty, the letter carries the meaning,
+   and the colour is there for recognition speed.
+
+   Measured with tokens/verify-tokens.py, which now checks all of this on every
+   run rather than trusting the table:
+
+                            ink on fill   fill vs white   fill vs shell-4
+     P  #1B6CA8  white         5.59            5.59            2.71
+     M  #F2C200  grey-12       8.54            1.68            9.00
+     K  #BE2A2A  white         5.91            5.91            2.56
+     N  #2C7A2F  white         5.34            5.34            2.83
+     S  #BA5200  white         4.89            4.89            3.09
+     H  #5F6368  white         6.05            6.05            2.50
+     W  #6B4423  white         8.48            8.48            1.78
+     O  #6A3FA0  white         7.42            7.42            2.04
+
+   INK ON FILL IS THE RATIO THAT MATTERS and all eight clear AA 4.5:1 with the
+   4.80 headroom generate-ramps.py uses for text, so rounding in any checker
+   still passes. S is the one value that changed coming upstream: the consumer
+   proposed #BF5700 at 4.59, which clears AA but sits under that headroom
+   convention. #BA5200 measures 4.89 for 1.27deg of OKLCH hue drift, well
+   inside the generator's 6deg tolerance and invisible beside an insert box.
+   W at 8.48 and O at 7.42 come second and third in the set, behind M's 8.54
+   and comfortably ahead of the other five, which is what having no trade shade
+   to match buys you: nothing constrained either hue except legibility. Both
+   were tried with grey-12 ink first, the way M takes it, and both fail there
+   (W 1.69, O 1.94), so white is the only ink either one can wear.
+
+   FILL VS SURFACE is the swatch's outer boundary and it does NOT clear the
+   3:1 graphical floor everywhere: M fails on every light surface (1.35-1.68)
+   and P, K, N, H, W and O all fail on the dark-scheme table-header band
+   (1.78-2.83), where W's 1.78 and O's 2.04 sit furthest under the floor of
+   anything in the palette. That is not left to luck — .lt-swatch reinstates
+   the boundary with an inset edge derived from the fill, and
+   --lt-swatch-edge-mix below is the certified ratio that makes every one of
+   them clear 3:1 on every surface in both schemes; the re-sweep at eight fills
+   left that ratio exactly where six fills had put it. Under SC 1.4.11 the fill
+   itself owes nothing anyway: by contract rule 2 the letter carries the
+   meaning, exactly the recorded footing of --lt-danger-accent and
+   --lt-icon-accent.
+
+   K'S RED, DECIDED 2026-07-29 BY SCOTT MOYSE. This is a third use of red
+   against "red is identity and danger only", and it is approved for ISO 513
+   AND FOR NOTHING ELSE. The permission is pinned to this set and to the value
+   #BE2A2A: it is duller and darker than --lt-brand-red #ED1C24 and than
+   --lt-danger-accent, cast iron has been red since long before any of our
+   software, and by contract rule 2 it only ever appears as a fill behind a
+   required letter — never as ink, border or action, so it cannot be mistaken
+   for a destructive control. A SECOND DOMAIN PALETTE THAT WANTS RED, GREEN OR
+   AMBER DOES NOT INHERIT THIS. It raises its own decision, with its own
+   numbers, and the ring fence was chosen deliberately over a general rule so
+   that reusing a status hue stays a decision somebody makes rather than a
+   door left open. verify-tokens.py enforces the fence by name.
+
+   BOTH EXTENSION ROOTS WERE CHECKED AGAINST THAT FENCE ON 2026-07-30 and
+   neither needs a new exception, because brown and purple are nowhere near the
+   three hues the fence contests. K's permission is untouched by them and still
+   generalises to nothing.
+
+   O's purple was measured against this system's own blues all the same, since
+   purple is new here and brand blue is the colour a reader might plausibly
+   confuse it with. It sits dE2000 13.0 from --lt-brand-blue #1F1BAB, which is
+   also what --lt-info-accent resolves to in the light root and in both panel
+   scopes; in the shell scope info-accent resolves to #8985FF and the distance
+   opens to 26.5, so 13.0 is the honest worst case and 13.0 is the number
+   recorded. That is under the 15.0 separation floor, and it is outside that
+   floor's scope on purpose: the floor separates two codes WITHIN one taxonomy,
+   where a reader holds them up against each other and has to tell them apart.
+   Contract rule 3 covers the cross-tier case instead, and it covers it by the
+   same argument as always — a domain fill and a brand or status colour cannot
+   be confused when neither one ever speaks alone.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --lt-iso-p: #1B6CA8;  --lt-iso-p-on: var(--lt-white);
+  --lt-iso-m: #F2C200;  --lt-iso-m-on: var(--lt-grey-12);
+  --lt-iso-k: #BE2A2A;  --lt-iso-k-on: var(--lt-white);
+  --lt-iso-n: #2C7A2F;  --lt-iso-n-on: var(--lt-white);
+  --lt-iso-s: #BA5200;  --lt-iso-s-on: var(--lt-white);
+  --lt-iso-h: #5F6368;  --lt-iso-h-on: var(--lt-white);
+  --lt-iso-w: #6B4423;  --lt-iso-w-on: var(--lt-white);
+  --lt-iso-o: #6A3FA0;  --lt-iso-o-on: var(--lt-white);
+}
+
+
+/* -----------------------------------------------------------------------------
+   4. DENSITY
+   Three modes, set on <html> or any container. Mouse first: comfortable is the
+   default for a Windows desktop tool, compact for a dense catalogue or spec
+   grid, spacious for a touchscreen kiosk.
+
+   Set it with data-lt-density="compact | comfortable | spacious".
+   Persist the user's choice; density is a feature, not a default.
+
+   IMPORTANT: --lt-control-height may drop to 28px in compact, but the hit area
+   of any interactive control must still reach --lt-target-min (24px). Pad the
+   target, do not shrink it below the floor.
+   -------------------------------------------------------------------------- */
+
+:root,
+[data-lt-density="comfortable"] {
+  --lt-density: comfortable;
+  --lt-control-height-base: 2.25rem; /* 36px */
+  --lt-control-padding-x: var(--lt-space-4);
+  --lt-row-height-base:   2.5rem;   /* 40px */
+  --lt-cell-padding-x:    var(--lt-space-4);
+  --lt-cell-padding-y:    var(--lt-space-3);
+  --lt-stack-gap:         var(--lt-space-5);
+  --lt-field-gap:         var(--lt-space-4);
+  --lt-section-gap:       var(--lt-space-8);
+  --lt-icon-size:         1.25rem;  /* 20px */
+  /* The pictogram tier. Icons come in two grids by the 2026-07-28 decision
+     (ICONS-PROPOSAL.md D1): the 24 grid renders at 16-24px via
+     --lt-icon-size, the 48 grid at 32-48px via this token. Each density
+     lands the pictogram on a size that divides its grid cleanly, so a
+     2-unit stroke never renders below 1.33px. */
+  --lt-pictogram-size:    2.5rem;   /* 40px */
+  /* Chip icons: the small steps below the density scale, used inside badges
+     and field error/warning chips. Deliberately density-independent: the
+     chips they sit in are sized by their text, not by control height.
+
+     BOTH SIT AT 16px, the 24-grid tier floor, since 2026-07-28 (Scott Moyse,
+     with the status glyph set). They were 12px and 14px, which is the exact
+     defect ICONS-PROPOSAL.md flagged as "three sizes that ignore the size
+     token" and which the standard's own render table (D1: 16 / 20 / 24)
+     rules out. Below 16px a 24-grid glyph loses its distinguishing marks:
+     the standard asks that every such mark be at least 3 grid units so it
+     renders at 2px at the floor (§4.5), and at 12px those marks land at
+     1.5px — the pencil's ferrule line and the dash inside dash-circle stop
+     being tellable apart from the circle itself, which is the acceptance
+     test the glyph set has to pass.
+
+     The two names are kept because both are consumed and the chips they
+     size are different components, but the scale below the floor is gone;
+     there is nowhere legal for a third step to go. Anything that genuinely
+     needs a smaller mark needs different artwork, not a smaller render. */
+  --lt-icon-size-xs:      1rem;     /* 16px, the 24-grid tier floor */
+  --lt-icon-size-sm:      1rem;     /* 16px, the 24-grid tier floor */
+  --lt-density-font:      var(--lt-text-base);
+  --lt-density-leading:   var(--lt-leading-base);
+}
+
+[data-lt-density="compact"] {
+  --lt-density: compact;
+  --lt-control-height-base: 1.75rem; /* 28px */
+  --lt-control-padding-x: var(--lt-space-3);
+  --lt-row-height-base:   2rem;     /* 32px */
+  --lt-cell-padding-x:    var(--lt-space-3);
+  --lt-cell-padding-y:    var(--lt-space-2);
+  --lt-stack-gap:         var(--lt-space-3);
+  --lt-field-gap:         var(--lt-space-3);
+  --lt-section-gap:       var(--lt-space-6);
+  --lt-icon-size:         1rem;     /* 16px */
+  --lt-pictogram-size:    2rem;     /* 32px, the 48-grid tier floor */
+  --lt-density-font:      var(--lt-text-sm);
+  --lt-density-leading:   var(--lt-leading-sm);
+}
+
+[data-lt-density="spacious"] {
+  --lt-density: spacious;
+  --lt-control-height-base: 3rem;   /* 48px, clears the 44px touch figure */
+  --lt-control-padding-x: var(--lt-space-6);
+  --lt-row-height-base:   3.5rem;   /* 56px */
+  --lt-cell-padding-x:    var(--lt-space-5);
+  --lt-cell-padding-y:    var(--lt-space-4);
+  --lt-stack-gap:         var(--lt-space-7);
+  --lt-field-gap:         var(--lt-space-5);
+  --lt-section-gap:       var(--lt-space-10);
+  --lt-icon-size:         1.5rem;   /* 24px */
+  --lt-pictogram-size:    3rem;     /* 48px */
+  --lt-density-font:      var(--lt-text-md);
+  --lt-density-leading:   var(--lt-leading-md);
+}
+
+/* The density blocks above write -base values; the two rules below derive the
+   tokens everything actually consumes. Components and apps keep reading
+   --lt-control-height and --lt-row-height, never the -base names — the -base
+   pair is internal to this section and skips the touch floor.
+
+   WHY THE INDIRECTION. This block used to read
+       --lt-control-height: max(var(--lt-control-height), var(--lt-target-touch));
+   which looks like "floor the current value" and is actually a self-reference.
+   A custom property whose value references itself is a cycle (CSS Variables
+   §3.4), and a cycle computes to guaranteed-invalid on every element — an
+   inherited value does NOT break it. Measured in a headless probe, 2026-07-28,
+   not inferred: with the old declarations active, --lt-control-height and
+   --lt-row-height resolved to nothing anywhere in the tree and a control
+   reading them collapsed to auto height. So whenever pointer:coarse matched,
+   the floor didn't merely fail to lift — it silently destroyed both tokens on
+   exactly the touch hardware it was written to protect. Found while verifying
+   the first consumer report (Evolute tool-manager, 2026-07-28), which had
+   read this block as proof the tokens were root-defaulted; it was neither
+   working nor the reason. conformance.py now fails the pattern outright
+   (token-self-cycle).
+
+   The selector includes [data-lt-density] as well as :root so the derivation
+   happens wherever a density is declared, and the touch floor therefore
+   reaches nested density containers too — the old :root-only form would have
+   missed those even if it had worked. */
+:root,
+[data-lt-density] {
+  --lt-control-height: var(--lt-control-height-base);
+  --lt-row-height:     var(--lt-row-height-base);
+}
+
+/* A coarse pointer means a finger. Lift the floor even if the app forgot to
+   ask for spacious, because a 28px target under a gloved thumb is a support
+   call waiting to happen. */
+@media (pointer: coarse) {
+  :root,
+  [data-lt-density] {
+    --lt-control-height: max(var(--lt-control-height-base), var(--lt-target-touch));
+    --lt-row-height:     max(var(--lt-row-height-base), var(--lt-target-touch));
+  }
+}
+
+
+/* -----------------------------------------------------------------------------
+   5. THEME INTENSITY
+   Operational is the DEFAULT: grey-first, colour reserved for meaning, following
+   the High Performance HMI convention. Commercial is the opt-in for
+   customer-facing surfaces that sit next to Livetools marketing, and restores
+   the fuller brand expression by NOT matching the selector below.
+
+   Chosen 2026-07-26: Scott prefers the operational look for the tools
+   themselves, so internal apps get it without asking, and quoting or catalogue
+   front-ends opt in with data-lt-theme="commercial".
+   -------------------------------------------------------------------------- */
+
+:root:not([data-lt-theme="commercial"]) {
+  --lt-surface-page:   var(--lt-grey-2);
+  --lt-surface-subtle: var(--lt-grey-3);
+
+  --lt-action-secondary-bg:       var(--lt-white);
+  --lt-action-secondary-bg-hover: var(--lt-grey-4);
+  --lt-action-secondary-border:   var(--lt-border-strong);
+
+  /* Status surfaces sit one step stronger so they survive shop-floor glare. */
+  --lt-danger-surface:  var(--lt-red-3);
+  --lt-warning-surface: var(--lt-amber-3);
+  --lt-success-surface: var(--lt-green-3);
+  --lt-border-default:  var(--lt-grey-9);
+
+  /* Operational dark: deepest page, muted panels. Panels at grey-5 need the
+     stronger border and placeholder, since grey-9 falls to 2.71 and grey-10 to
+     3.90 out there. Commercial's grey-2 panels keep the standard pair. */
+  --lt-theme-dark-page:   var(--lt-shell-1);
+  --lt-theme-dark-subtle: var(--lt-shell-2);
+  --lt-theme-dark-panel:  var(--lt-grey-5);
+  --lt-theme-dark-panel-border-i:    var(--lt-grey-10);
+  --lt-theme-dark-panel-placeholder: var(--lt-grey-11);
+}
+
+/* -----------------------------------------------------------------------------
+   5b. RETIRED THEME BLOCK
+   Two intensities over the same primitives.
+
+   commercial  (default) Fuller brand expression. Catalogues, quoting tools,
+               configurators, anything a customer sees and that sits next to
+               Livetools marketing.
+
+   operational Grey-first, colour reserved for abnormal states, following the
+               High Performance HMI convention (ISA-101). For the vending and
+               tool-crib kiosks, where an operator needs to read machine state
+               at a glance and a screen with no colour on it should mean
+               "everything is normal". Brand red stays available for identity
+               but stops being decorative.
+
+   Set with data-lt-theme="commercial | operational".
+   -------------------------------------------------------------------------- */
+
+
+
+/* -----------------------------------------------------------------------------
+   6. DARK SHELL
+   Not a full dark palette. A dark shell with light content panels.
+
+   Why it works this way. Brand blue #1F1BAB has a relative luminance of 0.0402,
+   so for it to clear 3:1 as a fill the surface behind it needs luminance of at
+   least 3 * (0.0402 + 0.05) - 0.05 = 0.2206, which is a mid grey. There is no
+   page dark enough to read as dark mode that can also carry brand blue as a fill.
+   A mid-grey page fails from the other direction: sitting in the middle of the
+   luminance range it leaves every saturated colour with nothing to separate
+   against, and brand red drops to 1.64:1.
+
+   An earlier version lifted the blue to #4F6AF0 so it would fill against black.
+   That measured 23 dE2000 from brand blue, which is a different colour, not a
+   variant. So the shell goes dark and the panels stay light: chrome, nav and page
+   background darken, while forms, tables and controls sit on a light panel where
+   every brand colour keeps its exact value. Brand blue measures 11.45:1 on the
+   panel and a white label on it measures 11.65:1.
+
+   This is also the conventional industrial HMI layout, dark frame around bright
+   working areas, so it is not a workaround so much as the normal answer.
+
+   If a genuinely all-dark screen is ever needed, the path is an outlined action
+   rather than a filled one: a border and label in a light blue, with no fill
+   pretending to be the brand colour. Not shipped, because a bright screen fights
+   glare better than a dark one and these screens live under shop lighting.
+
+   Applied when the OS asks for dark and the app has not pinned light, OR when the
+   app pins dark. The block is duplicated because a media query cannot contribute
+   a selector to a rule outside itself; it is generated, so the copies cannot
+   drift, and verify-tokens.py checks they match.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-lt-scheme="light"]) {
+    color-scheme: dark;
+
+    --lt-field-bg:     var(--lt-shell-3);
+    --lt-field-text:   var(--lt-shell-12);
+    --lt-field-border: var(--lt-shell-9);
+  --lt-field-affix-bg:   var(--lt-shell-5);
+  --lt-field-affix-text: var(--lt-shell-11);
+  --lt-danger-text:  var(--lt-shell-danger-text);
+  --lt-warning-text: var(--lt-shell-warning-text);
+  --lt-success-text: var(--lt-shell-success-text);
+  --lt-info-text:    var(--lt-shell-info-text);
+  --lt-text-link:       var(--lt-shell-info-text);
+  --lt-text-link-hover: var(--lt-shell-12);
+    --lt-field-affix-bg:   var(--lt-shell-5);
+    --lt-field-affix-text: var(--lt-shell-11);
+  --lt-danger-text:  var(--lt-shell-danger-text);
+  --lt-warning-text: var(--lt-shell-warning-text);
+  --lt-success-text: var(--lt-shell-success-text);
+  --lt-info-text:    var(--lt-shell-info-text);
+  --lt-text-link:       var(--lt-shell-info-text);
+  --lt-text-link-hover: var(--lt-shell-12);
+    --lt-danger-text:  var(--lt-shell-danger-text);
+    --lt-warning-text: var(--lt-shell-warning-text);
+    --lt-success-text: var(--lt-shell-success-text);
+    --lt-info-text:    var(--lt-shell-info-text);
+    --lt-text-link:       var(--lt-shell-info-text);
+    --lt-text-link-hover: var(--lt-shell-12);
+    /* The page is dark out here, so a status colour on it needs the shell tones
+       rather than the panel-safe ones. Panels re-declare these back.
+       Danger and warning hold the vivid step-9 tones by the 2026-07-27 decision,
+       so a fault is the same red on every surface. On the dark page (shell-2
+       #141414) red-9 is 4.20:1 and amber-9 is 8.88:1. */
+    --lt-danger-accent:  var(--lt-red-9);
+    --lt-warning-accent: var(--lt-amber-9);
+    --lt-success-accent: var(--lt-shell-success-text);
+    --lt-info-accent:    var(--lt-shell-info-text);
+    /* Dark shell. Chrome, nav and page background only. Content sits on a */
+    /* light panel, so the chromatic ramps above are used unchanged and every */
+    /* brand colour stays exact. Ratios are against the shell background. */
+    /* @generated:shell -- run generate-ramps.py, do not hand-edit */
+    /* Dark shell. Chrome, nav and page background only. Content sits on a */
+    /* light panel, so the chromatic ramps above are used unchanged and every */
+    /* brand colour stays exact. Ratios are against the shell background. */
+    --lt-shell-1:       #0D0D0D;  /*  1.05:1  deepest chrome */
+    --lt-shell-2:       #141414;  /*  1.00:1  shell background */
+    --lt-shell-3:       #1D1D1D;  /*  1.09:1  raised chrome */
+    --lt-shell-4:       #262626;  /*  1.22:1  chrome hover */
+    --lt-shell-5:       #303030;  /*  1.40:1  chrome active */
+    --lt-shell-6:       #3D3D3D;  /*  1.70:1  subtle shell border */
+    --lt-shell-7:       #4E4E4E;  /*  2.21:1  shell border */
+    --lt-shell-8:       #6C6C6C;  /*  3.51:1  strong shell border */
+    --lt-shell-9:       #8C8C8C;  /*  5.48:1  disabled on shell */
+    --lt-shell-10:       #A1A1A1;  /*  7.13:1  placeholder on shell */
+    --lt-shell-11:       #BEBEBE;  /*  9.91:1  muted text on shell */
+    --lt-shell-12:       #EBEBEB;  /* 15.45:1  text on shell */
+    
+    /* Status text for content sitting directly on shell surfaces: toasts,
+    /* hints and links on dark chrome. The shell is dark in BOTH schemes but
+    /* at two tones: grey-12 in the light scheme, shell-1 in the dark. Solved
+    /* against grey-12, the lighter and therefore binding tone; the darker
+    /* dark-scheme tones only raise the ratio. The first version solved
+    /* against the dark tone alone and landed at 3.75:1 out on the
+    /* light-scheme shell. Both ratios are printed so nobody has to guess
+    /* which tone a figure was measured against. */
+    --lt-shell-danger-text:   #FF5F56;  /* 4.80:1 on grey-12, 6.50:1 on shell-1 */
+    --lt-shell-warning-text:   #CB8810;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    --lt-shell-success-text:   #53A762;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    --lt-shell-info-text:   #708FFF;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    
+    /* @end:shell */
+    
+
+    /* The page darkens. The panel does not. */
+    --lt-surface-page:    var(--lt-theme-dark-page);
+    --lt-surface-subtle:  var(--lt-theme-dark-subtle);
+    --lt-surface-shell:   var(--lt-shell-1);
+    /* The panel darkens to grey-5 #DEDEDE, which is the floor: at grey-6, brand
+       red drops to 2.90 against the panel and fails 3:1. On grey-5 the numbers
+       hold with the retuned knobs below: red 3.26, blue 8.66, body text 10.67,
+       border 3.90, placeholder and secondary 5.53. Text also gains a little
+       weight (450 on Inter's variable axis) to hold its apparent strength as
+       the contrast steps down. */
+    --lt-panel-bg:          var(--lt-theme-dark-panel);
+    --lt-panel-placeholder: var(--lt-theme-dark-panel-placeholder);
+    --lt-panel-border-i:    var(--lt-theme-dark-panel-border-i);
+    --lt-panel-weight:      450;
+  /* Step-11 status text loses AA on the darker panel: danger lands on
+     4.14 and warning on 3.58 against grey-5. Step 12 restores the
+     headroom without leaving the ramp. */
+  --lt-panel-danger-text:  var(--lt-red-12);
+  --lt-panel-warning-text: var(--lt-amber-12);
+  --lt-panel-success-text: var(--lt-green-12);
+    /* Step-11 status text loses AA on the darker panel: danger lands on
+       4.14 and warning on 3.58 against grey-5. Step 12 restores the
+       headroom without leaving the ramp. */
+    --lt-panel-danger-text:  var(--lt-red-12);
+    --lt-panel-warning-text: var(--lt-amber-12);
+    --lt-panel-success-text: var(--lt-green-12);
+    --lt-surface-overlay: var(--lt-grey-1);
+    --lt-surface-scrim:   rgb(0 0 0 / 0.70);
+
+    /* Text directly on the shell, for chrome and anything outside a panel.
+       Text inside a panel keeps the light-scheme values, because the panel is
+       still light. */
+
+    /* Text sitting directly on the page. This is the half I got wrong first time:
+       the page went dark while the text tokens still pointed at near-black grey-12,
+       so every heading and paragraph outside a panel measured 1.28:1. A surface is
+       not just a background, it is a background plus the text and border tokens
+       that belong on it. */
+    --lt-text-primary:     var(--lt-shell-12);
+    --lt-text-secondary:   var(--lt-shell-11);
+    --lt-text-placeholder: var(--lt-shell-10);
+    --lt-text-disabled:    var(--lt-shell-9);
+    --lt-border-subtle:      var(--lt-shell-5);
+    --lt-border-default:     var(--lt-shell-7);
+    --lt-border-interactive: var(--lt-shell-8);
+    --lt-border-strong:      var(--lt-shell-10);
+    --lt-table-header-bg:    var(--lt-shell-4);
+    --lt-table-row-bg:       transparent;
+    --lt-table-row-bg-alt:   var(--lt-shell-3);
+    --lt-table-border:       var(--lt-shell-6);
+    /* Actions and status keep their light-scheme values, because a control belongs
+       on a panel. A control that must sit directly on dark chrome goes inside the .lt-shell context, which supplies its border and hover. */
+  
+  /* Text sitting directly on the page. This is the half I got wrong first time:
+     the page went dark while the text tokens still pointed at near-black grey-12,
+     so every heading and paragraph outside a panel measured 1.28:1. A surface is
+     not just a background, it is a background plus the text and border tokens
+     that belong on it. */
+  --lt-text-primary:     var(--lt-shell-12);
+  --lt-text-secondary:   var(--lt-shell-11);
+  --lt-text-placeholder: var(--lt-shell-10);
+  --lt-text-disabled:    var(--lt-shell-9);
+  --lt-border-subtle:      var(--lt-shell-5);
+  --lt-border-default:     var(--lt-shell-7);
+  --lt-border-interactive: var(--lt-shell-8);
+  --lt-border-strong:      var(--lt-shell-10);
+  --lt-table-header-bg:    var(--lt-shell-4);
+  --lt-table-row-bg:     transparent;
+  --lt-table-row-bg-alt:   var(--lt-shell-3);
+  --lt-table-border:     var(--lt-shell-6);
+  /* Actions and status keep their light-scheme values, because a control belongs
+     on a panel. A control that must sit directly on dark chrome goes inside the .lt-shell context, which supplies its border and hover. */
+  --lt-text-on-shell:       var(--lt-shell-12);
+    --lt-text-on-shell-muted: var(--lt-shell-11);
+    --lt-border-on-shell:     var(--lt-shell-8);
+    --lt-text-inverse:        var(--lt-shell-12);
+
+    --lt-focus-ring-offset: var(--lt-shell-2);
+
+    /* Shadows barely read against a dark shell, so layering leans on the
+       panel-to-shell luminance step instead. */
+    --lt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+    --lt-shadow-md: 0 2px 6px rgb(0 0 0 / 0.50);
+    --lt-shadow-lg: 0 8px 20px rgb(0 0 0 / 0.55);
+    --lt-shadow-overlay: 0 16px 40px rgb(0 0 0 / 0.65);
+  }
+}
+
+/* :root[data-lt-scheme="dark"], NOT bare [data-lt-scheme="dark"]. The bare
+   attribute selector is (0,1,0) and loses to the theme block
+   :root:not([data-lt-theme="commercial"]) at (0,2,0), which re-declares
+   --lt-surface-page and the secondary/status surfaces. The result was a page
+   that toggled to dark ink while keeping its light background, on every
+   operational-theme page, which is the default theme. The media-query twin of
+   this block already sits at (0,2,0) via :root:not([data-lt-scheme="light"]),
+   which is why OS-level dark worked while the manual toggle did not. Same
+   specificity, later in the file, wins the same way. Found 2026-07-27. */
+:root[data-lt-scheme="dark"] {
+  color-scheme: dark;
+
+  /* status colour on the dark page; panels re-declare these back. Danger and
+     warning are the vivid step-9 tones by the 2026-07-27 decision above. */
+  --lt-danger-accent:  var(--lt-red-9);
+  --lt-warning-accent: var(--lt-amber-9);
+  --lt-success-accent: var(--lt-shell-success-text);
+  --lt-info-accent:    var(--lt-shell-info-text);
+
+  --lt-field-bg:     var(--lt-shell-3);
+  --lt-field-text:   var(--lt-shell-12);
+  --lt-field-border: var(--lt-shell-9);
+  --lt-field-affix-bg:   var(--lt-shell-5);
+  --lt-field-affix-text: var(--lt-shell-11);
+  --lt-danger-text:  var(--lt-shell-danger-text);
+  --lt-warning-text: var(--lt-shell-warning-text);
+  --lt-success-text: var(--lt-shell-success-text);
+  --lt-info-text:    var(--lt-shell-info-text);
+  --lt-text-link:       var(--lt-shell-info-text);
+  --lt-text-link-hover: var(--lt-shell-12);
+    /* Dark shell. Chrome, nav and page background only. Content sits on a */
+    /* light panel, so the chromatic ramps above are used unchanged and every */
+    /* brand colour stays exact. Ratios are against the shell background. */
+    /* @generated:shell -- run generate-ramps.py, do not hand-edit */
+    /* Dark shell. Chrome, nav and page background only. Content sits on a */
+    /* light panel, so the chromatic ramps above are used unchanged and every */
+    /* brand colour stays exact. Ratios are against the shell background. */
+    --lt-shell-1:       #0D0D0D;  /*  1.05:1  deepest chrome */
+    --lt-shell-2:       #141414;  /*  1.00:1  shell background */
+    --lt-shell-3:       #1D1D1D;  /*  1.09:1  raised chrome */
+    --lt-shell-4:       #262626;  /*  1.22:1  chrome hover */
+    --lt-shell-5:       #303030;  /*  1.40:1  chrome active */
+    --lt-shell-6:       #3D3D3D;  /*  1.70:1  subtle shell border */
+    --lt-shell-7:       #4E4E4E;  /*  2.21:1  shell border */
+    --lt-shell-8:       #6C6C6C;  /*  3.51:1  strong shell border */
+    --lt-shell-9:       #8C8C8C;  /*  5.48:1  disabled on shell */
+    --lt-shell-10:       #A1A1A1;  /*  7.13:1  placeholder on shell */
+    --lt-shell-11:       #BEBEBE;  /*  9.91:1  muted text on shell */
+    --lt-shell-12:       #EBEBEB;  /* 15.45:1  text on shell */
+    
+    /* Status text for content sitting directly on shell surfaces: toasts,
+    /* hints and links on dark chrome. The shell is dark in BOTH schemes but
+    /* at two tones: grey-12 in the light scheme, shell-1 in the dark. Solved
+    /* against grey-12, the lighter and therefore binding tone; the darker
+    /* dark-scheme tones only raise the ratio. The first version solved
+    /* against the dark tone alone and landed at 3.75:1 out on the
+    /* light-scheme shell. Both ratios are printed so nobody has to guess
+    /* which tone a figure was measured against. */
+    --lt-shell-danger-text:   #FF5F56;  /* 4.80:1 on grey-12, 6.50:1 on shell-1 */
+    --lt-shell-warning-text:   #CB8810;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    --lt-shell-success-text:   #53A762;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    --lt-shell-info-text:   #708FFF;  /* 4.83:1 on grey-12, 6.54:1 on shell-1 */
+    
+    /* @end:shell */
+    
+
+  --lt-surface-page:    var(--lt-theme-dark-page);
+  --lt-surface-subtle:  var(--lt-theme-dark-subtle);
+  --lt-surface-shell:   var(--lt-shell-1);
+  /* The panel darkens to grey-5 #DEDEDE, which is the floor: at grey-6, brand
+     red drops to 2.90 against the panel and fails 3:1. On grey-5 the numbers
+     hold with the retuned knobs below: red 3.26, blue 8.66, body text 10.67,
+     border 3.90, placeholder and secondary 5.53. Text also gains a little
+     weight (450 on Inter's variable axis) to hold its apparent strength as
+     the contrast steps down. */
+  --lt-panel-bg:          var(--lt-theme-dark-panel);
+  --lt-panel-placeholder: var(--lt-theme-dark-panel-placeholder);
+  --lt-panel-border-i:    var(--lt-theme-dark-panel-border-i);
+  --lt-panel-weight:      450;
+  /* Step-11 status text loses AA on the darker panel: danger lands on
+     4.14 and warning on 3.58 against grey-5. Step 12 restores the
+     headroom without leaving the ramp. */
+  --lt-panel-danger-text:  var(--lt-red-12);
+  --lt-panel-warning-text: var(--lt-amber-12);
+  --lt-panel-success-text: var(--lt-green-12);
+  --lt-surface-overlay: var(--lt-grey-1);
+  --lt-surface-scrim:   rgb(0 0 0 / 0.70);
+
+
+  /* Text sitting directly on the page. This is the half I got wrong first time:
+     the page went dark while the text tokens still pointed at near-black grey-12,
+     so every heading and paragraph outside a panel measured 1.28:1. A surface is
+     not just a background, it is a background plus the text and border tokens
+     that belong on it. */
+  --lt-text-primary:     var(--lt-shell-12);
+  --lt-text-secondary:   var(--lt-shell-11);
+  --lt-text-placeholder: var(--lt-shell-10);
+  --lt-text-disabled:    var(--lt-shell-9);
+  --lt-border-subtle:      var(--lt-shell-5);
+  --lt-border-default:     var(--lt-shell-7);
+  --lt-border-interactive: var(--lt-shell-8);
+  --lt-border-strong:      var(--lt-shell-10);
+  --lt-table-header-bg:    var(--lt-shell-4);
+  --lt-table-row-bg:     transparent;
+  --lt-table-row-bg-alt:   var(--lt-shell-3);
+  --lt-table-border:     var(--lt-shell-6);
+  /* Actions and status keep their light-scheme values, because a control belongs
+     on a panel. A control that must sit directly on dark chrome goes inside the .lt-shell context, which supplies its border and hover. */
+  --lt-text-on-shell:       var(--lt-shell-12);
+  --lt-text-on-shell-muted: var(--lt-shell-11);
+  --lt-border-on-shell:     var(--lt-shell-8);
+  --lt-text-inverse:        var(--lt-shell-12);
+
+  --lt-focus-ring-offset: var(--lt-shell-2);
+
+  --lt-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --lt-shadow-md: 0 2px 6px rgb(0 0 0 / 0.50);
+  --lt-shadow-lg: 0 8px 20px rgb(0 0 0 / 0.55);
+  --lt-shadow-overlay: 0 16px 40px rgb(0 0 0 / 0.65);
+}
+
+/* -----------------------------------------------------------------------------
+   6b. SURFACE CONTEXTS
+   A surface carries its own text and border tokens. Put one of these on any
+   element that changes the background under its children, and everything inside
+   inherits the right values without knowing which scheme is active.
+
+     .lt-panel    light working surface: forms, tables, results, controls.
+                  Light in every scheme, which is what keeps brand blue exact.
+     .lt-shell    dark brand chrome: top bars, nav, hero bands. Dark in every
+                  scheme, matching the manual's own website and EDM samples.
+     .lt-page     back to whatever the page is, for nesting out of a context.
+
+   These re-declare the inherited tokens rather than setting colours directly, so
+   a component inside asks for --lt-text-primary and gets the correct value.
+   -------------------------------------------------------------------------- */
+
+.lt-panel,
+[data-lt-surface="panel"] {
+  background: var(--lt-surface-panel);
+  /* The panel is light in BOTH schemes, so native controls must be told to
+     render light. Without this the root's color-scheme:dark reaches inside and
+     the browser paints radios and checkboxes as dark filled discs on a light
+     card, which reads as "selected" when nothing is. */
+  color-scheme: light;
+  /* Nested surfaces. These were the gap: the panel re-declared its text and
+     border tokens but left --lt-surface-* pointing at the dark-scheme values,
+     so anything drawing its own background from a surface token (a readout, a
+     neutral badge) got a near-black fill while inheriting the panel's dark
+     text. A surface context has to re-declare its surfaces too, not just its
+     ink. */
+  --lt-surface-subtle:  var(--lt-grey-2);
+  /* status colour on neutral grey. Vivid step-9 for danger and warning by the
+     2026-07-27 decision recorded above; they fail AA as text and are reinforcement
+     for an icon and a word, not a signal on their own. */
+  --lt-danger-accent:  var(--lt-red-9);
+  --lt-warning-accent: var(--lt-amber-9);
+  --lt-success-accent: var(--lt-green-11);
+  --lt-info-accent:    var(--lt-blue-9);
+  /* the panel is light in both schemes, so the dark-text values always apply */
+  --lt-text-primary:     var(--lt-grey-12);
+  --lt-text-secondary:   var(--lt-grey-11);
+  --lt-text-placeholder: var(--lt-panel-placeholder);
+  --lt-text-disabled:    var(--lt-grey-9);
+  --lt-border-subtle:      var(--lt-grey-6);
+  --lt-border-default:     var(--lt-grey-8);
+  --lt-border-interactive: var(--lt-panel-border-i);
+  --lt-border-strong:      var(--lt-grey-11);
+  --lt-table-header-bg:    var(--lt-grey-4);
+  --lt-table-row-bg:       transparent;
+  --lt-table-row-bg-alt:   var(--lt-grey-2);
+  --lt-table-row-bg-hover: var(--lt-blue-2);
+  --lt-table-border:       var(--lt-grey-5);
+  --lt-field-bg:     var(--lt-white);
+  --lt-field-text:   var(--lt-grey-12);
+  --lt-field-border: var(--lt-panel-border-i);
+  --lt-field-affix-bg:   var(--lt-grey-3);
+  --lt-field-affix-text: var(--lt-grey-11);
+  --lt-danger-text:  var(--lt-panel-danger-text);
+  --lt-warning-text: var(--lt-panel-warning-text);
+  --lt-success-text: var(--lt-panel-success-text);
+  /* the dark scheme lifts links for dark chrome; on the light panel they come
+     back down to the deep action blue */
+  --lt-text-link:       var(--lt-blue-11);
+  --lt-text-link-hover: var(--lt-blue-12);
+  --lt-info-text:       var(--lt-blue-11);
+  --lt-focus-ring-offset:  var(--lt-surface-panel);
+  font-weight: var(--lt-panel-weight);
+  color: var(--lt-text-primary);
+}
+
+.lt-shell,
+[data-lt-surface="shell"] {
+  background: var(--lt-surface-shell);
+  /* dark in both schemes, so native controls render dark here even in light */
+  color-scheme: dark;
+  --lt-surface-subtle:  var(--lt-shell-3);
+  /* Danger and warning are the vivid step-9 tones by the 2026-07-27 decision
+     recorded on the panel accents above, so a fault reads the same red and a
+     warning the same orange on chrome as on a panel. On dark chrome amber-9 is
+     the better of the two by a wide margin. Success and info are solved for
+     both shell tones, grey-12 #2A2A2A in light and shell-1 #0D0D0D in dark,
+     and clear AA on each. (--lt-shell-*-text is also solved against both tones
+     since 2026-07-27; these two accents predate that fix and keep their own
+     literals so the accent job stays independently tunable.) */
+  --lt-danger-accent:  var(--lt-red-9);    /* 3.28 on #2A2A2A, 4.44 on #0D0D0D, below AA */
+  --lt-warning-accent: var(--lt-amber-9);  /* 6.92 on #2A2A2A, 9.37 on #0D0D0D, clears AA */
+  --lt-success-accent: #00AB47;  /* 4.73 on #2A2A2A, 6.40 on #0D0D0D */
+  --lt-info-accent:    #8985FF;  /* 4.69 / 6.35 */
+  /* the shell is dark in both schemes, so the light-text values always apply */
+  --lt-text-primary:     var(--lt-shell-12);
+  --lt-text-secondary:   var(--lt-shell-11);
+  --lt-text-placeholder: var(--lt-shell-10);
+  --lt-text-disabled:    var(--lt-shell-8);
+  --lt-border-subtle:      var(--lt-shell-6);
+  --lt-border-default:     var(--lt-shell-8);
+  /* shell-9, not shell-8. In the light scheme the shell is grey-12 (#2A2A2A),
+     which is lighter than the dark-scheme shell (#0D0D0D), so shell-8 only
+     reached 2.73:1 there and missed SC 1.4.11. shell-9 clears both. */
+  --lt-border-interactive: var(--lt-shell-9);
+  --lt-border-strong:      var(--lt-shell-11);
+  --lt-field-bg:     var(--lt-shell-3);
+  --lt-field-text:   var(--lt-shell-12);
+  --lt-field-border: var(--lt-shell-9);
+  --lt-field-affix-bg:   var(--lt-shell-5);
+  --lt-field-affix-text: var(--lt-shell-11);
+  --lt-danger-text:  var(--lt-shell-danger-text);
+  --lt-warning-text: var(--lt-shell-warning-text);
+  --lt-success-text: var(--lt-shell-success-text);
+  --lt-info-text:    var(--lt-shell-info-text);
+  --lt-text-link:       var(--lt-shell-info-text);
+  --lt-text-link-hover: var(--lt-shell-12);
+  /* Controls on chrome. Secondary actions read these, so hover works without
+     per-button styling; a hand-styled button was exactly how a hover state went
+     missing. shell-9 for the border because the light-scheme shell is #2A2A2A
+     and shell-8 only reaches 2.73 there. shell-6 for hover so the state change
+     is visible against both shell tones, #2A2A2A light and #0D0D0D dark. */
+  --lt-action-secondary-bg:       transparent;
+  --lt-action-secondary-bg-hover: var(--lt-shell-6);
+  --lt-action-secondary-text:     var(--lt-shell-12);
+  --lt-action-secondary-border:   var(--lt-shell-9);
+  --lt-focus-ring-offset:  var(--lt-surface-shell);
+  /* Brand red is the identity mark here and sits on dark chrome at large sizes
+     only; 4.09:1 against the shell clears 3:1 for non-text and large text. */
+  color: var(--lt-text-primary);
+}
+
+/* -----------------------------------------------------------------------------
+   7. REDUCED MOTION AND FORCED COLOURS
+   Forced colours matters here: these are Windows machines, and Windows High
+   Contrast Mode is genuinely used on shop floors and by anyone with low vision.
+   Hand control to the system rather than fighting it.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lt-duration-fast: 0ms;
+    --lt-duration-base: 0ms;
+    --lt-duration-slow: 0ms;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --lt-surface-page:       Canvas;
+    --lt-text-primary:       CanvasText;
+    --lt-text-secondary:     CanvasText;
+    --lt-action-bg:          ButtonFace;
+    --lt-action-text:        ButtonText;
+    --lt-border-default:     CanvasText;
+    --lt-border-interactive: CanvasText;
+    --lt-focus-ring-color:   Highlight;
+    --lt-shadow-sm: none;
+    --lt-shadow-md: none;
+    --lt-shadow-lg: none;
+  }
+}
+
+
+/* -----------------------------------------------------------------------------
+   8. BASE
+   The minimum needed for the tokens to take effect. Not a reset; a starting
+   point that components inherit from.
+   -------------------------------------------------------------------------- */
+
+html {
+  font-size: 100%;               /* respect the user's browser setting, never override */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--lt-surface-page);
+  color: var(--lt-text-primary);
+  font-family: var(--lt-font-body);
+  font-size: var(--lt-density-font, var(--lt-font-size-body));
+  line-height: var(--lt-density-leading, var(--lt-leading-body));
+  font-feature-settings: var(--lt-font-feature-text);
+  font-optical-sizing: auto;     /* Inter's opsz axis runs 14-32 */
+  -webkit-font-smoothing: auto;  /* deliberately NOT antialiased; it thins text on macOS */
+}
+
+/* Anything holding digits that need to line up in a column. */
+.lt-numeric,
+[data-lt-numeric] {
+  font-feature-settings: var(--lt-font-feature-numeric);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.lt-mono {
+  font-family: var(--lt-font-mono);
+  font-feature-settings: var(--lt-font-feature-mono);
+}
+
+/* One focus treatment for the whole system. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--lt-focus-ring-width) solid var(--lt-focus-ring-color);
+  outline-offset: var(--lt-focus-ring-gap);
+}
