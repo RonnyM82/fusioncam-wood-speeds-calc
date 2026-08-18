@@ -265,7 +265,12 @@ function buildAdvanced() {
         ${hint ? `<span class="lt-field__hint" id="${hintId}">${escapeHtml(hint)}</span>` : ''}
       </div>`;
     }
-    return `<lt-number-field id="advf-${f.id}" input-id="adv-${f.id}"` +
+    // stepper, on every one. The element replaces <input type="number">
+    // precisely because native spinners sit far below any sane target size,
+    // and these buttons are its replacement at full --lt-control-height.
+    // Dropping the native input without adding them leaves no way to nudge a
+    // value at all.
+    return `<lt-number-field id="advf-${f.id}" input-id="adv-${f.id}" stepper` +
       attr('label', f.label) + attr('measure', f.measure) + attr('unit', f.unit) +
       attr('decimals', f.decimals) + attr('step', f.step) + attr('hint', hint) +
       `></lt-number-field>`;

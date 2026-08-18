@@ -38,23 +38,23 @@
           <select class="lt-select" id="diameter"></select>
         </div>
         <lt-number-field id="f-flutes" input-id="flutes" label="Flutes"
-                         min="1" max="6" step="1" decimals="0"></lt-number-field>
+                         min="1" max="6" step="1" decimals="0" stepper></lt-number-field>
       </div>
 
       <div class="lt-form-grid">
         <lt-number-field id="f-thickness" input-id="thickness" label="Board thickness"
-                         measure="length" decimals="1" min="1" max="120" step="1"></lt-number-field>
+                         measure="length" decimals="1" min="1" max="120" step="1" stepper></lt-number-field>
         <lt-number-field id="f-doc" input-id="doc" label="Depth per pass"
-                         measure="length" decimals="1" min="0.1" step="0.5"
+                         measure="length" decimals="1" min="0.1" step="0.5" stepper
                          hint="Leave empty to cut the full board thickness."></lt-number-field>
       </div>
 
       <div class="lt-form-grid">
         <lt-number-field id="f-woc" input-id="woc" label="Width of cut"
-                         measure="length" decimals="1" min="0.1" step="0.5"
+                         measure="length" decimals="1" min="0.1" step="0.5" stepper
                          hint="Leave empty to cut a full slot, one tool diameter wide."></lt-number-field>
         <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
-                         measure="rotation" min="1000" max="30000" step="500"></lt-number-field>
+                         measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
       </div>
 
       <div class="lt-field">
