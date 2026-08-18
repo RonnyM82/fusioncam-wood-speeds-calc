@@ -1,0 +1,96 @@
+{
+ "schema_version": "1.0",
+ "sources": {
+  "vortex-via-reference": {
+   "document": "Vortex Tool guidance as quoted in reference/cnc-router-speeds-feeds-reference_4.html",
+   "retrieved": "2026-08-18"
+  },
+  "reference-v4": {
+   "document": "reference/cnc-router-speeds-feeds-reference_4.html (synthesis of the sourced research corpus)",
+   "retrieved": "2026-08-18"
+  },
+  "project-decision": {
+   "document": "Build-plan decision register, D2 and D7 (approved 2026-08-18)",
+   "retrieved": "2026-08-18"
+  }
+ },
+ "plunge_ramp": {
+  "ratio_of_cutting_feed": 0.3333,
+  "angle_deg_max": 45,
+  "ramp_length_mm": [50, 100],
+  "applies": "stated for down-cut and compression tools; used for all tool types as the conservative default",
+  "source": "vortex-via-reference",
+  "data_class": "vendor"
+ },
+ "lead_in_out": {
+  "ratio_of_cutting_feed": 1.0,
+  "note": "No vendor publishes a separate lead-in feed. An arc lead-in enters at reduced radial engagement, so the cutting feed is safe there.",
+  "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "chip_floor_mm_per_tooth": {
+  "warn_below": 0.1,
+  "plough_below": 0.08,
+  "marginal_below": 0.14,
+  "materials": "panel materials (MDF, particleboard, laminates, plywood)",
+  "note": "a minimum, not a target - the only limit that increases the feed; marginal_below is the close-to-minimum band boundary from the reference status chips",
+  "source": "reference-v4",
+  "data_class": "practitioner"
+ },
+ "depth_derating_extension": {
+  "form": "beyond 3xD: derate = 0.5 x (3 / ratio)",
+  "note": "hyperbolic continuation past the published 1x/2x/3xD anchors in chiploads.json depth_derating; the anchors themselves are the source through 3xD",
+  "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "compression_min_depth": {
+  "extra_mm": 1.5875,
+  "extra_display": "1/16 in",
+  "upcut_length_default_ratio_of_d": 1.0,
+  "behaviour": "block, not warn",
+  "note": "Vortex: a 0.5 in up-cut length must cut a minimum of 0.563 in per pass; up-cut length is usually about 1xD",
+  "source": "vortex-via-reference",
+  "data_class": "vendor"
+ },
+ "corner_model": {
+  "form": "L = v^2/a (decelerate into the corner plus accelerate out, each v^2/2a)",
+  "source": "reference-v4",
+  "data_class": "derived"
+ },
+ "defaults": {
+  "rpm": 18000,
+  "flutes_total": 2,
+  "max_feed_m_min": 30,
+  "spindle_kw": 10,
+  "breakpoint_rpm": 12000,
+  "footprint_cm2": 80,
+  "feature_mm": 120,
+  "source": "reference-v4",
+  "data_class": "reference_default"
+ },
+ "profile_bands": {
+  "note": "gentle/standard/aggressive = lower edge/midpoint/upper edge of the SERVED band (decision D11, 2026-08-18): the geometry-and-diameter-matched charts when they exist, otherwise the generic charts; other vendors render as named context",
+  "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "first_cut": {
+  "factor": 0.65,
+  "default_on": true,
+  "note": "the first cut runs at 65% of the served chart feed; work up toward the chart value once the cut proves out (decision D15; the README has promised conservative dial-in from the start)",
+  "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "big_iron_caveat": {
+  "applies_when": "every chart setting the served band carries machine_class big_iron_10hp_plus",
+  "message": "These values come only from charts written for rigid industrial machines with 10+ hp spindles. No conservative source (Onsrud, ITA) publishes this material, so there is nothing here to temper them. Treat the Gentle end as the starting point and prove it with a test cut.",
+  "source": "reference-v4",
+  "data_class": "practitioner"
+ },
+ "envelope_rules": {
+  "coverage_tolerance": 0.25,
+  "disagreement_ratio": 2.0,
+  "note": "a diameter-resolved chart contributes only within +/-25% of its published diameter range; when the charts eligible to set a band disagree by more than 2x in midpoint, the most conservative chart serves and the rest become context (decision D11)",
+  "source": "project-decision",
+  "data_class": "project_decision"
+ }
+}

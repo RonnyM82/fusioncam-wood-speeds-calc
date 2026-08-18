@@ -3,40 +3,95 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CNC Router Speeds &amp; Feeds Calculator — Coming Soon</title>
-  <meta name="description" content="A free browser-based speeds and feeds calculator for wood CNC routing.">
-  <style>
-    :root {
-      color-scheme: light dark;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-      box-sizing: border-box;
-    }
-    main {
-      max-width: 32rem;
-    }
-    h1 {
-      font-size: 1.75rem;
-      margin-bottom: 0.5rem;
-    }
-    p {
-      opacity: 0.75;
-      line-height: 1.5;
-    }
-  </style>
+  <title>CNC Router Speeds &amp; Feeds Calculator</title>
+  <meta name="description" content="Free speeds and feeds calculator for solid carbide cutters on nested-base CNC routers. Every number traces to a published source.">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
-    <h1>CNC Router Speeds &amp; Feeds Calculator</h1>
-    <p>A free tool for calculating spindle speeds and feed rates for wood CNC routing is under construction. Check back soon.</p>
+  <header>
+    <h1>CNC Router Speeds &amp; Feeds</h1>
+    <p class="tagline">For nested-base routers and solid carbide tooling. Pick your material, tool, board and machine, then transcribe the numbers straight into Fusion or Woodwork for Inventor. Every number traces to a published source.</p>
+  </header>
+
+  <main id="app">
+    <form id="inputs" onsubmit="return false">
+      <label class="field">Material
+        <select id="material"></select>
+      </label>
+
+      <fieldset class="field">
+        <legend>Tool type</legend>
+        <div id="tooltype" class="tool-grid"></div>
+      </fieldset>
+
+      <div class="field-row">
+        <label class="field">Tool diameter
+          <select id="diameter"></select>
+        </label>
+        <label class="field">Flutes
+          <input id="flutes" type="number" inputmode="numeric" min="1" max="6" step="1">
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">Board thickness (mm)
+          <input id="thickness" type="number" inputmode="decimal" min="1" max="120" step="0.1">
+        </label>
+        <label class="field">Depth per pass (mm)
+          <input id="doc" type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="= thickness">
+        </label>
+      </div>
+
+      <div class="field-row">
+        <label class="field">Width of cut (mm)
+          <input id="woc" type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="= diameter">
+        </label>
+        <label class="field">Spindle speed (rpm)
+          <input id="rpm" type="number" inputmode="numeric" min="1000" max="30000" step="500">
+        </label>
+      </div>
+
+      <label class="field">Machine
+        <select id="machine"></select>
+        <span class="hint" id="machine-note"></span>
+      </label>
+
+      <fieldset class="field">
+        <legend>How hard to run it</legend>
+        <div id="profile" class="segmented"></div>
+      </fieldset>
+
+      <label class="field check-field">
+        <input type="checkbox" id="firstcut">
+        <span id="firstcut-label">First cut: run a reduced feed until the cut proves good</span>
+      </label>
+
+      <details id="advanced">
+        <summary>Advanced</summary>
+        <div id="advanced-fields" class="adv-grid"></div>
+      </details>
+    </form>
+
+    <section id="results" aria-live="polite"></section>
+    <section id="diagnostics"></section>
+
+    <details class="defects">
+      <summary>Something looks wrong on the cut?</summary>
+      <dl>
+        <dt>Laminate edge chips.</dt><dd>Change the tool geometry. Do not change the feed.</dd>
+        <dt>Burn marks in corners.</dt><dd>Use the CAM corner feed function, or increase the machine acceleration.</dd>
+        <dt>Glazed or polished MDF edge.</dt><dd>Increase the feed or reduce the rpm to raise the chip load above the minimum.</dd>
+        <dt>Parts lift or move.</dt><dd>Use an onion skin or tabs. More vacuum does not correct a small footprint.</dd>
+        <dt>Torque stall at low rpm.</dt><dd>Increase the rpm into the constant-power range, or reduce the depth and the feed.</dd>
+      </dl>
+    </details>
   </main>
+
+  <footer>
+    <p>Every value is a start point from a published vendor chart or a measured study, never an average across vendors. Prove settings with a test cut and keep a record of linear metres per bit. Wood moves the numbers: species, moisture, grain and machine rigidity all matter.</p>
+    <p>No warranty of any kind. You are responsible for making sure the settings are safe for your machine, tooling and material. Sources and data live in the <a href="https://github.com/RonnyM82/fusioncam-wood-speeds-calc">repository</a>.</p>
+  </footer>
+
+  <script type="module" src="js/ui/app.js"></script>
 </body>
 </html>

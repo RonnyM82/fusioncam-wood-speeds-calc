@@ -94,6 +94,20 @@
    "rapid_m_min": 100,
    "cut_m_min": 50,
    "data_class": "vendor"
+  },
+  {
+   "make": "Generic",
+   "model": "Heavy nesting router (default)",
+   "spindle_kw": 10,
+   "breakpoint_rpm": 12000,
+   "rpm": [
+    12000,
+    24000
+   ],
+   "cut_feed_m_min": 30,
+   "accel_m_s2": 3,
+   "data_class": "derived",
+   "notes": "Not a real model. This preset combines an HSD ES929-class 10 kW spindle, the heavy-nesting acceleration tier, and the reference defaults for feed, breakpoint and vacuum."
   }
  ],
  "spindles_hsd": [
@@ -106,13 +120,15 @@
     12000,
     28000
    ],
-   "cooling": "fan"
+   "cooling": "fan",
+   "data_class": "vendor"
   },
   {
    "model": "ES919",
    "s1_kw": 6.6,
    "rpm_rated": 24000,
-   "cooling": "fan"
+   "cooling": "fan",
+   "data_class": "vendor"
   },
   {
    "model": "ES929",
@@ -122,7 +138,8 @@
     24000
    ],
    "holder": "HSK-F63",
-   "cooling": "fan"
+   "cooling": "fan",
+   "data_class": "vendor"
   },
   {
    "model": "ES988",
@@ -131,7 +148,8 @@
     12000,
     24000
    ],
-   "holder": "HSK-F63"
+   "holder": "HSK-F63",
+   "data_class": "vendor"
   },
   {
    "model": "ES951",
@@ -142,7 +160,8 @@
     7.6
    ],
    "rpm_rated": 24000,
-   "holder": "HSK-F63"
+   "holder": "HSK-F63",
+   "data_class": "vendor"
   },
   {
    "model": "ES884",
@@ -153,7 +172,8 @@
     8000,
     18000
    ],
-   "cooling": "liquid"
+   "cooling": "liquid",
+   "data_class": "vendor"
   },
   {
    "model": "ES888",
@@ -162,7 +182,8 @@
     8000,
     24000
    ],
-   "cooling": "liquid"
+   "cooling": "liquid",
+   "data_class": "vendor"
   }
  ],
  "spindle_model": "constant torque below breakpoint (P = T*n*2pi/60000, power ~ rpm), constant power above; derate linearly below breakpoint",
