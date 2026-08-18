@@ -135,6 +135,15 @@ EXEMPT = {
     # exactly as it is for lt-tokens.css. Decided with the icon standard,
     # 2026-07-28 (ICONS-PROPOSAL.md D2/D5).
     "app-tokens.css": "an app's own token extensions; brand literals are its job",
+    # Archived third-party source material, kept for data provenance. The
+    # reference doc is the published article several of this calculator's
+    # numbers trace back to, saved verbatim so a reader can check a value
+    # against what it was read from. Nobody styles it and no app markup
+    # imports from it, so its 233 findings are not drift: they are another
+    # author's stylesheet, and the file is only honest while it stays
+    # byte-for-byte what was published. Rewriting it to pass would destroy
+    # the one property that makes it worth keeping. Scott Moyse, 2026-08-18.
+    "cnc-router-speeds-feeds-reference_4.html": "archived third-party source; rewriting it would break provenance",
 }
 
 CHECK_SUFFIXES = {".css", ".html", ".js", ".mjs", ".htm", ".svg"}
