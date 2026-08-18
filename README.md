@@ -2,7 +2,7 @@
 
 A free, browser-based speeds and feeds calculator for wood CNC routing. No sign-up, no install, no server — it's a static page that runs entirely in your browser.
 
-Live at [speeds.fusioncam.co](https://speeds.fusioncam.co).
+Live at [wood.fusioncam.co](https://wood.fusioncam.co).
 
 ## Data provenance
 
