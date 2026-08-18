@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CNC Router Speeds &amp; Feeds Calculator</title>
   <meta name="description" content="Free speeds and feeds calculator for solid carbide cutters on nested-base CNC routers. Every number traces to a published source.">
+  <!-- Livetools Design System. Tokens first: every rule in lt-components.css
+       reads a --lt-* value and gets nothing if the tokens have not landed.
+       styles.css last so the app layer wins without a specificity fight. -->
+  <link rel="stylesheet" href="tokens/lt-tokens.css">
+  <link rel="stylesheet" href="components/lt-components.css">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,7 +18,9 @@
     <p class="tagline">For nested-base routers and solid carbide tooling. Pick your material, tool, board and machine, then transcribe the numbers straight into Fusion or Woodwork for Inventor. Every number traces to a published source.</p>
   </header>
 
-  <main id="app">
+  <!-- Controls belong on a panel, and the panel stays light in both colour
+       schemes. The header and the footer sit on the page surface. -->
+  <main id="app" class="lt-panel">
     <form id="inputs" onsubmit="return false">
       <label class="field">Material
         <select id="material"></select>
@@ -77,7 +84,7 @@
 
     <details class="defects">
       <summary>Something looks wrong on the cut?</summary>
-      <dl>
+      <dl class="lt-prose">
         <dt>Laminate edge chips.</dt><dd>Change the tool geometry. Do not change the feed.</dd>
         <dt>Burn marks in corners.</dt><dd>Use the CAM corner feed function, or increase the machine acceleration.</dd>
         <dt>Glazed or polished MDF edge.</dt><dd>Increase the feed or reduce the rpm to raise the chip load above the minimum.</dd>
@@ -87,9 +94,9 @@
     </details>
   </main>
 
-  <footer>
+  <footer class="lt-prose lt-prose--full">
     <p>Every value is a start point from a published vendor chart or a measured study, never an average across vendors. Prove settings with a test cut and keep a record of linear metres per bit. Wood moves the numbers: species, moisture, grain and machine rigidity all matter.</p>
-    <p>No warranty of any kind. You are responsible for making sure the settings are safe for your machine, tooling and material. Sources and data live in the <a href="https://github.com/RonnyM82/fusioncam-wood-speeds-calc">repository</a>.</p>
+    <p>No warranty of any kind. You are responsible for making sure the settings are safe for your machine, tooling and material. Sources and data live in the <a class="lt-link" href="https://github.com/RonnyM82/fusioncam-wood-speeds-calc">repository</a>.</p>
   </footer>
 
   <script type="module" src="js/ui/app.js"></script>
