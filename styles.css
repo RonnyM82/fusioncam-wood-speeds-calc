@@ -91,9 +91,7 @@ details#advanced, details.defects {
 }
 details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 
-.adv-grid { display: grid; gap: var(--lt-space-4); grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); margin-top: var(--lt-space-4); }
-.adv-field { font-size: var(--lt-text-sm); font-weight: var(--lt-weight-semibold); }
-.adv-field .hint { display: block; font-weight: var(--lt-weight-regular); color: var(--lt-text-secondary); margin-top: var(--lt-space-1); }
+#advanced-fields { margin-top: var(--lt-space-4); }
 
 /* A status surface is light in BOTH schemes, so its ink must be
    scheme-independent too: --lt-*-on-surface, never --lt-*-text. The -text

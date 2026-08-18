@@ -210,44 +210,66 @@ function buildProfile() {
   apply(state.profile, { recalculate: false });
 }
 
+// The unit lives in the field's affix, never in the label. An all-caps label
+// carrying "(m/s²)" is a label nobody finishes reading, and the affix puts the
+// unit where the number is. What the placeholders used to say now reads as a
+// hint, which is announced with the field instead of vanishing on first
+// keystroke.
 const ADV_FIELDS = [
   { id: 'fluteBasis', label: 'Flute count convention', select: [['total', 'Count total flutes (default)'], ['upcut_only', 'Count up-cut flutes only']], hint: 'The vendor charts give per-tooth values for the total flute count. Some engineers count only the up-cut flutes on up/down spirals. If that is your convention, the served feed runs conservative.' },
   { id: 'direction', label: 'Cut direction', select: [['climb', 'Climb (default, the safe higher-force assumption)'], ['conventional', 'Conventional (lower force, modelled for MDF, melamine and plywood only)']] },
-  { id: 'upcutLengthMm', label: 'Compression up-cut section length (mm)', ph: '1× diameter' },
-  { id: 'spindleKw', label: 'Spindle power (kW)', ph: 'from machine' },
-  { id: 'breakpointRpm', label: 'Spindle breakpoint (rpm)', ph: '12000' },
-  { id: 'feedMaxMMin', label: 'Machine max feed (m/min)', ph: 'from machine' },
-  { id: 'accelMs2', label: 'Axis acceleration (m/s²)', ph: 'from machine', hint: 'No OEM publishes this value. Derived tiers: hobby 0.4-1, light 1-3, heavy nesting 2-4.' },
-  { id: 'footprintCm2', label: 'Part footprint on vacuum (cm²)', ph: (d) => `e.g. ${d.rules.defaults.footprint_cm2}`, hint: 'Enter a value to enable the hold-down check.' },
-  { id: 'featureMm', label: 'Smallest feature length (mm)', ph: (d) => `e.g. ${d.rules.defaults.feature_mm}`, hint: 'Enter a value to enable the corner check.' },
-  { id: 'vacDPkPa', label: 'Vacuum ΔP achieved (kPa)', ph: (d) => String(d.machines.vacuum.default_kpa), hint: (d) => `On a cut-open nested sheet, ${d.machines.vacuum.achieved_nested_flow_through_kpa[0]}-${d.machines.vacuum.achieved_nested_flow_through_kpa[1]} kPa is realistic. 83 kPa is a sealed pod, not a nest.` },
-  { id: 'vacMu', label: 'Grip factor μ', ph: '0.4', hint: 'Your own estimate. No source publishes this value. It covers friction, air leakage and safety margin.' },
-  { id: 'densityKgM3', label: 'Timber density (kg/m³)', ph: 'e.g. 515 radiata', hint: 'Solid timber only. The model is valid 287-1080 kg/m³ and warns outside that range.' },
+  { id: 'upcutLengthMm', label: 'Compression up-cut length', measure: 'length', decimals: 1, step: 0.5, hint: 'Defaults to one tool diameter.' },
+  { id: 'spindleKw', label: 'Spindle power', unit: 'kW', decimals: 1, step: 0.5, hint: 'Filled from the machine preset. Edit it to override.' },
+  { id: 'breakpointRpm', label: 'Spindle breakpoint', measure: 'rotation', step: 500, hint: 'The rpm where constant torque becomes constant power. Typically 12000.' },
+  { id: 'feedMaxMMin', label: 'Machine max feed', measure: 'speed', hint: 'Filled from the machine preset. Edit it to override.' },
+  { id: 'accelMs2', label: 'Axis acceleration', unit: 'm/s²', decimals: 1, step: 0.1, hint: 'No OEM publishes this value. Derived tiers: hobby 0.4-1, light 1-3, heavy nesting 2-4.' },
+  { id: 'footprintCm2', label: 'Part footprint on vacuum', unit: 'cm²', decimals: 0, step: 10, hint: (d) => `Enter a value to enable the hold-down check, for example ${d.rules.defaults.footprint_cm2}.` },
+  { id: 'featureMm', label: 'Smallest feature length', measure: 'length', decimals: 1, step: 1, hint: (d) => `Enter a value to enable the corner check, for example ${d.rules.defaults.feature_mm}.` },
+  { id: 'vacDPkPa', label: 'Vacuum ΔP achieved', unit: 'kPa', decimals: 0, step: 5, hint: (d) => `On a cut-open nested sheet, ${d.machines.vacuum.achieved_nested_flow_through_kpa[0]}-${d.machines.vacuum.achieved_nested_flow_through_kpa[1]} kPa is realistic. 83 kPa is a sealed pod, not a nest.` },
+  // The symbol goes in the affix, not the label: .lt-field__label uppercases,
+  // and CSS uppercase maps Greek mu to capital Mu, which renders as a Latin M.
+  // "GRIP FACTOR M" is a different quantity.
+  { id: 'vacMu', label: 'Grip factor', unit: 'μ', decimals: 2, step: 0.05, hint: 'Your own estimate, typically 0.4. No source publishes this value. It covers friction, air leakage and safety margin.' },
+  { id: 'densityKgM3', label: 'Timber density', unit: 'kg/m³', decimals: 0, step: 10, hint: 'Solid timber only, for example 515 for radiata. The model is valid 287-1080 kg/m³ and warns outside that range.' },
 ];
 
 function buildAdvanced() {
   const box = $('advanced-fields');
   const resolve = (v) => (typeof v === 'function' ? v(data) : v);
+  const attr = (name, v) => (v == null || v === '' ? '' : ` ${name}="${escapeHtml(v)}"`);
+
   box.innerHTML = ADV_FIELDS.map((f) => {
-    const input = f.select
-      ? `<select id="adv-${f.id}">${f.select.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>`
-      : `<input id="adv-${f.id}" type="number" inputmode="decimal" step="any" placeholder="${escapeHtml(resolve(f.ph))}">`;
     const hint = resolve(f.hint);
-    return `<label class="adv-field">${f.label}${input}${hint ? `<span class="hint">${escapeHtml(hint)}</span>` : ''}</label>`;
+    if (f.select) {
+      const hintId = `adv-${f.id}-hint`;
+      const options = f.select.map(([v, l]) => `<option value="${v}">${escapeHtml(l)}</option>`).join('');
+      return `<div class="lt-field">
+        <label class="lt-field__label" for="adv-${f.id}">${escapeHtml(f.label)}</label>
+        <select class="lt-select" id="adv-${f.id}"${hint ? ` aria-describedby="${hintId}"` : ''}>${options}</select>
+        ${hint ? `<span class="lt-field__hint" id="${hintId}">${escapeHtml(hint)}</span>` : ''}
+      </div>`;
+    }
+    return `<lt-number-field id="advf-${f.id}" input-id="adv-${f.id}"` +
+      attr('label', f.label) + attr('measure', f.measure) + attr('unit', f.unit) +
+      attr('decimals', f.decimals) + attr('step', f.step) + attr('hint', hint) +
+      `></lt-number-field>`;
   }).join('');
+
   for (const f of ADV_FIELDS) {
-    if (state.adv[f.id] != null) $(`adv-${f.id}`).value = String(state.adv[f.id]);
-    $(`adv-${f.id}`).addEventListener(f.select ? 'change' : 'input', (e) => {
-      const v = e.target.value;
-      if (f.select) {
-        state.adv[f.id] = v;
-      } else {
-        const n = Number(v);
-        if (v === '' || !Number.isFinite(n) || n <= 0) delete state.adv[f.id];
-        else state.adv[f.id] = n;
-      }
-      recalc();
-    });
+    if (f.select) {
+      const el = $(`adv-${f.id}`);
+      if (state.adv[f.id] != null) el.value = String(state.adv[f.id]);
+      el.addEventListener('change', (e) => { state.adv[f.id] = e.target.value; recalc(); });
+    } else {
+      const el = $(`advf-${f.id}`);
+      if (state.adv[f.id] != null) el.value = state.adv[f.id];
+      el.addEventListener('lt-change', (e) => {
+        const v = e.detail.value;
+        if (!Number.isFinite(v) || v <= 0) delete state.adv[f.id];
+        else state.adv[f.id] = v;
+        recalc();
+      });
+    }
   }
 }
 
@@ -269,8 +291,8 @@ function applyMachineToAdvanced({ keepExisting = false } = {}) {
     if (v == null) continue;
     if (keepExisting && state.adv[id] != null) continue;
     state.adv[id] = v;
-    const el = $(`adv-${id}`);
-    if (el) el.value = String(v);
+    const el = $(`advf-${id}`);
+    if (el) el.value = v;
   }
 }
 
