@@ -9,6 +9,7 @@
        reads a --lt-* value and gets nothing if the tokens have not landed.
        styles.css last so the app layer wins without a specificity fight. -->
   <link rel="stylesheet" href="tokens/lt-tokens.css">
+  <link rel="stylesheet" href="app-tokens.css">
   <link rel="stylesheet" href="components/lt-components.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -99,6 +100,11 @@
       </dl>
     </details>
   </main>
+
+  <!-- One tooltip serves both charts. It floats over the page, so it takes a
+       surface context of its own: .lt-panel, never an overlay token plus page
+       ink, which measures 1.09:1 in the dark scheme. -->
+  <div id="chart-tip" class="chart-tip lt-panel" role="tooltip" hidden></div>
 
   <footer class="lt-prose lt-prose--full">
     <p>Every value is a start point from a published vendor chart or a measured study, never an average across vendors. Prove settings with a test cut and keep a record of linear metres per bit. Wood moves the numbers: species, moisture, grain and machine rigidity all matter.</p>

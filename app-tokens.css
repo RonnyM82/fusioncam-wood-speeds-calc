@@ -1,0 +1,84 @@
+/* ---------------------------------------------------------------------------
+   app-tokens.css  --  wood speeds and feeds calculator
+
+   This app's own token extensions. Loads AFTER lt-tokens.css and BEFORE
+   lt-components.css, which is the documented slot for this file, and
+   conformance.py exempts it by name because declaring values is its job.
+   Everywhere else in this repo a literal colour is still a finding.
+
+   WHY IT EXISTS
+   The design system carries 272 tokens and no chart family. The capacity
+   cascade and the chip-load ladder are bar and range visualisations, and
+   SKILL.md is explicit that a gap in the token layer is fixed at the token
+   layer and never patched around in a component. The first pass at this
+   migration did exactly the thing that rule forbids: it read --lt-border-*
+   tokens as data-mark fills and left a comment apologising for it. These four
+   tokens are the fix.
+
+   They live here rather than in lt-tokens.css so the vendored copy stays
+   byte-identical to upstream and an upgrade is still a clean re-copy. They keep
+   the --lt- namespace on purpose: conformance.py's token graph only walks
+   --lt-* names, so a differently prefixed token would sit outside the
+   undefined-token and token-self-cycle checks entirely.
+
+   ONE SET OF VALUES COVERS BOTH COLOUR SCHEMES. Both charts sit inside
+   <main class="lt-panel">, and .lt-panel re-declares --lt-surface-subtle
+   unconditionally, so the chart track computes to #F8F8F8 in the light scheme
+   and in the dark one. Measured in a headless browser, not reasoned about:
+   the panel behind it moves (#FFFFFF light, #DEDEDE dark) and the track does
+   not.
+
+   MEASURED CONTRAST, every mark against the #F8F8F8 track it is painted on:
+
+     --lt-chart-mark            grey-11  #565554    7.00:1
+     --lt-chart-mark-context    grey-9   #868686    3.43:1
+     --lt-chart-mark-emphasis   blue-9   #1F1BAB   10.97:1
+
+   All three clear the 3:1 floor SC 1.4.11 asks of a graphical object. The
+   context mark is the tight one, and it is only legal because it sits on the
+   track: against the dark scheme's #DEDEDE panel the same grey measures
+   2.71:1. Do not move these marks off the track without re-measuring.
+
+   VALIDATOR RESULT, run rather than eyeballed:
+     node scripts/validate_palette.js "#565554,#868686,#1F1BAB" \
+          --mode light --surface "#F8F8F8"
+
+     PASS  CVD separation        worst adjacent dE 17.0 (deutan, tritan)
+     PASS  Normal-vision floor   worst adjacent dE 17.0
+     PASS  Contrast vs surface   all three >= 3:1
+     FAIL  Lightness band        blue-9 at L 0.365, under the 0.43 light floor
+     FAIL  Chroma floor          the two greys read as grey
+
+   Both failures are out of scope and the validator says so in its own footer:
+   its six checks govern CATEGORICAL palettes, where hue carries identity. This
+   is not one. It is an emphasis palette -- grey the rest, highlight the one
+   that matters -- which is what anti-patterns.md prescribes in place of
+   categorical hues when the story is a single number. The greys are meant to
+   read as grey; that is the de-emphasis doing its job, not a hue failing to.
+
+   WORTH KNOWING BEFORE ANYONE BUILDS A CATEGORICAL CHART HERE. The lightness
+   FAIL is out of scope for this chart and would not be for that one, and the
+   Livetools blue ramp cannot currently answer it: step 8 (#89A5FF) is 2.36:1
+   on the track, too pale to be a mark at all, and step 9 is darker than the
+   method's 0.43-0.77 band. There is no step in between. A real categorical
+   chart in a Livetools app needs ramp steps that do not exist yet, and that is
+   an upstream request, not something a second app should quietly invent.
+
+   Neither chart leans on colour alone. The serving ladder row and the binding
+   cascade row both carry bold weight as well as the emphasis fill.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* The recessed well a data bar is drawn inside. */
+  --lt-chart-track: var(--lt-grey-2);
+
+  /* A neutral data mark: the default fill for a bar that is not the story. */
+  --lt-chart-mark: var(--lt-grey-11);
+
+  /* A context mark, deliberately quieter than the neutral one: a cap that
+     cannot bind, a published range that does not serve. */
+  --lt-chart-mark-context: var(--lt-grey-9);
+
+  /* The one mark the chart is about. */
+  --lt-chart-mark-emphasis: var(--lt-action-bg);
+}

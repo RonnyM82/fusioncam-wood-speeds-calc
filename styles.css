@@ -156,28 +156,54 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 
 /* THE TWO CHARTS BELOW ARE BESPOKE ON PURPOSE. The capacity cascade and the
    chip-load ladder are bar and range visualisations, and the system has no
-   component for either. They read --lt-* tokens for every value.
+   component for either. Their colours are named tokens in app-tokens.css,
+   which records what each one measures against the track it is painted on.
 
-   Note the gap this exposes: the token layer has no data-visualisation ramp,
-   so a neutral data bar borrows a border token. That is the honest nearest
-   fit, not a designed answer. If a third chart lands in a Livetools app, the
-   ramp belongs in lt-tokens.css rather than in a third app guessing again.
+   Both are EMPHASIS charts: grey the rest, highlight the one that matters.
+   Neither cycles hues, and neither leans on colour alone -- the serving and
+   binding rows carry bold weight too.
 
-   Neither chart uses opacity to separate a live bar from a context one. An
-   opacity cannot be contrast-checked and it is discarded under forced colours,
-   so the difference is carried by two different tokens instead. */
+   Neither uses opacity to separate a live mark from a context one. An opacity
+   cannot be contrast-checked and is discarded under forced colours, so the
+   difference is carried by two different tokens.
+
+   Marks follow the fixed specs: capped thin bars, a 4px rounded data-end with
+   the baseline end left square, a 2px surface gap between touching bars, and a
+   hairline recessive track. No border is ever drawn around a mark to separate
+   it -- the gap does that work. */
 .cascade { margin-top: var(--lt-space-4); }
-.casc-row { display: flex; align-items: center; gap: var(--lt-space-3); padding: var(--lt-space-1) 0; font-size: var(--lt-text-sm); }
+.casc-row {
+  display: flex;
+  align-items: center;
+  gap: var(--lt-space-3);
+  /* half the 2px surface gap on each side of a touching neighbour */
+  padding-block: 1px;
+  min-block-size: var(--lt-target-min);
+  font-size: var(--lt-text-sm);
+}
 .casc-label { flex: 0 1 7rem; min-width: 0; }
-.casc-bar { flex: 1 1 3rem; min-width: 2rem; height: var(--lt-space-4); background: var(--lt-surface-subtle); border-radius: var(--lt-radius-sm); overflow: hidden; }
-.casc-fill { display: block; height: 100%; background: var(--lt-border-strong); }
-.casc-row.is-bind .casc-fill { background: var(--lt-action-bg); }
+.casc-bar {
+  flex: 1 1 3rem;
+  min-width: 2rem;
+  block-size: var(--lt-space-4);
+  background: var(--lt-chart-track);
+  border-radius: var(--lt-radius-sm);
+}
+/* Square at the baseline it grows from, rounded at the data end. */
+.casc-fill {
+  display: block;
+  block-size: 100%;
+  background: var(--lt-chart-mark);
+  border-start-end-radius: var(--lt-radius-md);
+  border-end-end-radius: var(--lt-radius-md);
+}
+.casc-row.is-bind .casc-fill { background: var(--lt-chart-mark-emphasis); }
 .casc-row.is-bind { font-weight: var(--lt-weight-bold); }
 /* A cap so far above the served feed that it cannot bind. Dimmed with a
    real ink token rather than opacity: at 0.45 the label dropped under the
    contrast floor and nothing could measure it. */
 .casc-row.na { color: var(--lt-text-placeholder); }
-.casc-row.na .casc-fill { background: var(--lt-border-interactive); }
+.casc-row.na .casc-fill { background: var(--lt-chart-mark-context); }
 .casc-val { flex: 0 1 auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .ladder {
@@ -208,21 +234,30 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   color: var(--lt-text-secondary);
   white-space: nowrap;
 }
-.ladder-track { position: relative; height: var(--lt-space-5); background: var(--lt-surface-subtle); border-radius: var(--lt-radius-sm); }
+.ladder-track {
+  position: relative;
+  block-size: var(--lt-space-5);
+  background: var(--lt-chart-track);
+  border-radius: var(--lt-radius-sm);
+}
+/* A range bar, so BOTH ends are data ends and both round. */
 .ladder-bar {
   position: absolute;
   top: var(--lt-space-1);
   bottom: var(--lt-space-1);
-  background: var(--lt-border-interactive);
-  border-radius: var(--lt-radius-sm);
+  background: var(--lt-chart-mark-context);
+  border-radius: var(--lt-radius-md);
 }
-.ladder-row.is-serving .ladder-bar { background: var(--lt-action-bg); }
+.ladder-row.is-serving .ladder-bar { background: var(--lt-chart-mark-emphasis); }
+/* The served feed per tooth, marked in every row against the shared scale.
+   Dotted stays: this is a threshold reference line, which is the one case
+   the anti-pattern on dashed rules explicitly carves out. It is not a grid. */
 .ladder-mark {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 0;
-  border-left: var(--lt-border-width-medium) dotted var(--lt-border-interactive);
+  border-left: var(--lt-border-width-medium) dotted var(--lt-chart-mark-context);
 }
 .ladder-row.is-serving .ladder-mark { border-left-color: var(--lt-text-primary); }
 .ladder-range {
@@ -232,6 +267,58 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   font-size: var(--lt-text-2xs);
 }
 .ladder-legend { margin: var(--lt-space-3) 0 0; font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
+
+/* THE HOVER LAYER. Each chart is one tab stop with a roving tabindex, so the
+   focus ring lands on a row and the arrow keys walk the rest. The hovered or
+   focused row lifts with a ring in the surface colour rather than a border
+   drawn on the mark, which would add ink that is not data. */
+.casc-row, .ladder-row {
+  border-radius: var(--lt-radius-sm);
+  outline-offset: calc(var(--lt-border-width-medium) * -1);
+}
+.casc-row:hover, .ladder-row:hover {
+  background: var(--lt-chart-track);
+}
+.casc-row:focus-visible, .ladder-row:focus-visible {
+  outline: var(--lt-focus-ring-width) solid var(--lt-focus-ring-color);
+  outline-offset: var(--lt-focus-ring-gap);
+}
+.ladder-row { min-block-size: var(--lt-target-min); }
+
+.chart-tip {
+  position: fixed;
+  /* An anchored floating layer, dismissed like one, and it must sit under the
+     overlay, modal and toast levels. There is no --lt-z-tooltip. */
+  z-index: var(--lt-z-dropdown);
+  display: grid;
+  gap: var(--lt-space-1);
+  max-inline-size: 22rem;
+  padding: var(--lt-space-3) var(--lt-space-4);
+  border: var(--lt-border-width-thin) solid var(--lt-border-default);
+  border-radius: var(--lt-radius-md);
+  box-shadow: var(--lt-shadow-overlay);
+  pointer-events: none;
+}
+.chart-tip[hidden] { display: none; }
+/* Values lead, labels follow: the reader already has the row and wants the
+   number, which is the legend's hierarchy inverted. */
+.chart-tip__value {
+  font-size: var(--lt-text-md);
+  font-weight: var(--lt-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--lt-text-primary);
+}
+.chart-tip__label { font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
+.chart-tip__note { font-size: var(--lt-text-xs); color: var(--lt-text-primary); }
+
+.table-twin { margin-top: var(--lt-space-4); }
+.table-twin > summary {
+  cursor: pointer;
+  font-size: var(--lt-text-xs);
+  font-weight: var(--lt-weight-semibold);
+  color: var(--lt-text-secondary);
+}
+.table-twin .lt-table-wrap { margin-top: var(--lt-space-3); }
 @media (max-width: 480px) {
   .ladder-row { grid-template-columns: 1fr auto; }
   .ladder-label { grid-column: 1 / -1; }

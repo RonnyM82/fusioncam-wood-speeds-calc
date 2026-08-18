@@ -109,6 +109,7 @@ async function init() {
   state.firstCut = data.rules.first_cut?.default_on ?? false;
   readUrlState();
   buildForm();
+  initChartTips();
   recalc();
 }
 
@@ -438,16 +439,29 @@ function render(result) {
   const shown = Object.entries(caps).filter(([, v]) => v !== undefined);
   const maxCap = Math.max(...shown.map(([, v]) => v));
   const finalV = result.outputs.cuttingFeedMmMin;
-  const cascade = shown.map(([k, v]) => {
+
+  // Every row carries its own tip and its own accessible name, so the hover
+  // layer only ever repeats what focus and the table already give.
+  const cascRows = shown.map(([k, v]) => {
     const na = k !== 'ideal' && k !== result.limit.binding && v > finalV * 2;
+    const binds = k === result.limit.binding;
     const w = Math.max(2, Math.min(100, (v / maxCap) * 100));
     const pair = feedPair(v);
-    return `<div class="casc-row ${k === result.limit.binding ? 'is-bind' : ''} ${na ? 'na' : ''}">
-      <span class="casc-label">${CAP_LABELS[k]}</span>
-      <span class="casc-bar"><span class="casc-fill" style="width:${w}%"></span></span>
-      <span class="casc-val">${pair.metric}<span class="imperial">${pair.imperial}</span></span>
-    </div>`;
-  }).join('');
+    const verdict = binds ? 'This is the cap that sets the feed.'
+      : na ? `Far above the served feed, so it cannot bind.`
+      : `Above the served ${feedPair(finalV).metric}, so it does not bind.`;
+    return {
+      label: CAP_LABELS[k], metric: pair.metric, imperial: pair.imperial, verdict,
+      html: `<div class="casc-row${binds ? ' is-bind' : ''}${na ? ' na' : ''}"
+        data-tip-value="${escapeHtml(pair.metric)}"
+        data-tip-label="${escapeHtml(CAP_LABELS[k])}"
+        data-tip-note="${escapeHtml(verdict)}" tabindex="-1">
+        <span class="casc-label">${CAP_LABELS[k]}</span>
+        <span class="casc-bar"><span class="casc-fill" style="width:${w}%"></span></span>
+        <span class="casc-val">${pair.metric}<span class="imperial">${pair.imperial}</span></span>
+      </div>`,
+    };
+  });
 
   const badges = chips.map((c) => {
     const variant = CHIP_VARIANT[c.level];
@@ -459,8 +473,137 @@ function render(result) {
   diag.innerHTML = `
     <h2>What is going on in this cut</h2>
     <div class="lt-row">${badges}</div>
-    <div class="cascade">${cascade}</div>
+    <div class="cascade">${cascRows.map((r) => r.html).join('')}</div>
+    ${tableTwin('What could cap the feed', ['Limit', 'Feedrate', 'Does it bind?'],
+      cascRows.map((r) => [r.label, `${r.metric} (${r.imperial})`, r.verdict]))}
   `;
+
+  labelChartRows();
+}
+
+// The table-view twin. Every chart on this page shows its values as text
+// already, so this is not the only way to read a number -- it is the
+// WCAG-clean equivalent, with real headers and a real reading order, and it
+// is what a tooltip is allowed to enhance rather than gate. Collapsed by
+// default so it costs no height, and a <details> gives the keyboard and the
+// announced state for free.
+function tableTwin(caption, headers, rows) {
+  const head = headers.map((h) => `<th scope="col">${escapeHtml(h)}</th>`).join('');
+  const body = rows.map((cells) => `<tr>${cells.map((c, i) =>
+    i === 0 ? `<th scope="row">${escapeHtml(c)}</th>` : `<td>${escapeHtml(c)}</td>`).join('')}</tr>`).join('');
+  return `<details class="table-twin">
+    <summary>Show ${escapeHtml(caption.toLowerCase())} as a table</summary>
+    <div class="lt-table-wrap">
+      <table class="lt-table lt-table--zebra">
+        <caption class="lt-sr-only">${escapeHtml(caption)}</caption>
+        <thead><tr>${head}</tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </details>`;
+}
+
+// ---------------------------------------------------------------------------
+// The chart hover layer.
+//
+// It ENHANCES and never gates. Every number a tip shows is already visible text
+// beside its own bar, and every tip sentence is also the third column of that
+// chart's table twin, so a reader who never hovers loses nothing.
+//
+// Chart labels are vendor names read out of the data files, so the tip is built
+// with textContent and never by concatenating markup.
+//
+// Keyboard parity without fifteen tab stops: each chart is ONE tab stop and the
+// arrow keys move a roving tabindex between its rows, the same shape as the
+// profile radiogroup above. Focus shows exactly what hover shows.
+// ---------------------------------------------------------------------------
+const TIP_HOSTS = ['results', 'diagnostics'];
+
+function initChartTips() {
+  const tip = $('chart-tip');
+  let current = null;
+
+  const show = (row) => {
+    if (current === row) return;
+    current = row;
+    const line = (cls, text) => {
+      const el = document.createElement('span');
+      el.className = cls;
+      el.textContent = text;
+      return el;
+    };
+    // Values lead, labels follow: the reader has the row and wants the number.
+    tip.replaceChildren(
+      line('chart-tip__value', row.dataset.tipValue),
+      line('chart-tip__label', row.dataset.tipLabel),
+      line('chart-tip__note', row.dataset.tipNote),
+    );
+    tip.hidden = false;
+    const r = row.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const gap = 8;
+    tip.style.left = `${Math.min(Math.max(gap, r.left), window.innerWidth - t.width - gap)}px`;
+    tip.style.top = `${r.top > t.height + gap * 2 ? r.top - t.height - gap : r.bottom + gap}px`;
+  };
+
+  const hide = () => { current = null; tip.hidden = true; };
+
+  // Focus outranks a pointer that has not moved. pointerover fires again when
+  // the page scrolls a different row under a stationary pointer, so arrowing
+  // down a chart with the mouse resting on it tore the tip away to whatever
+  // the mouse happened to be over. pointermove only fires when the pointer
+  // really moves, and the lock covers the rest.
+  let lockedToFocus = false;
+
+  for (const id of TIP_HOSTS) {
+    const host = $(id);
+    host.addEventListener('pointermove', (e) => {
+      lockedToFocus = false;
+      const row = e.target.closest('[data-tip-value]');
+      row ? show(row) : hide();
+    });
+    host.addEventListener('pointerleave', () => { if (!lockedToFocus) hide(); });
+    host.addEventListener('focusin', (e) => {
+      const row = e.target.closest('[data-tip-value]');
+      if (!row) return;
+      lockedToFocus = true;
+      show(row);
+    });
+    host.addEventListener('focusout', () => { lockedToFocus = false; hide(); });
+    host.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { hide(); return; }
+      const row = e.target.closest('[data-tip-value]');
+      if (!row) return;
+      const rows = [...row.parentElement.querySelectorAll('[data-tip-value]')];
+      const i = rows.indexOf(row);
+      let next = null;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = Math.min(i + 1, rows.length - 1);
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = Math.max(i - 1, 0);
+      if (e.key === 'Home') next = 0;
+      if (e.key === 'End') next = rows.length - 1;
+      if (next === null) return;
+      e.preventDefault();
+      rows.forEach((r, n) => { r.tabIndex = n === next ? 0 : -1; });
+      rows[next].focus();
+    });
+  }
+}
+
+// Run after every render, because render() replaces the markup the rows live
+// in. The accessible name is set here rather than in the template so the one
+// set of data attributes is the single source for the tip, the name and the
+// table twin.
+function labelChartRows() {
+  for (const id of TIP_HOSTS) {
+    for (const group of $(id).querySelectorAll('.cascade, .ladder')) {
+      const rows = [...group.querySelectorAll('[data-tip-value]')];
+      rows.forEach((row, i) => {
+        row.tabIndex = i === 0 ? 0 : -1;
+        row.setAttribute('aria-label',
+          `${row.dataset.tipLabel}. ${row.dataset.tipValue}. ${row.dataset.tipNote}`);
+      });
+    }
+  }
 }
 
 // The chart ladder: every published chart for this material and tool on one
@@ -477,23 +620,48 @@ function ladderHtml(result) {
   const hi = Math.max(...all.map((b) => b.hi), fz);
   const span = hi - lo || 1;
   const pos = (v) => (((v - lo) / span) * 100).toFixed(1);
+  // The bar's position on the shared scale is the one thing this chart shows
+  // that its own text does not, so that is what the tip says: whether the
+  // served feed falls inside this chart's published band, and which way out
+  // it sits when it does not.
+  const verdictFor = (b) => {
+    if (b.serves) return `Sets your numbers. The served ${fz.toFixed(3)} sits in this band.`;
+    if (fz < b.lo) return `Served feed is below this band, by ${(b.lo - fz).toFixed(3)} mm/tooth.`;
+    if (fz > b.hi) return `Served feed is above this band, by ${(fz - b.hi).toFixed(3)} mm/tooth.`;
+    return 'Served feed falls inside this band, but this chart does not serve it.';
+  };
+
   const rowsHtml = all.map((b) => {
     const left = Number(pos(b.lo));
     const width = Math.max(Number(pos(b.hi)) - left, 0.8);
     const tag = b.machineClass ? ' <em class="ladder-tag">10 hp+ charts</em>' : '';
-    return `<div class="ladder-row ${b.serves ? 'is-serving' : ''}">
+    const range = `${b.lo.toFixed(3)}–${b.hi.toFixed(3)}`;
+    return `<div class="ladder-row${b.serves ? ' is-serving' : ''}" tabindex="-1"
+      data-tip-value="${range} mm/tooth"
+      data-tip-label="${escapeHtml(b.label)}${b.machineClass ? ' (10 hp+ charts)' : ''}"
+      data-tip-note="${escapeHtml(verdictFor(b))}">
       <span class="ladder-label">${escapeHtml(b.label)}${tag}</span>
       <span class="ladder-track">
         <span class="ladder-bar" style="left:${left}%;width:${width.toFixed(1)}%"></span>
         <span class="ladder-mark" style="left:${pos(fz)}%"></span>
       </span>
-      <span class="ladder-range">${b.lo.toFixed(3)}–${b.hi.toFixed(3)}</span>
+      <span class="ladder-range">${range}</span>
     </div>`;
   }).join('');
+
+  const twin = tableTwin('Every published chart for this cut',
+    ['Chart', 'Published band (mm/tooth)', 'Against the served feed'],
+    all.map((b) => [
+      b.label + (b.machineClass ? ' (10 hp+ charts)' : ''),
+      `${b.lo.toFixed(3)}–${b.hi.toFixed(3)}`,
+      verdictFor(b),
+    ]));
+
   return `<div class="ladder">
     <div class="ladder-head"><h2>Every published chart for this cut</h2><span class="ladder-units">mm/tooth</span></div>
     ${rowsHtml}
     <p class="ladder-legend">The highlighted chart sets your numbers. The dotted line marks the served feed per tooth, ${fz.toFixed(3)} mm/tooth. The other charts are context, and their numbers do not serve.</p>
+    ${twin}
   </div>`;
 }
 
