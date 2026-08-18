@@ -93,31 +93,25 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 
 #advanced-fields { margin-top: var(--lt-space-4); }
 
-/* A status surface is light in BOTH schemes, so its ink must be
-   scheme-independent too: --lt-*-on-surface, never --lt-*-text. The -text
-   tokens are page ink, they lift on dark, and on these pale cards that pair
-   measured 3.35-3.44:1 when the design system shipped it in 2026-07. */
-.limit-line {
-  padding: var(--lt-space-4) var(--lt-space-5);
-  border-radius: var(--lt-radius-md);
-  margin: var(--lt-space-5) 0 var(--lt-space-4);
-  font-weight: var(--lt-weight-semibold);
-}
-.limit-line.good { background: var(--lt-success-surface); color: var(--lt-success-on-surface); }
-.limit-line.neutral { background: var(--lt-surface-subtle); color: var(--lt-text-secondary); }
-.limit-line.bad { background: var(--lt-danger-surface); color: var(--lt-danger-on-surface); }
+/* The limit line, the warnings, the notes, the refusal and the block are all
+   .lt-alert banners now, and the diagnostic chips are .lt-badge. The results
+   section spaces them; the components carry no outer margin of their own. */
+#results { display: grid; gap: var(--lt-space-4); margin-block: var(--lt-space-5); }
 
+/* The output rows stay bespoke. .lt-specs is the nearest component and it is
+   not an equivalent: it left-aligns its values in a second column, and a
+   column of feedrates a machinist transcribes needs its digits right-aligned
+   and its imperial conversion under each one. Tokens only, no literals. */
 .out-card {
-  background: var(--lt-surface-panel);
   border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
   border-radius: var(--lt-radius-md);
   padding: var(--lt-space-2) var(--lt-space-5);
 }
 .out-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: var(--lt-space-3);
+  gap: var(--lt-space-1) var(--lt-space-3);
   padding: var(--lt-space-3) 0;
   border-bottom: var(--lt-border-width-thin) solid var(--lt-border-subtle);
 }
@@ -128,39 +122,11 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 .metric { font-weight: var(--lt-weight-bold); font-variant-numeric: tabular-nums; }
 .imperial { display: block; font-size: var(--lt-text-xs); color: var(--lt-text-secondary); font-variant-numeric: tabular-nums; }
 .row-note {
+  grid-column: 1 / -1;
   font-size: var(--lt-text-sm);
   color: var(--lt-text-secondary);
-  padding: 0 0 var(--lt-space-3);
-  border-bottom: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  padding-top: var(--lt-space-2);
 }
-
-.messages { list-style: none; padding: 0; margin: var(--lt-space-4) 0; }
-.messages li {
-  padding: var(--lt-space-3) var(--lt-space-4);
-  border-radius: var(--lt-radius-md);
-  margin: var(--lt-space-2) 0;
-  font-size: var(--lt-text-base);
-}
-.messages .warn { background: var(--lt-warning-surface); color: var(--lt-warning-on-surface); }
-.messages .warn-chip_plough, .messages .warn-chip_below_min { background: var(--lt-danger-surface); color: var(--lt-danger-on-surface); }
-.messages .note { background: var(--lt-surface-subtle); color: var(--lt-text-secondary); }
-
-.error-card, .block-card { padding: var(--lt-space-5); border-radius: var(--lt-radius-md); margin: var(--lt-space-5) 0; }
-.error-card { background: var(--lt-danger-surface); color: var(--lt-danger-on-surface); }
-.block-card { background: var(--lt-warning-surface); color: var(--lt-warning-on-surface); }
-.error-card p, .block-card p { margin: var(--lt-space-3) 0 0; }
-
-.chips { display: flex; flex-wrap: wrap; gap: var(--lt-space-2); }
-.chip {
-  padding: var(--lt-space-1) var(--lt-space-3);
-  border-radius: var(--lt-radius-pill);
-  font-size: var(--lt-text-xs);
-  font-weight: var(--lt-weight-medium);
-}
-.chip-cool { background: var(--lt-success-surface); color: var(--lt-success-on-surface); }
-.chip-warm { background: var(--lt-warning-surface); color: var(--lt-warning-on-surface); }
-.chip-hot { background: var(--lt-danger-surface); color: var(--lt-danger-on-surface); }
-.chip-info { background: var(--lt-surface-subtle); color: var(--lt-text-secondary); }
 
 .cascade { margin-top: var(--lt-space-4); }
 .casc-row { display: flex; align-items: center; gap: var(--lt-space-3); padding: var(--lt-space-1) 0; font-size: var(--lt-text-sm); }

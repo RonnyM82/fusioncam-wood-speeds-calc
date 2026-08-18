@@ -45,6 +45,22 @@ const OUTPUT_ROWS = [
   { key: 'plungeFeedMmMin', label: 'Plunge feedrate', fmt: feedPair },
 ];
 
+// One glyph per severity, for the whole app, kept in one place so a meaning
+// cannot pick up a second drawing at a second call site. Severity is the kind
+// here: every badge and banner already names what it measured in words, so the
+// glyph carries how it is going, which is the part colour cannot carry on its
+// own. Around 8% of men have red-green colour vision deficiency, and this
+// calculator's readers are mostly men on a shop floor.
+const STATUS_GLYPH = {
+  success: 'lt-ic-success',
+  warning: 'lt-ic-warning',
+  danger: 'lt-ic-alert',
+  info: 'lt-ic-info',
+};
+
+// buildChips() speaks in levels. The design system speaks in severities.
+const CHIP_VARIANT = { cool: 'success', warm: 'warning', hot: 'danger', info: 'info' };
+
 const CAP_LABELS = {
   ideal: 'Chip load target',
   vmax: 'Machine feed',
@@ -338,37 +354,66 @@ function recalc() {
   writeUrlState();
 }
 
+// A banner, not a toast: every message here stays true until the numbers
+// change, and a toast is gone in five seconds while the reader is looking at
+// the workpiece.
+//
+// No role="alert" or role="status" on these, deliberately. That rule exists
+// because a banner inserted by script is otherwise silent, and these are not:
+// #results is already an aria-live region, so a role inside it would announce
+// the same sentence twice.
+function alertHtml(variant, title, body = null) {
+  const icon = `<svg class="lt-icon" aria-hidden="true" focusable="false"><use href="#${STATUS_GLYPH[variant]}"/></svg>`;
+  const parts = [];
+  if (title) parts.push(`<span class="lt-alert__title">${escapeHtml(title)}</span>`);
+  if (body) parts.push(`<p>${escapeHtml(body)}</p>`);
+  const inner = title && parts.length === 1
+    ? parts[0]
+    : `<div class="lt-alert__body">${parts.join('')}</div>`;
+  return `<div class="lt-alert lt-alert--${variant}">${icon}${inner}</div>`;
+}
+
 function render(result) {
   const box = $('results');
   const diag = $('diagnostics');
   if (result.status === 'refused') {
-    box.innerHTML = `<div class="error-card"><strong>No number for this one.</strong><p>${escapeHtml(result.refusal.reason)}</p></div>`;
+    box.innerHTML = alertHtml('danger', 'No number for this one.', result.refusal.reason);
     diag.innerHTML = '';
     return;
   }
   if (result.status === 'blocked') {
-    box.innerHTML = `<div class="block-card"><strong>Blocked, not just warned.</strong><p>${escapeHtml(result.block.reason)}</p></div>`;
+    box.innerHTML = alertHtml('warning', 'Blocked, not just warned.', result.block.reason);
     diag.innerHTML = '';
     return;
   }
 
+  // A description list, so the pairing of a label to its number is in the
+  // markup rather than implied by two columns lining up.
   const rows = OUTPUT_ROWS.map((row) => {
     const pair = row.fmt(result.outputs[row.key]);
-    const note = row.noteKey ? `<div class="row-note">${escapeHtml(result.outputNotes[row.noteKey])}</div>` : '';
-    return `<div class="out-row ${row.secondary ? 'secondary' : ''}">
-      <div class="out-label">${row.label}</div>
-      <div class="out-vals"><span class="metric">${pair.metric}</span>${pair.imperial ? `<span class="imperial">${pair.imperial}</span>` : ''}</div>
-    </div>${note}`;
+    const note = row.noteKey ? `<dd class="row-note">${escapeHtml(result.outputNotes[row.noteKey])}</dd>` : '';
+    return `<div class="out-row${row.secondary ? ' secondary' : ''}">
+      <dt class="out-label">${row.label}</dt>
+      <dd class="out-vals"><span class="metric">${pair.metric}</span>${pair.imperial ? `<span class="imperial">${pair.imperial}</span>` : ''}</dd>
+      ${note}
+    </div>`;
   }).join('');
 
-  const limitClass = result.limit.binding === 'ideal' ? 'good' : (result.limit.binding === 'pow' || result.limit.binding === 'vac') ? 'bad' : 'neutral';
-  const warnings = result.warnings.map((w) => `<li class="warn warn-${w.code}">${escapeHtml(w.message)}</li>`).join('');
-  const notes = result.notes.map((n) => `<li class="note">${escapeHtml(n)}</li>`).join('');
+  const limitVariant = result.limit.binding === 'ideal' ? 'success'
+    : (result.limit.binding === 'pow' || result.limit.binding === 'vac') ? 'danger' : 'info';
+
+  const messages = [
+    ...result.warnings.map((w) => ({
+      variant: w.code === 'chip_plough' || w.code === 'chip_below_min' ? 'danger' : 'warning',
+      text: w.message,
+    })),
+    ...result.notes.map((n) => ({ variant: 'info', text: n })),
+  ].map((m) => alertHtml(m.variant, null, m.text)).join('');
 
   box.innerHTML = `
-    <div class="limit-line ${limitClass}">${escapeHtml(result.limit.message)}</div>
-    <div class="out-card">${rows}</div>
-    ${warnings || notes ? `<ul class="messages">${warnings}${notes}</ul>` : ''}
+    ${alertHtml(limitVariant, result.limit.message)}
+    <dl class="out-card">${rows}</dl>
+    ${messages}
     ${ladderHtml(result)}
   `;
 
@@ -388,9 +433,16 @@ function render(result) {
     </div>`;
   }).join('');
 
+  const badges = chips.map((c) => {
+    const variant = CHIP_VARIANT[c.level];
+    return `<span class="lt-badge lt-badge--${variant}">` +
+      `<svg aria-hidden="true" focusable="false"><use href="#${STATUS_GLYPH[variant]}"/></svg>` +
+      `${escapeHtml(c.text)}</span>`;
+  }).join('');
+
   diag.innerHTML = `
     <h2>What is going on in this cut</h2>
-    <div class="chips">${chips.map((c) => `<span class="chip chip-${c.level}">${escapeHtml(c.text)}</span>`).join('')}</div>
+    <div class="lt-row">${badges}</div>
     <div class="cascade">${cascade}</div>
   `;
 }
