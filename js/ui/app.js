@@ -402,18 +402,29 @@ function render(result) {
   const limitVariant = result.limit.binding === 'ideal' ? 'success'
     : (result.limit.binding === 'pow' || result.limit.binding === 'vac') ? 'danger' : 'info';
 
-  const messages = [
-    ...result.warnings.map((w) => ({
-      variant: w.code === 'chip_plough' || w.code === 'chip_below_min' ? 'danger' : 'warning',
-      text: w.message,
-    })),
-    ...result.notes.map((n) => ({ variant: 'info', text: n })),
-  ].map((m) => alertHtml(m.variant, null, m.text)).join('');
+  // A warning asks for judgement, so it is a banner. A note is provenance
+  // context, and there can be nine of them at once when most published charts
+  // hold no value at the chosen diameter. Nine banners is a stream, and a
+  // stream belongs in the page rather than in a stack of banners that drowns
+  // the numbers above it.
+  const warnings = result.warnings.map((w) => alertHtml(
+    w.code === 'chip_plough' || w.code === 'chip_below_min' ? 'danger' : 'warning',
+    null,
+    w.message,
+  )).join('');
+
+  const notes = result.notes.length
+    ? `<div class="notes">
+        <h3 class="notes-title">Notes on this calculation</h3>
+        <ul>${result.notes.map((n) => `<li>${escapeHtml(n)}</li>`).join('')}</ul>
+      </div>`
+    : '';
 
   box.innerHTML = `
     ${alertHtml(limitVariant, result.limit.message)}
     <dl class="out-card">${rows}</dl>
-    ${messages}
+    ${warnings}
+    ${notes}
     ${ladderHtml(result)}
   `;
 

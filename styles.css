@@ -43,7 +43,10 @@ header h1 {
   line-height: var(--lt-leading-base);
 }
 
-h2 {
+/* Scoped, not a bare h2. A bare element selector reaches inside any component
+   that generates its own heading, which is how a gallery once gave every
+   lt-dialog title a 64px top margin and a rule under it. */
+#diagnostics h2 {
   font-size: var(--lt-text-lg);
   line-height: var(--lt-leading-lg);
   margin: var(--lt-space-6) 0 var(--lt-space-3);
@@ -98,6 +101,29 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
    section spaces them; the components carry no outer margin of their own. */
 #results { display: grid; gap: var(--lt-space-4); margin-block: var(--lt-space-5); }
 
+/* Provenance notes, not banners. One cut can produce nine of them, because
+   most published charts hold no value at a 3.175 mm tool, and nine banners
+   bury the feedrates they sit under. */
+.notes {
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+  padding: var(--lt-space-4) var(--lt-space-5);
+  color: var(--lt-text-secondary);
+  font-size: var(--lt-text-sm);
+  line-height: var(--lt-leading-sm);
+}
+.notes-title {
+  font-size: var(--lt-text-xs);
+  font-weight: var(--lt-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--lt-text-primary);
+  margin-bottom: var(--lt-space-3);
+}
+.notes ul { padding-inline-start: var(--lt-space-5); }
+.notes li { margin-block: var(--lt-space-2); }
+
 /* The output rows stay bespoke. .lt-specs is the nearest component and it is
    not an equivalent: it left-aligns its values in a second column, and a
    column of feedrates a machinist transcribes needs its digits right-aligned
@@ -128,6 +154,18 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   padding-top: var(--lt-space-2);
 }
 
+/* THE TWO CHARTS BELOW ARE BESPOKE ON PURPOSE. The capacity cascade and the
+   chip-load ladder are bar and range visualisations, and the system has no
+   component for either. They read --lt-* tokens for every value.
+
+   Note the gap this exposes: the token layer has no data-visualisation ramp,
+   so a neutral data bar borrows a border token. That is the honest nearest
+   fit, not a designed answer. If a third chart lands in a Livetools app, the
+   ramp belongs in lt-tokens.css rather than in a third app guessing again.
+
+   Neither chart uses opacity to separate a live bar from a context one. An
+   opacity cannot be contrast-checked and it is discarded under forced colours,
+   so the difference is carried by two different tokens instead. */
 .cascade { margin-top: var(--lt-space-4); }
 .casc-row { display: flex; align-items: center; gap: var(--lt-space-3); padding: var(--lt-space-1) 0; font-size: var(--lt-text-sm); }
 .casc-label { flex: 0 1 7rem; min-width: 0; }
@@ -135,11 +173,14 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 .casc-fill { display: block; height: 100%; background: var(--lt-border-strong); }
 .casc-row.is-bind .casc-fill { background: var(--lt-action-bg); }
 .casc-row.is-bind { font-weight: var(--lt-weight-bold); }
-.casc-row.na { opacity: 0.45; }
+/* A cap so far above the served feed that it cannot bind. Dimmed with a
+   real ink token rather than opacity: at 0.45 the label dropped under the
+   contrast floor and nothing could measure it. */
+.casc-row.na { color: var(--lt-text-placeholder); }
+.casc-row.na .casc-fill { background: var(--lt-border-interactive); }
 .casc-val { flex: 0 1 auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .ladder {
-  background: var(--lt-surface-panel);
   border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
   border-radius: var(--lt-radius-md);
   padding: var(--lt-space-4) var(--lt-space-5);
@@ -172,20 +213,18 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   position: absolute;
   top: var(--lt-space-1);
   bottom: var(--lt-space-1);
-  background: var(--lt-border-strong);
-  opacity: 0.5;
+  background: var(--lt-border-interactive);
   border-radius: var(--lt-radius-sm);
 }
-.ladder-row.is-serving .ladder-bar { background: var(--lt-action-bg); opacity: 1; }
+.ladder-row.is-serving .ladder-bar { background: var(--lt-action-bg); }
 .ladder-mark {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 0;
-  border-left: var(--lt-border-width-medium) dotted var(--lt-text-primary);
-  opacity: 0.5;
+  border-left: var(--lt-border-width-medium) dotted var(--lt-border-interactive);
 }
-.ladder-row.is-serving .ladder-mark { opacity: 0.9; }
+.ladder-row.is-serving .ladder-mark { border-left-color: var(--lt-text-primary); }
 .ladder-range {
   color: var(--lt-text-secondary);
   font-variant-numeric: tabular-nums;
