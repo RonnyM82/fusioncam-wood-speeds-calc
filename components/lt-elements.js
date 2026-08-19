@@ -423,9 +423,12 @@ class LtNumberField extends HTMLElement {
         const spec = this.#spec;
         const lo = min === -Infinity ? null : formatNumber(spec.fromBase(min), this.#decimals);
         const hi = max === Infinity ? null : formatNumber(spec.fromBase(max), this.#decimals);
-        message = lo && hi ? `Must be between ${lo} and ${hi} ${spec.unit}.`
-          : lo ? `Must be at least ${lo} ${spec.unit}.`
-          : `Must be at most ${hi} ${spec.unit}.`;
+        // A unit-less field has nothing to name, and "between 1 and 6 ." reads
+        // as a typo. Same guard #paint() uses to hide the affix.
+        const u = spec.unit ? ` ${spec.unit}` : "";
+        message = lo && hi ? `Must be between ${lo} and ${hi}${u}.`
+          : lo ? `Must be at least ${lo}${u}.`
+          : `Must be at most ${hi}${u}.`;
       }
     } else if (this.#base < warnLo || this.#base > warnHi) {
       state = "warn";
