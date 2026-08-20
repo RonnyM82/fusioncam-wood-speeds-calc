@@ -671,6 +671,28 @@
   .lt-input-group > :focus-visible,
   .lt-input-group > :hover { z-index: 1; }
 
+  /* ONLY THE INPUT FLEXES. The group is a flex container at inline-size: 100%
+     and .lt-input is itself inline-size: 100%, so the line always overflows and
+     every child shrinks by default. How far each one shrinks depends on how wide
+     its NEIGHBOUR's unit text happens to be, so no two steppers in one form come
+     out the same width, and the widest affix squeezes its buttons hardest.
+
+     That is not cosmetic. .lt-btn--icon asks for --lt-control-height and falls
+     back on min-inline-size: --lt-target-min, the WCAG 2.2 floor, so a crowded
+     stepper lands ON the accessibility minimum rather than near it. Worse, it
+     defeats the coarse-pointer floor entirely: the whole purpose of
+     --lt-target-touch is that a control reaches 44px on touch hardware, and
+     measured before this rule the same buttons painted 27-35px wide there.
+
+     .lt-input already carries min-inline-size: 0, so it absorbs the whole
+     shrinkage with no overflow, down to its own intrinsic minimum in a panel
+     far narrower than any real form. Measured across a six-field form, second
+     consumer report 2026-08-20: six distinct button widths from 24.00 to
+     30.36px before, one width of exactly 36.00 after, and 44.00 under
+     pointer:coarse. smoke-measure.py asserts both axes so this cannot regress. */
+  .lt-input-group > .lt-btn,
+  .lt-input-group > .lt-affix { flex: none; }
+
   .lt-affix {
     display: flex;
     align-items: center;
@@ -929,6 +951,426 @@
   .lt-specs--bordered > dd {
     padding-block: var(--lt-space-3);
     border-block-end: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  }
+
+
+/* -----------------------------------------------------------------------------
+   FILE DROP
+   A dropzone that is a <label> wrapping a real <input type="file">. That is the
+   whole accessibility story: click, Enter, Space, focus ring and the OS file
+   dialog all come from the input for free, and the component adds dragging on
+   top rather than reimplementing selection. An app that loses the script still
+   has a labelled file input that posts.
+
+   Dragging is a POINTER-ONLY affordance and can never be the only way in. The
+   zone therefore always shows the browse action as well, and the drag states
+   below only change how the same target looks.
+   -------------------------------------------------------------------------- */
+
+  .lt-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--lt-space-3);
+    padding: var(--lt-space-6);
+    min-block-size: 8rem;
+    text-align: center;
+    background: var(--lt-field-bg);
+    color: var(--lt-text-secondary);
+    /* Dashed, because a dropzone is a target rather than a container. The
+       colour is the interactive border family: rule 4 applies here exactly as
+       it does to an input, and the lighter greys are under 3:1. */
+    border: var(--lt-border-width-thin) dashed var(--lt-border-interactive);
+    border-radius: var(--lt-radius-md);
+    cursor: pointer;
+    transition: background-color var(--lt-duration-fast) var(--lt-ease-standard),
+                border-color var(--lt-duration-fast) var(--lt-ease-standard);
+  }
+  .lt-dropzone > svg,
+  .lt-dropzone > .lt-icon {
+    inline-size: var(--lt-pictogram-size);
+    block-size: var(--lt-pictogram-size);
+    max-inline-size: none;
+    color: var(--lt-text-secondary);
+    flex: none;
+  }
+  .lt-dropzone__action {
+    font-weight: var(--lt-weight-semibold);
+    color: var(--lt-action-bg);
+  }
+  .lt-dropzone__hint { font-size: var(--lt-text-xs); }
+  .lt-dropzone:hover { border-color: var(--lt-border-strong); }
+
+  /* The input is the real control and stays in the accessibility tree; it is
+     only visually hidden. display:none would take it out of the tab order and
+     strand every keyboard user, which is the classic version of this bug. */
+  .lt-dropzone input[type="file"] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* Focus lives on the input, so the ring has to be drawn on the label around
+     it or it paints on a 1px box nobody can see. */
+  .lt-dropzone:has(input[type="file"]:focus-visible) {
+    outline: var(--lt-focus-ring-width) solid var(--lt-focus-ring-color);
+    outline-offset: var(--lt-focus-ring-gap);
+  }
+  .lt-dropzone[data-over="true"] {
+    background: var(--lt-action-bg-subtle);
+    border-color: var(--lt-action-bg);
+    border-style: solid;
+  }
+  .lt-dropzone[data-over="true"] .lt-dropzone__action { color: var(--lt-action-bg); }
+  .lt-dropzone[aria-disabled="true"] {
+    cursor: not-allowed;
+    background: var(--lt-surface-subtle);
+    color: var(--lt-text-disabled);
+    border-color: var(--lt-border-subtle);
+  }
+
+  /* The chosen files. A list, because that is what it is: the count matters,
+     the order matters, and each row owns its own remove control. */
+  .lt-filelist {
+    list-style: none;
+    margin: var(--lt-space-4) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--lt-space-2);
+  }
+  .lt-file {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: var(--lt-space-3);
+    padding: var(--lt-space-2) var(--lt-space-3);
+    background: var(--lt-surface-subtle);
+    border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+    border-radius: var(--lt-radius-sm);
+    font-size: var(--lt-text-sm);
+  }
+  .lt-file > svg,
+  .lt-file > .lt-icon {
+    inline-size: var(--lt-icon-size-sm);
+    block-size: var(--lt-icon-size-sm);
+    max-inline-size: none;
+    flex: none;
+  }
+  .lt-file__name {
+    /* A file name is the thing being identified, so it truncates from the
+       START: the extension and the distinguishing tail matter more than the
+       shared prefix every export from one machine has. */
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    text-align: left;
+  }
+  .lt-file__name > bdi { direction: ltr; }
+  .lt-file__size {
+    font-variant-numeric: tabular-nums;
+    color: var(--lt-text-secondary);
+    font-size: var(--lt-text-xs);
+    white-space: nowrap;
+  }
+  .lt-file--error {
+    background: var(--lt-danger-surface);
+    border-color: var(--lt-danger-on-surface);
+    color: var(--lt-danger-on-surface);
+  }
+  .lt-file--error .lt-file__size { color: var(--lt-danger-on-surface); }
+  .lt-file__error {
+    grid-column: 1 / -1;
+    font-size: var(--lt-text-xs);
+    color: var(--lt-danger-on-surface);
+  }
+
+  /* Progress is APP-DRIVEN. This component collects and validates files; it
+     does not own the network, because an app owns its endpoint, its auth and
+     its retry policy. The bar is here so an app has somewhere to report to. */
+  .lt-file__progress {
+    grid-column: 1 / -1;
+    block-size: 4px;
+    border-radius: var(--lt-radius-pill);
+    background: var(--lt-progress-track);
+    overflow: hidden;
+  }
+  .lt-file__progress > span {
+    display: block;
+    block-size: 100%;
+    inline-size: 0;
+    background: var(--lt-progress-fill);
+    transition: inline-size var(--lt-duration-base) var(--lt-ease-standard);
+  }
+  .lt-file__progress[data-done="true"] > span { background: var(--lt-progress-done); }
+
+
+/* -----------------------------------------------------------------------------
+   DATE AND TIME FIELD WIDTHS
+   A date field holds ten characters and a time field holds five. Left alone,
+   neither says so, and a bare <input type="text"> takes its intrinsic width
+   from the size attribute's default of TWENTY characters measured in the
+   current font. That is both too wide and, worse, unstable: .lt-panel sets
+   font-weight from --lt-panel-weight, which is 400 in the light scheme and 450
+   in the dark one so text holds its apparent strength as the contrast steps
+   down. Twenty characters of Inter at 450 are wider than twenty at 400, so the
+   whole control changed size when the scheme flipped.
+
+   Measured 2026-08-20 at 150% display scaling, which is the Windows default on
+   most laptops: the date field went 244.33px light to 251.00px dark, a 6.7px
+   jump. At 100% the same difference is under a pixel and rounds away, which is
+   why it only shows on a scaled display and why it reads as the control
+   twitching rather than as a font change.
+
+   The cap goes through --lt-field-max-width for the reason the facet range
+   gives above: it is the system's mechanism for exactly this and it reaches
+   every control kind at once, so the affix caps together with its input rather
+   than being stranded mid-field. In rem, so it is a length rather than a count
+   of glyphs and no font weight can move it.
+   -------------------------------------------------------------------------- */
+
+  lt-date-field { --lt-field-max-width: 12rem; }
+  lt-time-field { --lt-field-max-width: 9rem; }
+
+
+/* -----------------------------------------------------------------------------
+   CALENDAR
+   The popup half of <lt-date-field>. Same construction as .lt-menu__list and for
+   the same reasons: .lt-panel for its own surface, because a floating light card
+   that takes --lt-surface-overlay plus page ink measures 1.09:1 in the dark
+   scheme (see the traps); position: fixed so a table's overflow cannot clip it;
+   and the popover top layer where the browser has it.
+
+   WHY THIS EXISTS AT ALL, given <input type="date"> is right there. The same
+   argument that replaced <input type="number">, one step worse. The native
+   picker cannot take the density tokens, cannot take the surface contexts, and
+   hands you whatever target size the OS feels like on a kiosk. And its text half
+   parses by locale, so 03/04/2026 is the third of April on one machine and the
+   fourth of March on another, with nothing on screen to say which. That is the
+   millimetres-versus-microns failure again, and this system has already decided
+   how it feels about ambiguous units.
+   -------------------------------------------------------------------------- */
+
+  .lt-calendar {
+    position: fixed;
+    z-index: var(--lt-z-dropdown);
+    inline-size: max-content;
+    padding: var(--lt-space-4);
+    border: var(--lt-border-width-thin) solid var(--lt-border-default);
+    border-radius: var(--lt-radius-md);
+    box-shadow: var(--lt-shadow-lg);
+  }
+  .lt-calendar[hidden] { display: none; }
+  .lt-calendar:popover-open {
+    /* the top layer positions itself; margin:0 undoes the UA centring */
+    margin: 0;
+    inset: auto;
+  }
+
+  .lt-calendar__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--lt-space-2);
+    margin-block-end: var(--lt-space-3);
+  }
+  .lt-calendar__title {
+    font-weight: var(--lt-weight-semibold);
+    font-size: var(--lt-density-font);
+    /* The month and year never wrap and never reflow the grid under them, so
+       the arrows stay put as you page through. */
+    white-space: nowrap;
+    text-align: center;
+    flex: 1;
+  }
+
+  .lt-calendar__grid {
+    border-collapse: collapse;
+    /* tabular figures, or the columns jitter between 1 and 11 */
+    font-variant-numeric: tabular-nums;
+  }
+  .lt-calendar__grid th {
+    font-size: var(--lt-text-xs);
+    font-weight: var(--lt-weight-semibold);
+    color: var(--lt-text-secondary);
+    padding-block-end: var(--lt-space-2);
+    text-transform: none;
+  }
+  .lt-calendar__grid td { padding: 0; }
+
+  /* Every day is a real button at the WCAG target floor, which is the other
+     half of why this is not the native control: on a shop-floor kiosk the OS
+     picker's day cells are routinely well under it. */
+  .lt-calendar__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* --lt-control-height, not --lt-target-min. 24px clears SC 2.5.8 and is
+       still a small thing to hit with a mouse; every other control in this
+       system is control-height and a calendar has no reason to be the
+       exception. The coarse-pointer block below lifts it to the touch floor. */
+    inline-size: var(--lt-control-height);
+    block-size: var(--lt-control-height);
+    padding: 0;
+    background: transparent;
+    color: var(--lt-text-primary);
+    border: var(--lt-border-width-thin) solid transparent;
+    border-radius: var(--lt-radius-sm);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .lt-calendar__day:hover:not(:disabled) { background: var(--lt-action-secondary-bg-hover); }
+  .lt-calendar__day:disabled {
+    color: var(--lt-text-disabled);
+    cursor: not-allowed;
+  }
+  /* Today is marked with a RULE, not a colour, so it survives forced colours and
+     does not compete with selection for the colour channel. */
+  .lt-calendar__day[data-today="true"] { border-color: var(--lt-border-interactive); }
+  .lt-calendar__day[aria-selected="true"] {
+    background: var(--lt-action-bg);
+    color: var(--lt-action-text);
+    font-weight: var(--lt-weight-semibold);
+  }
+  .lt-calendar__day[data-outside="true"] { color: var(--lt-text-secondary); }
+
+  .lt-calendar__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--lt-space-2);
+    margin-block-start: var(--lt-space-3);
+    padding-block-start: var(--lt-space-3);
+    border-block-start: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  }
+
+  /* The echo under a date field. A parsed date is repeated back in words the
+     moment it is understood, because a numeric date is the one value in this
+     system a reader cannot check by looking at it: 03/04 is two different days
+     and only the month NAME settles it. Same instinct as the affix on a number
+     field, which exists so a value is never read without its unit. */
+  .lt-field__echo {
+    font-size: var(--lt-text-xs);
+    color: var(--lt-text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (pointer: coarse) {
+    .lt-calendar__day {
+      inline-size: var(--lt-target-touch);
+      block-size: var(--lt-target-touch);
+    }
+  }
+
+
+/* -----------------------------------------------------------------------------
+   CHART TEXTURE
+   Four fills that are tellable apart with NO COLOUR AT ALL: solid, a 45-degree
+   hatch, a 135-degree hatch, and the two crossed. Add one class to a mark that
+   already carries a --lt-chart-* colour; solid is the absence of a class.
+
+   This is rule 3 applied to a chart. The series colours are solved to survive
+   red-green colour blindness, but three other cases collapse them completely and
+   no palette can fix any of them: a photocopy, a monochrome print, and Windows
+   High Contrast Mode, which is genuinely used on shop floors. Texture is the
+   channel that survives all three, so past about four series it stops being a
+   nicety.
+
+   The stripes are cut in the TRACK colour rather than painted in a new one, so a
+   hatched mark reads as the plot background showing through it and no second
+   colour enters the chart. color-mix keeps that honest: the stripe is the track
+   at 78%, which stays visible on the pale fills without hollowing out the dark
+   ones.
+
+   Geometry is raw px on purpose, the same way the select chevron's marker is.
+   These are print numbers, not layout: 3.5px of stripe on a 9px period survives
+   a fax and a 300dpi laser, and scaling them with density would make a compact
+   chart hatch too fine to reproduce.
+   -------------------------------------------------------------------------- */
+
+  .lt-hatch,
+  .lt-hatch--back,
+  .lt-hatch--cross {
+    /* background-image composites OVER background-color, so the mark keeps
+       whatever --lt-chart-* it was given and the texture layers on top. */
+    background-repeat: repeat;
+  }
+  .lt-hatch {
+    background-image: repeating-linear-gradient(45deg,
+      color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 3.5px,
+      transparent 3.5px 9px);
+  }
+  .lt-hatch--back {
+    background-image: repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 3.5px,
+      transparent 3.5px 9px);
+  }
+  /* SAME LINEWEIGHT, WIDER SPACING. All three textures draw a 3.5px line; what
+     changes is the period. Thinning the cross instead was the first attempt and
+     it was wrong: a texture set with three different lineweights reads as three
+     unrelated fills rather than one system, and at a glance the cross looked
+     like a different, lighter thing.
+
+     The spacing is solved rather than eyeballed. One stripe layer covers w/p of
+     the mark. Two layers crossing OVERLAP, so their union is 1-(1-r)^2, which
+     is 2r-r^2 and not 2r. Setting that equal to the single-layer coverage of
+     3.5/9 gives r = 0.219 and a period of 16px, so the cross now shows 0.390 of
+     the track against the single hatch's 0.389. Identical weight, identical
+     density, and the pale fills keep their colour. */
+  .lt-hatch--cross {
+    background-image:
+      repeating-linear-gradient(45deg,
+        color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 3.5px,
+        transparent 3.5px 16px),
+      repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 3.5px,
+        transparent 3.5px 16px);
+  }
+
+  /* A legend key has to carry the same texture as the mark it names, or the
+     texture is decoration rather than an encoding. Small keys need a finer
+     period than a bar does, or one stripe fills the whole swatch. */
+  .lt-chart-key {
+    display: inline-block;
+    inline-size: 0.75rem;
+    block-size: 0.75rem;
+    border-radius: 2px;
+    background-size: 6px 6px;
+    flex: none;
+  }
+  .lt-chart-key.lt-hatch,
+  .lt-chart-key.lt-hatch--back,
+  .lt-chart-key.lt-hatch--cross { background-size: auto; }
+  .lt-chart-key.lt-hatch {
+    background-image: repeating-linear-gradient(45deg,
+      color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 2px,
+      transparent 2px 5px);
+  }
+  .lt-chart-key.lt-hatch--back {
+    background-image: repeating-linear-gradient(135deg,
+      color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 2px,
+      transparent 2px 5px);
+  }
+  /* A 12px key cannot carry a 3.5px line and still read as a hatch, so the key
+     runs at its own 2px weight. The rule is the same one scaled: all three keys
+     share ONE lineweight and only the period changes. 2/5 covers 0.400; two
+     layers at 2/9 cover 0.395. */
+  .lt-chart-key.lt-hatch--cross {
+    background-image:
+      repeating-linear-gradient(45deg,
+        color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 2px,
+        transparent 2px 9px),
+      repeating-linear-gradient(135deg,
+        color-mix(in srgb, var(--lt-chart-track) 78%, transparent) 0 2px,
+        transparent 2px 9px);
   }
 
 
@@ -2307,6 +2749,30 @@
    -------------------------------------------------------------------------- */
 
 @media (forced-colors: active) {
+  /* THE CASE TEXTURE EXISTS FOR. Every --lt-chart-* fill collapses to one system
+     colour here and the gradients are discarded, so eight series would render as
+     eight identical bars. Rather than fight that with forced-color-adjust on the
+     colours - which would be exactly the "fight the system" this file's token
+     comments warn against - the marks are handed to the system as CanvasText and
+     the TEXTURE is what carries identity. The stripes are cut in Canvas, so the
+     four fills stay four distinguishable patterns in pure black and white, which
+     is the same set a photocopy leaves you with. forced-color-adjust is scoped
+     to the texture layer alone and to nothing else. */
+  .lt-hatch,
+  .lt-hatch--back,
+  .lt-hatch--cross { forced-color-adjust: none; background-color: CanvasText; }
+  .lt-hatch {
+    background-image: repeating-linear-gradient(45deg, Canvas 0 3.5px, transparent 3.5px 9px);
+  }
+  .lt-hatch--back {
+    background-image: repeating-linear-gradient(135deg, Canvas 0 3.5px, transparent 3.5px 9px);
+  }
+  .lt-hatch--cross {
+    background-image:
+      repeating-linear-gradient(45deg, Canvas 0 3.5px, transparent 3.5px 16px),
+      repeating-linear-gradient(135deg, Canvas 0 3.5px, transparent 3.5px 16px);
+  }
+
   .lt-btn,
   .lt-input,
   .lt-select,

@@ -2,7 +2,8 @@
    Livetools Design System, behavioural components
    lt-elements.js     requires lt-tokens.css and lt-components.css
 
-   Version 0.4.0  (2026-08-10)
+   Version 0.5.0  (2026-08-20)
+     + <lt-date-field>, <lt-time-field>, <lt-file-drop>
 
    Load it once, anywhere, no build step and no dependencies:
 
@@ -2430,6 +2431,1150 @@ define("lt-wizard", LtWizard);
 
 
 /* -----------------------------------------------------------------------------
+   <lt-file-drop>
+
+   A file field you can drag onto. The dropzone is a <label> around a real
+   <input type="file">, so click, Enter, Space, focus and the OS dialog are the
+   platform's rather than ours, and the element only adds dragging on top.
+
+   IT DOES NOT OWN THE NETWORK. It collects, validates and lists files, keeps
+   the input's FileList in step so a plain form post carries the right set, and
+   exposes a progress API for the app to drive. An app owns its endpoint, its
+   auth and its retry policy; a design-system component that decided those would
+   be wrong in every application that has ever needed to send a file.
+
+   Attributes
+     label       the field label
+     hint        help text under the zone
+     accept      same syntax as the input: ".pdf,.step,image/*"
+     multiple    accept more than one file
+     max-size    per-file ceiling: a number of bytes, or "10MB" / "500KB"
+     max-files   ceiling on how many are held at once
+     name        form field name; the input participates in the parent <form>
+     required    at least one file
+     disabled    zone and input both
+     input-id    id for the input, generated when absent
+
+   Properties:  files (File[]), valid (bool)
+   Events:      lt-files-change  { files, added, rejected }
+   Methods:     setProgress(file|name, 0..1), setError(file|name, message),
+                clearError(file|name), clear()
+   Keyboard:    the zone is a label, so Tab reaches the input and Enter or Space
+                opens the file dialog. Each row's remove button is in the tab
+                order after it.
+   -------------------------------------------------------------------------- */
+
+const SIZE_UNITS = [
+  ["TB", 1024 ** 4], ["GB", 1024 ** 3], ["MB", 1024 ** 2], ["KB", 1024], ["B", 1],
+];
+
+/** "10MB" / "500 kb" / "1048576" -> bytes. NaN when it means nothing. */
+function parseSize(raw) {
+  if (raw == null) return NaN;
+  const text = String(raw).trim();
+  if (!text) return NaN;
+  const m = /^([0-9]*\.?[0-9]+)\s*([a-z]*)$/i.exec(text);
+  if (!m) return NaN;
+  const n = parseFloat(m[1]);
+  const unit = (m[2] || "B").toUpperCase();
+  const hit = SIZE_UNITS.find((u) => u[0] === unit || u[0][0] === unit);
+  return hit ? n * hit[1] : NaN;
+}
+
+/** Bytes as something a person reads. Whole numbers under 10 keep a decimal. */
+function formatSize(bytes) {
+  if (!Number.isFinite(bytes)) return "";
+  for (const [unit, size] of SIZE_UNITS) {
+    if (bytes >= size || unit === "B") {
+      const n = bytes / size;
+      const shown = unit === "B" ? Math.round(n) : (n < 10 ? n.toFixed(1) : Math.round(n));
+      return `${shown} ${unit}`;
+    }
+  }
+  return `${bytes} B`;
+}
+
+/**
+ * Does a File satisfy an accept string? Mirrors the input's own rule: a
+ * comma-separated list of extensions, exact MIME types, and type/* wildcards.
+ * Implemented rather than delegated because the input only enforces accept in
+ * its own dialog, and a dropped file never goes near that dialog.
+ */
+function matchesAccept(file, accept) {
+  if (!accept) return true;
+  const name = file.name.toLowerCase();
+  const type = (file.type || "").toLowerCase();
+  return accept.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    .some((rule) => {
+      if (rule.startsWith(".")) return name.endsWith(rule);
+      if (rule.endsWith("/*")) return type.startsWith(rule.slice(0, -1));
+      return type === rule;
+    });
+}
+
+class LtFileDrop extends HTMLElement {
+  static observedAttributes = ["disabled"];
+
+  #input = null;
+  #zone = null;
+  #list = null;
+  #msg = null;
+  #files = [];          // the authoritative set; input.files is kept to match
+  #errors = new Map();  // key -> message, for app-reported failures
+  #progress = new Map();// key -> 0..1
+  // dragleave fires when the pointer crosses onto a CHILD of the zone, so a
+  // naive enter/leave pair flickers the highlight the whole time you are over
+  // the icon or the hint text. Counting entries against leaves is the fix.
+  #dragDepth = 0;
+
+  connectedCallback() {
+    if (this.#input) return;
+    this.#render();
+  }
+
+  attributeChangedCallback(name) {
+    if (!this.#input) return;
+    if (name === "disabled") this.#syncDisabled();
+  }
+
+  get files() { return this.#files.slice(); }
+
+  get valid() {
+    if (this.hasAttribute("required") && this.#files.length === 0) return false;
+    return this.#errors.size === 0;
+  }
+
+  #key(fileOrName) {
+    return typeof fileOrName === "string" ? fileOrName : fileOrName.name;
+  }
+
+  #render() {
+    const id = this.getAttribute("input-id")
+      || `lt-fd-${Math.random().toString(36).slice(2, 9)}`;
+    const label = this.getAttribute("label") || "";
+    const hint = this.getAttribute("hint") || "";
+    const accept = this.getAttribute("accept") || "";
+    const multiple = this.hasAttribute("multiple");
+
+    this.classList.add("lt-field");
+
+    const parts = [];
+    if (label) {
+      parts.push(`<span class="lt-field__label"${this.hasAttribute("required") ? " data-required" : ""}>${label}</span>`);
+    }
+    parts.push(
+      `<label class="lt-dropzone" for="${id}">` +
+        `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5" ` +
+        `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">` +
+        `<path d="M24 32V10"/><path d="m14 20 10-10 10 10"/>` +
+        `<path d="M8 30v6a2 2 0 0 0 2 2h28a2 2 0 0 0 2-2v-6"/></svg>` +
+        `<span><span class="lt-dropzone__action">Choose ${multiple ? "files" : "a file"}</span>` +
+        ` or drag ${multiple ? "them" : "it"} here</span>` +
+        (accept ? `<span class="lt-dropzone__hint">${accept}</span>` : "") +
+        `<input type="file" id="${id}"` +
+          (accept ? ` accept="${accept}"` : "") +
+          (multiple ? " multiple" : "") +
+          (this.hasAttribute("required") ? " required" : "") +
+          (this.hasAttribute("disabled") ? " disabled" : "") +
+          (this.getAttribute("name") ? ` name="${this.getAttribute("name")}"` : "") +
+        `>` +
+      `</label>`
+    );
+    if (hint) parts.push(`<span class="lt-field__hint" id="${id}-hint">${hint}</span>`);
+    parts.push(`<ul class="lt-filelist" hidden></ul>`);
+    parts.push(`<span data-msg id="${id}-msg" hidden></span>`);
+
+    this.innerHTML = parts.join("");
+
+    this.#input = this.querySelector("input[type=file]");
+    this.#zone = this.querySelector(".lt-dropzone");
+    this.#list = this.querySelector(".lt-filelist");
+    this.#msg = this.querySelector("[data-msg]");
+    if (hint) this.#input.setAttribute("aria-describedby", `${id}-hint`);
+
+    this.#input.addEventListener("change", () => {
+      this.#accept(Array.from(this.#input.files || []));
+    });
+
+    // preventDefault on dragover is what makes the element a drop target at
+    // all; without it the browser navigates to the file and the page is gone.
+    ["dragenter", "dragover"].forEach((type) => {
+      this.#zone.addEventListener(type, (e) => {
+        if (this.hasAttribute("disabled")) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+        if (type === "dragenter") this.#dragDepth++;
+        this.#zone.dataset.over = "true";
+      });
+    });
+    this.#zone.addEventListener("dragleave", () => {
+      this.#dragDepth = Math.max(0, this.#dragDepth - 1);
+      if (this.#dragDepth === 0) delete this.#zone.dataset.over;
+    });
+    this.#zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this.#dragDepth = 0;
+      delete this.#zone.dataset.over;
+      if (this.hasAttribute("disabled")) return;
+      this.#accept(Array.from(e.dataTransfer?.files || []));
+    });
+
+    this.#syncDisabled();
+  }
+
+  #syncDisabled() {
+    const off = this.hasAttribute("disabled");
+    this.#input.disabled = off;
+    this.#zone.setAttribute("aria-disabled", String(off));
+    this.querySelectorAll(".lt-file button").forEach((b) => { b.disabled = off; });
+  }
+
+  /** Validate an incoming batch, keep what passes, report what does not. */
+  #accept(incoming) {
+    const accept = this.getAttribute("accept") || "";
+    const maxSize = parseSize(this.getAttribute("max-size"));
+    const maxFiles = parseInt(this.getAttribute("max-files") || "", 10);
+    const multiple = this.hasAttribute("multiple");
+
+    const added = [];
+    const rejected = [];
+    for (const file of incoming) {
+      if (!matchesAccept(file, accept)) {
+        rejected.push({ file, reason: `Not an accepted file type. Expected ${accept}.` });
+        continue;
+      }
+      if (Number.isFinite(maxSize) && file.size > maxSize) {
+        rejected.push({ file, reason: `Too large at ${formatSize(file.size)}. The limit is ${formatSize(maxSize)}.` });
+        continue;
+      }
+      // Same name AND same size is the same file arriving twice, which is what
+      // dropping a folder twice looks like. Size is included because two
+      // genuinely different files with one name is a real case on a shop floor.
+      if (this.#files.some((f) => f.name === file.name && f.size === file.size)) {
+        rejected.push({ file, reason: "Already added." });
+        continue;
+      }
+      const room = multiple
+        ? (Number.isFinite(maxFiles) ? maxFiles - this.#files.length - added.length : Infinity)
+        : 1 - added.length;
+      if (room <= 0) {
+        rejected.push({
+          file,
+          reason: multiple ? `Only ${maxFiles} files can be added.` : "Only one file can be added.",
+        });
+        continue;
+      }
+      added.push(file);
+    }
+
+    this.#files = multiple ? this.#files.concat(added) : added.slice(0, 1);
+    this.#syncInput();
+    this.#paint(rejected);
+
+    const said = [];
+    if (added.length) said.push(`${added.length} file${added.length === 1 ? "" : "s"} added`);
+    if (rejected.length) said.push(`${rejected.length} rejected`);
+    if (said.length) announce(said.join(", "), rejected.length ? "assertive" : "polite");
+
+    this.dispatchEvent(new CustomEvent("lt-files-change", {
+      bubbles: true,
+      detail: { files: this.files, added, rejected },
+    }));
+  }
+
+  /**
+   * Rebuild the input's FileList from our set, so a plain form post carries
+   * exactly what is on screen. Without this a removed file still posts, which
+   * is the bug every hand-rolled version of this component ships with.
+   */
+  #syncInput() {
+    if (typeof DataTransfer !== "function") return;   // jsdom and old engines
+    try {
+      const dt = new DataTransfer();
+      this.#files.forEach((f) => dt.items.add(f));
+      this.#input.files = dt.files;
+    } catch {
+      /* Some engines refuse to construct a FileList. The property API still
+         reports the right set; only the no-JS form post degrades. */
+    }
+  }
+
+  #paint(rejected = []) {
+    this.#list.textContent = "";
+    this.#list.hidden = this.#files.length === 0;
+
+    for (const file of this.#files) {
+      const key = file.name;
+      const li = document.createElement("li");
+      li.className = "lt-file";
+      if (this.#errors.has(key)) li.classList.add("lt-file--error");
+
+      const icon = document.createElementNS(SVG_NS, "svg");
+      icon.setAttribute("viewBox", "0 0 24 24");
+      icon.setAttribute("fill", "none");
+      icon.setAttribute("stroke", "currentColor");
+      icon.setAttribute("stroke-width", "2");
+      icon.setAttribute("aria-hidden", "true");
+      const path = document.createElementNS(SVG_NS, "path");
+      path.setAttribute("d", "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Zm0 0v5h5");
+      icon.appendChild(path);
+      li.appendChild(icon);
+
+      // THE NAME IS DATA. A file name is chosen by whoever is at the machine
+      // and routinely contains angle brackets and ampersands from a CAM export.
+      // It goes in through textContent, never a markup string. Same rule as
+      // toast() above, and the <bdi> keeps the RTL truncation from reordering
+      // anything in the name itself.
+      const name = document.createElement("span");
+      name.className = "lt-file__name";
+      const bdi = document.createElement("bdi");
+      bdi.textContent = file.name;
+      name.appendChild(bdi);
+      name.title = file.name;
+      li.appendChild(name);
+
+      const size = document.createElement("span");
+      size.className = "lt-file__size";
+      size.textContent = formatSize(file.size);
+      li.appendChild(size);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "lt-btn lt-btn--ghost lt-btn--icon";
+      remove.setAttribute("aria-label", `Remove ${file.name}`);
+      remove.disabled = this.hasAttribute("disabled");
+      const x = document.createElementNS(SVG_NS, "svg");
+      x.setAttribute("viewBox", "0 0 24 24");
+      x.setAttribute("fill", "none");
+      x.setAttribute("stroke", "currentColor");
+      x.setAttribute("stroke-width", "2");
+      x.setAttribute("stroke-linecap", "round");
+      x.setAttribute("aria-hidden", "true");
+      const x1 = document.createElementNS(SVG_NS, "path");
+      x1.setAttribute("d", "M6 6l12 12M18 6 6 18");
+      x.appendChild(x1);
+      remove.appendChild(x);
+      remove.addEventListener("click", () => this.#remove(file));
+      li.appendChild(remove);
+
+      if (this.#progress.has(key)) {
+        const bar = document.createElement("div");
+        bar.className = "lt-file__progress";
+        const value = Math.max(0, Math.min(1, this.#progress.get(key)));
+        if (value >= 1) bar.dataset.done = "true";
+        bar.setAttribute("role", "progressbar");
+        bar.setAttribute("aria-valuemin", "0");
+        bar.setAttribute("aria-valuemax", "100");
+        bar.setAttribute("aria-valuenow", String(Math.round(value * 100)));
+        bar.setAttribute("aria-label", `Uploading ${file.name}`);
+        const fill = document.createElement("span");
+        fill.style.inlineSize = `${value * 100}%`;
+        bar.appendChild(fill);
+        li.appendChild(bar);
+      }
+
+      if (this.#errors.has(key)) {
+        const err = document.createElement("span");
+        err.className = "lt-file__error";
+        err.textContent = this.#errors.get(key);
+        li.appendChild(err);
+      }
+
+      this.#list.appendChild(li);
+    }
+
+    // Rejections are about the batch rather than about any row, so they belong
+    // in the field's own message rather than in the list.
+    if (rejected.length) {
+      this.#msg.hidden = false;
+      this.#msg.className = "lt-field__error";
+      this.#msg.setAttribute("role", "alert");
+      this.#msg.textContent = rejected.length === 1
+        ? `${rejected[0].file.name}: ${rejected[0].reason}`
+        : `${rejected.length} files were not added. ${rejected[0].file.name}: ${rejected[0].reason}`;
+    } else {
+      this.#msg.hidden = true;
+      this.#msg.textContent = "";
+      this.#msg.removeAttribute("role");
+      this.#msg.className = "";
+    }
+    this.#input.setAttribute("aria-invalid", String(!this.valid));
+  }
+
+  #remove(file) {
+    this.#files = this.#files.filter((f) => f !== file);
+    this.#errors.delete(file.name);
+    this.#progress.delete(file.name);
+    this.#syncInput();
+    this.#paint();
+    announce(`${file.name} removed`);
+    this.dispatchEvent(new CustomEvent("lt-files-change", {
+      bubbles: true,
+      detail: { files: this.files, added: [], rejected: [] },
+    }));
+    // Focus would otherwise land on <body> when the row it was in disappears.
+    const next = this.querySelector(".lt-file button") || this.#input;
+    if (next) next.focus();
+  }
+
+  setProgress(fileOrName, fraction) {
+    this.#progress.set(this.#key(fileOrName), fraction);
+    this.#paint();
+  }
+
+  setError(fileOrName, message) {
+    this.#errors.set(this.#key(fileOrName), message);
+    this.#paint();
+    announce(message, "assertive");
+  }
+
+  clearError(fileOrName) {
+    this.#errors.delete(this.#key(fileOrName));
+    this.#paint();
+  }
+
+  clear() {
+    this.#files = [];
+    this.#errors.clear();
+    this.#progress.clear();
+    this.#syncInput();
+    this.#paint();
+    this.dispatchEvent(new CustomEvent("lt-files-change", {
+      bubbles: true,
+      detail: { files: [], added: [], rejected: [] },
+    }));
+  }
+}
+
+define("lt-file-drop", LtFileDrop);
+
+
+/* -----------------------------------------------------------------------------
+   Dates and times
+
+   WHY NOT <input type="date">, which is right there and free. The same argument
+   that replaced <input type="number">, one degree worse.
+
+   The native picker cannot read the density tokens, cannot join a surface
+   context, and gives a kiosk whatever day-cell size the OS feels like, which is
+   routinely under the WCAG target floor this system holds everywhere else. And
+   its text half parses BY LOCALE: 03/04/2026 is the third of April on a machine
+   set to en-NZ and the fourth of March on one set to en-US, with nothing on
+   screen to say which reading you got. That is millimetres-versus-microns
+   again, and the system already decided how it feels about a number whose unit
+   is not shown.
+
+   So: value is ALWAYS ISO yyyy-mm-dd, whatever is on screen. Typing accepts
+   what people actually type. And the parsed date is echoed back in words the
+   moment it is understood, because the month NAME is the only thing that
+   settles 03/04 and a reader cannot check a numeric date by looking at it.
+   -------------------------------------------------------------------------- */
+
+const MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** ISO yyyy-mm-dd for a Date, in LOCAL time. toISOString() would be wrong: it
+ *  converts to UTC first, so an evening in New Zealand reports tomorrow. */
+function isoOf(date) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+}
+
+/** A local-midnight Date from yyyy-mm-dd. new Date("2026-04-03") parses as UTC
+ *  and lands on the 2nd in any negative offset, so the parts go in separately. */
+function dateOf(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || "").trim());
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  // Rejects 2026-02-31 by seeing whether the parts survived normalisation.
+  return d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3] ? d : null;
+}
+
+const MONTH_WORD = /^([0-9]{1,2})[ \-]*([a-z]{3,})[ \-]*([0-9]{2,4})?$/i;
+
+/**
+ * Parse what a person types into an ISO date, or null.
+ *
+ * Accepts ISO first and unconditionally, because it is unambiguous and a
+ * pasted value from anywhere else in the system is ISO. Then day-first numeric
+ * forms with any of / - . as separators, then "3 Apr 2026". A two-digit year
+ * maps into the current century, which is wrong exactly once every hundred
+ * years and right every other time.
+ *
+ * dayFirst is a parameter rather than a constant because the ambiguity is real:
+ * the caller declares which reading it means and the field then SHOWS that
+ * reading back in words, so nobody has to know what the default was.
+ */
+function parseDateInput(raw, dayFirst = true) {
+  const text = String(raw || "").trim();
+  if (!text) return null;
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(text);
+  if (iso) {
+    const norm = `${iso[1]}-${String(+iso[2]).padStart(2, "0")}-${String(+iso[3]).padStart(2, "0")}`;
+    return dateOf(norm) ? norm : null;
+  }
+
+  const word = MONTH_WORD.exec(text);
+  if (word) {
+    const idx = MONTHS.findIndex((m) => m.toLowerCase().startsWith(word[2].toLowerCase()));
+    if (idx >= 0) {
+      const year = word[3] ? expandYear(+word[3]) : new Date().getFullYear();
+      const d = new Date(year, idx, +word[1]);
+      return d.getDate() === +word[1] ? isoOf(d) : null;
+    }
+  }
+
+  const num = /^(\d{1,4})[/\-. ](\d{1,2})(?:[/\-. ](\d{1,4}))?$/.exec(text);
+  if (num) {
+    let a = +num[1], b = +num[2];
+    let year = num[3] ? expandYear(+num[3]) : new Date().getFullYear();
+    let day, month;
+    if (num[1].length === 4) { year = a; month = b; day = num[3] ? +num[3] : 1; }
+    else if (dayFirst) { day = a; month = b; }
+    else { month = a; day = b; }
+    const d = new Date(year, month - 1, day);
+    return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day
+      ? isoOf(d) : null;
+  }
+
+  // A bare run of digits, the way someone types a date on a keypad with no
+  // separators at all: 3426 is unreadable, but 030426 and 03042026 are not.
+  const bare = /^(\d{6}|\d{8})$/.exec(text);
+  if (bare) {
+    const s = bare[1];
+    const a = +s.slice(0, 2), b = +s.slice(2, 4);
+    const year = expandYear(+s.slice(4));
+    const day = dayFirst ? a : b, month = dayFirst ? b : a;
+    const d = new Date(year, month - 1, day);
+    return d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day
+      ? isoOf(d) : null;
+  }
+  return null;
+}
+
+function expandYear(n) {
+  if (n >= 100) return n;
+  const century = Math.floor(new Date().getFullYear() / 100) * 100;
+  return century + n;
+}
+
+/** Display an ISO date in the field's own numeric order. */
+function formatDate(iso, dayFirst = true) {
+  const d = dateOf(iso);
+  if (!d) return "";
+  const p = (n) => String(n).padStart(2, "0");
+  return dayFirst
+    ? `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`
+    : `${p(d.getMonth() + 1)}/${p(d.getDate())}/${d.getFullYear()}`;
+}
+
+/** The echo. This is the part that makes a numeric date checkable. */
+function spellDate(iso) {
+  const d = dateOf(iso);
+  if (!d) return "";
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+
+/* -----------------------------------------------------------------------------
+   <lt-date-field>
+
+   Attributes
+     label, hint     as every other field
+     value           ISO yyyy-mm-dd
+     min, max        ISO, inclusive
+     month-first     read and write mm/dd/yyyy instead of dd/mm/yyyy
+     name            form field name; posts the ISO value, never the display one
+     required, disabled, input-id
+
+   Properties:  value (ISO string), dateValue (Date|null), valid
+   Events:      lt-change { value }
+   Keyboard:    in the field, Down or Alt+Down opens the calendar. In the
+                calendar, arrows move a day or a week, PageUp/PageDown move a
+                month, Shift with them moves a year, Home and End go to the ends
+                of the week, Enter or Space picks, Escape closes and returns
+                focus to the field.
+   -------------------------------------------------------------------------- */
+
+class LtDateField extends HTMLElement {
+  static observedAttributes = ["value", "min", "max", "disabled"];
+
+  #input = null;
+  #posted = null;
+  #msg = null;
+  #echo = null;
+  #cal = null;
+  #trigger = null;
+  #group = null;
+  #iso = "";          // the canonical value, always ISO
+  #cursor = null;     // the date the calendar grid is showing
+  #open = false;
+
+  connectedCallback() {
+    if (this.#input) return;
+    this.#render();
+    this.#iso = this.getAttribute("value") || "";
+    this.#paint();
+  }
+
+  attributeChangedCallback(name, oldV, newV) {
+    if (!this.#input || oldV === newV) return;
+    if (name === "value") { this.#iso = newV || ""; this.#paint(); }
+    else if (name === "disabled") {
+      this.#input.disabled = this.hasAttribute("disabled");
+      this.#trigger.disabled = this.#input.disabled;
+      if (this.#posted) this.#posted.disabled = this.#input.disabled;
+    } else this.#validate();
+  }
+
+  get dayFirst() { return !this.hasAttribute("month-first"); }
+  get value() { return this.#iso; }
+  set value(v) { this.#iso = v || ""; this.#paint(); }
+  get dateValue() { return dateOf(this.#iso); }
+  get valid() { return this.#validate(true); }
+
+  #render() {
+    const id = this.getAttribute("input-id")
+      || `lt-df-${Math.random().toString(36).slice(2, 9)}`;
+    const label = this.getAttribute("label") || "";
+    const hint = this.getAttribute("hint") || "";
+    this.classList.add("lt-field");
+
+    const pattern = this.dayFirst ? "dd/mm/yyyy" : "mm/dd/yyyy";
+    const parts = [];
+    if (label) {
+      parts.push(`<label class="lt-field__label" for="${id}"${this.hasAttribute("required") ? " data-required" : ""}>${label}</label>`);
+    }
+    parts.push(
+      `<div class="lt-input-group">` +
+        `<input id="${id}" class="lt-input" type="text" inputmode="numeric" autocomplete="off"` +
+          ` placeholder="${pattern}"` +
+          (this.hasAttribute("required") ? " required" : "") +
+          (this.hasAttribute("disabled") ? " disabled" : "") + `>` +
+        `<button type="button" class="lt-btn lt-btn--secondary lt-btn--icon" data-open ` +
+          `aria-label="Choose a date" aria-haspopup="dialog" aria-expanded="false">` +
+          `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ` +
+          `stroke-linecap="round" aria-hidden="true" focusable="false">` +
+          `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>` +
+          `</svg></button>` +
+      `</div>`
+    );
+    // The pattern goes in the hint, always, even when the app supplies one of
+    // its own: a date field whose order is not stated is the whole failure this
+    // element exists to avoid.
+    parts.push(`<span class="lt-field__hint" id="${id}-hint">${hint ? hint + " " : ""}${pattern}</span>`);
+    parts.push(`<span class="lt-field__echo" data-echo></span>`);
+    parts.push(`<span data-msg id="${id}-msg" hidden></span>`);
+
+    this.innerHTML = parts.join("");
+
+    this.#input = this.querySelector("input");
+    this.#trigger = this.querySelector("[data-open]");
+    this.#group = this.querySelector(".lt-input-group");
+    this.#msg = this.querySelector("[data-msg]");
+    this.#echo = this.querySelector("[data-echo]");
+    this.#input.setAttribute("aria-describedby", `${id}-hint`);
+
+    if (this.getAttribute("name")) {
+      this.#posted = document.createElement("input");
+      this.#posted.type = "hidden";
+      this.#posted.name = this.getAttribute("name");
+      this.appendChild(this.#posted);
+      // The VISIBLE input stays nameless on purpose, exactly as it does on
+      // lt-number-field: what the field shows is a local reading, and a local
+      // reading must never be what a form stores.
+      this.#input.removeAttribute("name");
+    }
+
+    this.#input.addEventListener("input", () => this.#commit(false));
+    this.#input.addEventListener("blur", () => { this.#commit(true); this.#paint(); });
+    this.#input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown" && (e.altKey || !this.#input.value)) {
+        e.preventDefault();
+        this.#openCal();
+      }
+    });
+    this.#trigger.addEventListener("click", () => {
+      this.#open ? this.#closeCal() : this.#openCal();
+    });
+  }
+
+  #commit(final) {
+    const parsed = parseDateInput(this.#input.value, this.dayFirst);
+    if (parsed) this.#iso = parsed;
+    else if (final && !this.#input.value.trim()) this.#iso = "";
+    this.#echo.textContent = parsed ? spellDate(parsed) : "";
+    this.#validate();
+    if (this.#posted) this.#posted.value = this.#iso;
+    if (parsed || (final && !this.#input.value.trim())) {
+      this.dispatchEvent(new CustomEvent("lt-change", {
+        bubbles: true, detail: { value: this.#iso },
+      }));
+    }
+  }
+
+  #paint() {
+    if (!this.#input) return;
+    this.#input.value = this.#iso ? formatDate(this.#iso, this.dayFirst) : "";
+    this.#echo.textContent = this.#iso ? spellDate(this.#iso) : "";
+    if (this.#posted) this.#posted.value = this.#iso;
+    this.#validate();
+  }
+
+  #validate(quietly = false) {
+    const min = this.getAttribute("min");
+    const max = this.getAttribute("max");
+    let message = "";
+    const typed = this.#input.value.trim();
+    if (typed && !parseDateInput(typed, this.dayFirst)) {
+      message = `That is not a date. Use ${this.dayFirst ? "dd/mm/yyyy" : "mm/dd/yyyy"}.`;
+    } else if (!typed && this.hasAttribute("required")) {
+      message = "";   // an empty required field is the form's problem on submit
+    } else if (this.#iso && min && this.#iso < min) {
+      message = `Must be ${spellDate(min)} or later.`;
+    } else if (this.#iso && max && this.#iso > max) {
+      message = `Must be ${spellDate(max)} or earlier.`;
+    }
+    if (quietly) return !message;
+
+    // The chip and aria-invalid are ONE operation, the same way they are on
+    // lt-number-field. Painting one without the other is the half-a-field
+    // defect lt_dom_audit.py exists to catch.
+    if (message) {
+      this.#msg.hidden = false;
+      this.#msg.className = "lt-field__error";
+      this.#msg.setAttribute("role", "alert");
+      this.#msg.textContent = message;
+      this.#input.setAttribute("aria-invalid", "true");
+      this.#input.setAttribute("aria-describedby", `${this.#input.id}-hint ${this.#input.id}-msg`);
+    } else {
+      this.#msg.hidden = true;
+      this.#msg.textContent = "";
+      this.#msg.removeAttribute("role");
+      this.#msg.className = "";
+      this.#input.setAttribute("aria-invalid", "false");
+      this.#input.setAttribute("aria-describedby", `${this.#input.id}-hint`);
+    }
+    return !message;
+  }
+
+  /* ---- the calendar ------------------------------------------------------ */
+
+  #openCal() {
+    if (this.hasAttribute("disabled")) return;
+    this.#cursor = dateOf(this.#iso) || new Date();
+    if (!this.#cal) {
+      this.#cal = document.createElement("div");
+      // .lt-panel because it is a floating light card, and the overlay-plus-
+      // page-ink pair measures 1.09:1 in the dark scheme. Same as lt-menu.
+      this.#cal.className = "lt-calendar lt-panel";
+      this.#cal.setAttribute("role", "dialog");
+      this.#cal.setAttribute("aria-modal", "false");
+      this.#cal.setAttribute("aria-label", "Choose a date");
+      document.body.appendChild(this.#cal);
+      this.#cal.addEventListener("keydown", (e) => this.#calKey(e));
+    }
+    this.#cal.hidden = false;
+    this.#open = true;
+    this.#trigger.setAttribute("aria-expanded", "true");
+    this.#drawCal();
+    // Anchor on the GROUP, not on the button that opened it. The trigger is a
+    // 36px icon at the far end of the field, so hanging the calendar off it put
+    // a 300px panel out to the right of the control, overlapping whatever sat
+    // beside it. A picker belongs under the thing it fills in: the popup drops
+    // from the field's bottom edge and lines up with its start edge, which is
+    // where a reader is already looking.
+    placeFloating(this, this.#group || this.#trigger, this.#cal, { alignStart: true });
+    const focusTarget = this.#cal.querySelector('[aria-selected="true"]')
+      || this.#cal.querySelector('.lt-calendar__day:not(:disabled)');
+    if (focusTarget) focusTarget.focus();
+    this.#onDocDown = (e) => {
+      if (!this.#cal.contains(e.target) && !this.contains(e.target)) this.#closeCal();
+    };
+    document.addEventListener("pointerdown", this.#onDocDown, true);
+  }
+
+  #closeCal(refocus = true) {
+    if (!this.#open) return;
+    this.#open = false;
+    this.#cal.hidden = true;
+    this.#trigger.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", this.#onDocDown, true);
+    if (refocus) this.#trigger.focus();
+  }
+
+  #onDocDown = null;
+
+  #inRange(iso) {
+    const min = this.getAttribute("min");
+    const max = this.getAttribute("max");
+    if (min && iso < min) return false;
+    if (max && iso > max) return false;
+    return true;
+  }
+
+  #drawCal() {
+    const cur = this.#cursor;
+    const year = cur.getFullYear();
+    const month = cur.getMonth();
+    this.#cal.textContent = "";
+
+    const head = document.createElement("div");
+    head.className = "lt-calendar__head";
+    const mk = (label, delta, unit) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "lt-btn lt-btn--ghost lt-btn--icon";
+      b.setAttribute("aria-label", label);
+      b.textContent = delta < 0 ? "‹" : "›";
+      b.addEventListener("click", () => {
+        this.#cursor = unit === "y"
+          ? new Date(year + delta, month, 1)
+          : new Date(year, month + delta, 1);
+        this.#drawCal();
+      });
+      return b;
+    };
+    head.appendChild(mk("Previous month", -1, "m"));
+    const title = document.createElement("span");
+    title.className = "lt-calendar__title";
+    title.id = `${this.#input.id}-caltitle`;
+    title.textContent = `${MONTHS[month]} ${year}`;
+    head.appendChild(title);
+    head.appendChild(mk("Next month", 1, "m"));
+    this.#cal.setAttribute("aria-labelledby", title.id);
+    this.#cal.appendChild(head);
+
+    const table = document.createElement("table");
+    table.className = "lt-calendar__grid";
+    const thead = document.createElement("thead");
+    const hr = document.createElement("tr");
+    for (const w of WEEKDAYS) {
+      const th = document.createElement("th");
+      th.scope = "col";
+      // The abbreviation is what is drawn; the full name is what is read out,
+      // so a screen reader says "Monday" rather than spelling "Mon".
+      const abbr = document.createElement("abbr");
+      abbr.title = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday",
+                     Fri: "Friday", Sat: "Saturday", Sun: "Sunday" }[w];
+      abbr.textContent = w;
+      th.appendChild(abbr);
+      hr.appendChild(th);
+    }
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    const body = document.createElement("tbody");
+    // Weeks start Monday: this is a New Zealand workshop, not a US calendar.
+    const first = new Date(year, month, 1);
+    const lead = (first.getDay() + 6) % 7;
+    const start = new Date(year, month, 1 - lead);
+    const today = isoOf(new Date());
+
+    for (let w = 0; w < 6; w++) {
+      const tr = document.createElement("tr");
+      for (let d = 0; d < 7; d++) {
+        const cell = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d);
+        const iso = isoOf(cell);
+        const td = document.createElement("td");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "lt-calendar__day";
+        b.textContent = String(cell.getDate());
+        b.dataset.iso = iso;
+        if (cell.getMonth() !== month) b.dataset.outside = "true";
+        if (iso === today) b.dataset.today = "true";
+        b.setAttribute("aria-selected", String(iso === this.#iso));
+        // The full date is the accessible name, because "14" on its own tells a
+        // screen-reader user nothing about which month they are in.
+        b.setAttribute("aria-label", spellDate(iso) + (iso === today ? ", today" : ""));
+        b.disabled = !this.#inRange(iso);
+        b.tabIndex = iso === (this.#iso || today) ? 0 : -1;
+        b.addEventListener("click", () => this.#pick(iso));
+        td.appendChild(b);
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+    }
+    table.appendChild(body);
+    this.#cal.appendChild(table);
+
+    const foot = document.createElement("div");
+    foot.className = "lt-calendar__foot";
+    const todayBtn = document.createElement("button");
+    todayBtn.type = "button";
+    todayBtn.className = "lt-btn lt-btn--ghost";
+    todayBtn.textContent = "Today";
+    todayBtn.disabled = !this.#inRange(today);
+    todayBtn.addEventListener("click", () => this.#pick(today));
+    const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
+    clearBtn.className = "lt-btn lt-btn--ghost";
+    clearBtn.textContent = "Clear";
+    clearBtn.addEventListener("click", () => this.#pick(""));
+    foot.appendChild(todayBtn);
+    foot.appendChild(clearBtn);
+    this.#cal.appendChild(foot);
+  }
+
+  #pick(iso) {
+    this.#iso = iso;
+    this.#paint();
+    this.#closeCal();
+    announce(iso ? spellDate(iso) + " selected" : "Date cleared");
+    this.dispatchEvent(new CustomEvent("lt-change", {
+      bubbles: true, detail: { value: this.#iso },
+    }));
+  }
+
+  #calKey(e) {
+    const focused = this.#cal.querySelector(".lt-calendar__day:focus");
+    if (e.key === "Escape") { e.preventDefault(); this.#closeCal(); return; }
+    if (!focused) return;
+    const from = dateOf(focused.dataset.iso);
+    if (!from) return;
+    const move = (days, months = 0, years = 0) => {
+      e.preventDefault();
+      let to = new Date(from.getFullYear() + years, from.getMonth() + months, from.getDate() + days);
+      // CLAMP TO THE RANGE, never step past it. A day outside min/max renders
+      // as a disabled button, and .focus() on a disabled button does nothing:
+      // the cell the user came from has just been replaced by #drawCal, so
+      // focus falls to <body> and a keyboard user is stranded outside the
+      // dialog with no way back in. Landing on the boundary is also what the
+      // native pickers do. Found by driving the arrows in a real browser,
+      // 2026-08-20; jsdom cannot see it because it does not run focus.
+      const min = this.getAttribute("min");
+      const max = this.getAttribute("max");
+      if (min && isoOf(to) < min) to = dateOf(min) || to;
+      if (max && isoOf(to) > max) to = dateOf(max) || to;
+      this.#cursor = to;
+      this.#drawCal();
+      const next = this.#cal.querySelector(`[data-iso="${isoOf(to)}"]`);
+      if (next && !next.disabled) { next.tabIndex = 0; next.focus(); }
+      else {
+        // Belt and braces: if the clamp still could not produce a focusable
+        // cell, put focus on the first one that is, rather than nowhere.
+        const fallback = this.#cal.querySelector(".lt-calendar__day:not(:disabled)");
+        if (fallback) { fallback.tabIndex = 0; fallback.focus(); }
+      }
+    };
+    switch (e.key) {
+      case "ArrowLeft":  move(-1); break;
+      case "ArrowRight": move(1); break;
+      case "ArrowUp":    move(-7); break;
+      case "ArrowDown":  move(7); break;
+      case "Home":       move(-((from.getDay() + 6) % 7)); break;
+      case "End":        move(6 - ((from.getDay() + 6) % 7)); break;
+      case "PageUp":     e.shiftKey ? move(0, 0, -1) : move(0, -1); break;
+      case "PageDown":   e.shiftKey ? move(0, 0, 1) : move(0, 1); break;
+      default: break;
+    }
+  }
+}
+
+define("lt-date-field", LtDateField);
+
+
+/* -----------------------------------------------------------------------------
+   <lt-time-field>
+
+   No popup. A time is two numbers and typing them is faster than any picker,
+   which is not true of a date. What it does instead is accept every shape a
+   person actually types on a shop floor and normalise it: 1430, 14:30, 2.30pm,
+   9, all land on the same value.
+
+   24-hour by default, because a job sheet that says 7:15 without saying which
+   one has the same problem as a date that does not say its order.
+
+   Attributes:  label, hint, value (HH:MM), min, max, step (minutes),
+                twelve-hour, name, required, disabled, input-id
+   Properties:  value (HH:MM), valid
+   Events:      lt-change { value }
+   -------------------------------------------------------------------------- */
+
+/** Minutes since midnight from what a person typed, or null. */
+function parseTimeInput(raw) {
+  const text = String(raw || "").trim().toLowerCase().replace(/\s+/g, "");
+  if (!text) return null;
+  const m = /^(\d{1,2})(?:[:.h]?(\d{2}))?(am|pm|a|p)?$/.exec(text)
+    || /^(\d{3,4})(am|pm|a|p)?$/.exec(text);
+  if (!m) return null;
+
+  let h, min, suffix;
+  if (m[1].length >= 3) {                    // 930 or 1430, no separator
+    h = +m[1].slice(0, m[1].length - 2);
+    min = +m[1].slice(-2);
+    suffix = m[2];
+  } else {
+    h = +m[1];
+    min = m[2] == null ? 0 : +m[2];
+    suffix = m[3];
+  }
+  if (!Number.isFinite(h) || !Number.isFinite(min) || min > 59) return null;
+  if (suffix) {
+    if (h < 1 || h > 12) return null;
+    const pm = suffix[0] === "p";
+    h = (h % 12) + (pm ? 12 : 0);
+  }
+  if (h > 23) return null;
+  return h * 60 + min;
+}
+
+function formatTime(minutes, twelve = false) {
+  if (minutes == null || !Number.isFinite(minutes)) return "";
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  const p = (n) => String(n).padStart(2, "0");
+  if (!twelve) return `${p(h)}:${p(m)}`;
+  const suffix = h < 12 ? "am" : "pm";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${p(m)} ${suffix}`;
+}
+
+class LtTimeField extends HTMLElement {
+  static observedAttributes = ["value", "min", "max", "disabled"];
+
+  #input = null;
+  #posted = null;
+  #msg = null;
+  #echo = null;
+  #minutes = null;
+
+  connectedCallback() {
+    if (this.#input) return;
+    this.#render();
+    const v = this.getAttribute("value");
+    this.#minutes = v ? parseTimeInput(v) : null;
+    this.#paint();
+  }
+
+  attributeChangedCallback(name, oldV, newV) {
+    if (!this.#input || oldV === newV) return;
+    if (name === "value") { this.#minutes = newV ? parseTimeInput(newV) : null; this.#paint(); }
+    else if (name === "disabled") {
+      this.#input.disabled = this.hasAttribute("disabled");
+      if (this.#posted) this.#posted.disabled = this.#input.disabled;
+    } else this.#validate();
+  }
+
+  get twelve() { return this.hasAttribute("twelve-hour"); }
+  get value() { return this.#minutes == null ? "" : formatTime(this.#minutes, false); }
+  set value(v) { this.#minutes = v ? parseTimeInput(v) : null; this.#paint(); }
+  get valid() { return this.#validate(true); }
+
+  #render() {
+    const id = this.getAttribute("input-id")
+      || `lt-tf-${Math.random().toString(36).slice(2, 9)}`;
+    const label = this.getAttribute("label") || "";
+    const hint = this.getAttribute("hint") || "";
+    this.classList.add("lt-field");
+    const pattern = this.twelve ? "h:mm am" : "hh:mm";
+
+    const parts = [];
+    if (label) {
+      parts.push(`<label class="lt-field__label" for="${id}"${this.hasAttribute("required") ? " data-required" : ""}>${label}</label>`);
+    }
+    parts.push(
+      `<div class="lt-input-group">` +
+        `<input id="${id}" class="lt-input lt-input--numeric" type="text" inputmode="numeric" ` +
+          `autocomplete="off" placeholder="${pattern}"` +
+          (this.hasAttribute("required") ? " required" : "") +
+          (this.hasAttribute("disabled") ? " disabled" : "") + `>` +
+        `<span class="lt-affix">${this.twelve ? "12h" : "24h"}</span>` +
+      `</div>`
+    );
+    parts.push(`<span class="lt-field__hint" id="${id}-hint">${hint ? hint + " " : ""}${pattern}</span>`);
+    parts.push(`<span class="lt-field__echo" data-echo></span>`);
+    parts.push(`<span data-msg id="${id}-msg" hidden></span>`);
+    this.innerHTML = parts.join("");
+
+    this.#input = this.querySelector("input");
+    this.#msg = this.querySelector("[data-msg]");
+    this.#echo = this.querySelector("[data-echo]");
+    this.#input.setAttribute("aria-describedby", `${id}-hint`);
+
+    if (this.getAttribute("name")) {
+      this.#posted = document.createElement("input");
+      this.#posted.type = "hidden";
+      this.#posted.name = this.getAttribute("name");
+      this.appendChild(this.#posted);
+      this.#input.removeAttribute("name");
+    }
+
+    this.#input.addEventListener("input", () => this.#commit(false));
+    this.#input.addEventListener("blur", () => { this.#commit(true); this.#paint(); });
+    this.#input.addEventListener("keydown", (e) => {
+      const step = parseInt(this.getAttribute("step") || "15", 10) || 15;
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+      const base = this.#minutes == null ? (e.key === "ArrowUp" ? 0 : 24 * 60 - step) : this.#minutes;
+      const next = (base + (e.key === "ArrowUp" ? step : -step) + 24 * 60) % (24 * 60);
+      this.#minutes = next;
+      this.#paint();
+      this.dispatchEvent(new CustomEvent("lt-change", { bubbles: true, detail: { value: this.value } }));
+    });
+  }
+
+  #commit(final) {
+    const parsed = parseTimeInput(this.#input.value);
+    if (parsed != null) this.#minutes = parsed;
+    else if (final && !this.#input.value.trim()) this.#minutes = null;
+    // The echo shows the OTHER clock, which is the check: someone who typed
+    // 7:15 meaning the evening sees "19:15" and someone who typed 19:15 sees
+    // "7:15 pm". Either way the reading they did not type is on screen.
+    this.#echo.textContent = parsed == null ? "" : formatTime(parsed, !this.twelve);
+    this.#validate();
+    if (this.#posted) this.#posted.value = this.value;
+    if (parsed != null || (final && !this.#input.value.trim())) {
+      this.dispatchEvent(new CustomEvent("lt-change", { bubbles: true, detail: { value: this.value } }));
+    }
+  }
+
+  #paint() {
+    if (!this.#input) return;
+    this.#input.value = this.#minutes == null ? "" : formatTime(this.#minutes, this.twelve);
+    this.#echo.textContent = this.#minutes == null ? "" : formatTime(this.#minutes, !this.twelve);
+    if (this.#posted) this.#posted.value = this.value;
+    this.#validate();
+  }
+
+  #validate(quietly = false) {
+    const min = this.getAttribute("min") ? parseTimeInput(this.getAttribute("min")) : null;
+    const max = this.getAttribute("max") ? parseTimeInput(this.getAttribute("max")) : null;
+    let message = "";
+    const typed = this.#input.value.trim();
+    if (typed && parseTimeInput(typed) == null) {
+      message = `That is not a time. Use ${this.twelve ? "h:mm am" : "hh:mm"}.`;
+    } else if (this.#minutes != null && min != null && this.#minutes < min) {
+      message = `Must be ${formatTime(min, this.twelve)} or later.`;
+    } else if (this.#minutes != null && max != null && this.#minutes > max) {
+      message = `Must be ${formatTime(max, this.twelve)} or earlier.`;
+    }
+    if (quietly) return !message;
+    if (message) {
+      this.#msg.hidden = false;
+      this.#msg.className = "lt-field__error";
+      this.#msg.setAttribute("role", "alert");
+      this.#msg.textContent = message;
+      this.#input.setAttribute("aria-invalid", "true");
+      this.#input.setAttribute("aria-describedby", `${this.#input.id}-hint ${this.#input.id}-msg`);
+    } else {
+      this.#msg.hidden = true;
+      this.#msg.textContent = "";
+      this.#msg.removeAttribute("role");
+      this.#msg.className = "";
+      this.#input.setAttribute("aria-invalid", "false");
+      this.#input.setAttribute("aria-describedby", `${this.#input.id}-hint`);
+    }
+    return !message;
+  }
+}
+
+define("lt-time-field", LtTimeField);
+
+
+/* -----------------------------------------------------------------------------
    Toasts and the shared live region
 
    One live region for the whole page, created lazily. Two of them, in fact:
@@ -2720,4 +3865,12 @@ if (document.readyState === "loading") {
   initFieldAudit();
 }
 
-export { parseNumber, formatNumber, UNITS, DEFINED };
+export {
+  parseNumber, formatNumber, UNITS, DEFINED,
+  // The date, time and size helpers are pure and are where a wrong day or a
+  // wrong unit would actually come from, so they are tested directly rather
+  // than only through the elements that use them.
+  parseDateInput, formatDate, spellDate, isoOf, dateOf,
+  parseTimeInput, formatTime,
+  parseSize, formatSize, matchesAccept,
+};

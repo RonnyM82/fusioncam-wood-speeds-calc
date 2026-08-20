@@ -434,6 +434,16 @@
   --lt-action-secondary-text:     var(--lt-grey-12);
   --lt-action-secondary-border:   var(--lt-border-interactive);
 
+  /* Determinate progress, added 2026-08-20 with <lt-file-drop>. Its own pair
+     rather than a borrowed one: a progress track is not a surface and not a
+     border, and reaching for --lt-border-subtle because it happened to be the
+     right grey is the mistake rule 1 names. The track carries no meaning on its
+     own, so it sits below 3:1 deliberately; the FILL is what has to be legible
+     and it is the action colour, 10.97:1 on the track. */
+  --lt-progress-track: var(--lt-grey-5);
+  --lt-progress-fill:  var(--lt-action-bg);
+  --lt-progress-done:  var(--lt-success-accent);
+
   /* Brand. Identity surfaces only: logo lockups, brand bars, the circular arc
      devices, large display type. Do NOT reach for this to style a control. */
   /* Brand. Identity surfaces only: logo lockups, brand bars, the circular arc
@@ -836,6 +846,115 @@
   --lt-iso-h: #5F6368;  --lt-iso-h-on: var(--lt-white);
   --lt-iso-w: #6B4423;  --lt-iso-w-on: var(--lt-white);
   --lt-iso-o: #6A3FA0;  --lt-iso-o-on: var(--lt-white);
+}
+
+
+/* -----------------------------------------------------------------------------
+   3c. CHART PALETTE
+   A FOURTH JOB FOR COLOUR, added 2026-08-20 from the wood calculator's report.
+   Section 3b named three jobs; a chart mark is none of them:
+
+     brand identity   who we are          logotype, brand bars, arcs
+     status severity  how something IS    danger, warning, success, info
+     domain palette   WHAT something IS   an externally-fixed trade taxonomy
+     chart series     WHICH ONE this is   series 1 of n, and nothing more
+
+   A series colour carries identity only. It says which line is which and it
+   means nothing else: not good, not bad, not a material group. That is why
+   these are their own family rather than borrowed from any of the three above,
+   and it is the failure the report caught, where a consumer with no chart
+   tokens reached for --lt-border-strong as the fill of a data bar. A border
+   token used as a fill passes every static check and is still wrong.
+
+   THE PLOT SURFACE IS PART OF THE CONTRACT, and this is the load-bearing half.
+   A chart paints --lt-chart-track as its plot background, always, and every
+   mark below is certified against that value and no other. The track is
+   --lt-grey-2 unconditionally: not scheme-dependent, not theme-dependent, so a
+   chart looks the same on a night shift as it does at 9am and the palette is
+   solved once rather than twice. That is the same move .lt-panel already makes
+   by staying light in both schemes.
+
+   The reason it is mandatory rather than advisory was measured. Marks drawn
+   straight onto a panel with no track meet 3:1 on the light panel (#FFFFFF)
+   and on the commercial dark panel (--lt-grey-2), but the OPERATIONAL dark
+   panel is --lt-grey-5 #DEDEDE, and against that four of the eight fall to
+   2.38-2.45:1 and fail SC 1.4.11. Solving the whole palette against grey-5
+   instead was tried and rejected: it forces every mark dark, which drags the
+   green to an olive and cost the eighth slot outright. The track keeps both.
+
+   THE CONTRACT:
+
+   1. ORDER IS THE MECHANISM. Take the first N slots for N series, in order,
+      and never cycle or re-order. The sequence is chosen so that every PREFIX
+      is as separable as it can be, because a three-series chart uses slots 1-3
+      alone and has to survive on its own. Worst pair anywhere: 20.4 at three
+      series, 14.9 at four, 13.0 at six, 10.3 at all eight.
+   2. MEASURED ON EVERY PAIR, not on neighbours. The first draft of this
+      palette passed a neighbours-only check with amber, green and olive at
+      slots 2, 5 and 8, where they were never compared to each other; measured
+      properly, green and olive sat 0.3 apart under protanopia, which is the
+      same colour. A legend lists every series together, so every pair is a
+      neighbour where it counts. verify-tokens.py checks all 28 pairs.
+   3. NINE SERIES IS NOT A NINTH COLOUR. Past eight, fold the tail into
+      "Other", facet into small multiples, or change the chart. A generated
+      hue is never the answer.
+   4. NEVER THE SOLE SIGNAL, same as rule 3 everywhere else in this system. A
+      chart carries a legend, and four or fewer series carry direct labels as
+      well. The separation figures below say a reader CAN tell two marks apart;
+      they do not say a reader knows which is which without being told.
+   5. NO RED. A red slot was measured and rejected on 2026-08-20: at eight
+      series it scored 10.4 against this palette's 10.3, which is the same
+      number, and at six series it was worse (10.5 against 13.0), because a red
+      crowds the same warm region as the amber and pushes it into the green.
+      It would also have cost a second named exception to rule 2, alongside the
+      ISO 513 cast-iron K swatch. Paying an exception for nothing is not a
+      trade. Red stays identity and danger.
+
+   THE MATHS, so nobody re-derives it from memory. Separation is Euclidean
+   distance in OKLab x100, under Machado-Oliveira-Fernandes 2009 at severity
+   1.0, taking the worse of protanopia and deuteranopia. The floor is 8, and a
+   companion floor of 15 applies unsimulated so that full-colour readers are
+   not asked to split hairs either. This palette measures 10.3 and 16.5, the worst pair being teal against
+   magenta.
+   Tritanopia, the rare blue-yellow form, is NOT covered: it scores 2.2, and
+   covering it as well cost about a third of the red-green headroom. That is a
+   deliberate trade, taken 2026-08-20 with both numbers in hand, on the grounds
+   that red-green affects around 1 in 12 men and tritanopia around 1 in 10,000
+   people and is not sex-linked. Rule 4 is what carries the tritan case.
+
+   These are literals for the same reason the domain palettes are: the ramps are
+   derived from brand inputs and none of these hues is derivable from them. They
+   are solved for separation under simulated colour blindness, which is not a
+   property any perceptual ramp step happens to have. verify-tokens.py pins every
+   value by name and recomputes the whole matrix, so the palette cannot drift.
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* The plot surface. Fixed in every scheme and every theme, on purpose. */
+  --lt-chart-track: var(--lt-grey-2);   /* #F8F8F8, 1.27:1 on the grey-5 panel */
+  --lt-chart-grid:  var(--lt-grey-6);   /* 1.42:1 on the track; recessive by design,
+                                           a gridline is not a graphical object under
+                                           SC 1.4.11 because the axis labels carry
+                                           the values. Do not darken it to "fix" a
+                                           contrast finding it is not subject to. */
+
+  /* Categorical series. Take the first N, in order, never cycled. */
+  --lt-chart-1: #10A700;   /* green     3.02:1 on the track */
+  --lt-chart-2: #7A00D3;   /* violet    7.14:1 */
+  --lt-chart-3: #852758;   /* rose      8.14:1  held off the red band on purpose */
+  --lt-chart-4: #0092FF;   /* blue      3.02:1 */
+  --lt-chart-5: #0D9E9A;   /* teal      3.10:1 */
+  --lt-chart-6: #865801;   /* amber     5.80:1 */
+  --lt-chart-7: #006898;   /* cyan      5.76:1 */
+  --lt-chart-8: #FF17E5;   /* magenta   3.04:1 */
+
+  /* One series, or a series plus its context. A single-series chart takes
+     --lt-chart-mark rather than slot 1: identity is not in question when there
+     is only one thing on the page, so it stays neutral and the colour channel
+     is left free for the one bar that actually needs pointing at. */
+  --lt-chart-mark:          var(--lt-grey-11);  /*  7.00:1 the neutral mark   */
+  --lt-chart-mark-context:  var(--lt-grey-9);   /*  3.43:1 the quieter one    */
+  --lt-chart-mark-emphasis: var(--lt-blue-9);   /* 10.97:1 the one that matters */
 }
 
 

@@ -9,6 +9,11 @@ the system. Exit code 1 on any error, so it can gate a commit or a CI step.
     python3 conformance.py ../my-app          # check an app built on the system
     python3 conformance.py --warnings         # show advisories too
 
+An app exempts its OWN files by writing .conformance-exempt at the root it
+checks, one "filename: reason" a line. Never by editing this file, which is
+vendored: the next re-copy would delete the exemption and the app would go from
+green to a wall of findings with nothing to explain it.
+
 WHY THIS EXISTS
 A design system that relies on people remembering it decays. Worse, an AI coding
 agent asked to "make the button red" will happily write #ED1C24 into a component,
@@ -24,7 +29,9 @@ generic lint list:
                    will not be caught by the contrast checks.
   raw-font-size    a px or pt font size instead of a --lt-text-* token, which
                    breaks the density modes and ignores the user's browser
-                   setting.
+                   setting. Read across the whole declaration value, not just
+                   what follows the colon, so a literal cannot hide one bracket
+                   deep in a var() fallback slot.
   inline-style-state
                    an inline style on an interactive element. Inline styles carry
                    no :hover, :focus or :active, so a control styled this way
@@ -82,6 +89,22 @@ initial value, which is why this class of bug reaches a rendered page:
   undefined-token  a var(--lt-*) with no fallback that nothing in the
                    checked set defines. A typo (--lt-space-04) or a token
                    dropped by a version bump computes to nothing, silently.
+  undefined-token-fallback
+                   the same undefined name, but carrying a fallback. Skipping
+                   these looked sound, because a fallback is exactly what stops
+                   a declaration computing to nothing. It also stops the check
+                   seeing an invented token: write a name the system has never
+                   defined, put a raw value in the fallback slot, and the page
+                   renders correctly while every rule here stays green. The
+                   second consumer report (2026-08-20) shipped
+                   z-index: var(--lt-z-tooltip, 60) through the gate, where no
+                   --lt-z-tooltip exists and a unitless z-index is neither a
+                   colour nor a length, so nothing caught the 60 either. A
+                   fallback is a legitimate hedge on a token that EXISTS and may
+                   not have landed in this version; against a name nothing
+                   defines it is a typo or an invention. This fails rather than
+                   warns because the false-positive rate is zero by
+                   construction: the name is in the checked set or it is not.
   conditional-token-no-fallback
                    a var(--lt-*) with no fallback whose definitions ALL sit
                    inside conditional contexts: an @media / @supports /
@@ -135,16 +158,55 @@ EXEMPT = {
     # exactly as it is for lt-tokens.css. Decided with the icon standard,
     # 2026-07-28 (ICONS-PROPOSAL.md D2/D5).
     "app-tokens.css": "an app's own token extensions; brand literals are its job",
-    # Archived third-party source material, kept for data provenance. The
-    # reference doc is the published article several of this calculator's
-    # numbers trace back to, saved verbatim so a reader can check a value
-    # against what it was read from. Nobody styles it and no app markup
-    # imports from it, so its 233 findings are not drift: they are another
-    # author's stylesheet, and the file is only honest while it stays
-    # byte-for-byte what was published. Rewriting it to pass would destroy
-    # the one property that makes it worth keeping. Scott Moyse, 2026-08-18.
-    "cnc-router-speeds-feeds-reference_4.html": "archived third-party source; rewriting it would break provenance",
 }
+
+# An app's OWN exemptions, read from a file the app owns.
+#
+# EXEMPT above is this system's list and ships inside a vendored file, so until
+# 2026-08-20 the only way for an app to exempt one of its own files was to edit
+# conformance.py in place. That is forbidden by the same rules that tell people
+# to vendor it, and it does not survive: the next re-copy silently deletes the
+# exemption and the app goes from green to hundreds of findings with no hint
+# why. The wood calculator hit exactly this. It keeps an archived third-party
+# article in the repo for data provenance, saved byte-for-byte so a reader can
+# check a number against what it was read from, and rewriting it to pass would
+# destroy the one property that makes it worth keeping. Its only option was to
+# patch the vendored checker, and a re-vendor would have taken it from passing
+# to 239 errors behind a pre-commit hook.
+#
+# So: an app writes .conformance-exempt at the root it checks, one entry a line
+# as "filename: reason". The reason is required, because an exemption with no
+# argument is how an exempt list becomes a way to make findings go away. Blank
+# lines and # comments are ignored. Matched on the BASE NAME, the same way
+# EXEMPT is, so it reads the same and cannot be used to exempt a whole tree.
+APP_EXEMPT_FILE = ".conformance-exempt"
+
+
+def load_app_exempt(root):
+    """{basename: reason} from the app's own list, or {} when there is none."""
+    root = pathlib.Path(root)
+    path = (root if root.is_dir() else root.parent) / APP_EXEMPT_FILE
+    if not path.is_file():
+        return {}
+    out = {}
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        name, _, reason = line.partition(":")
+        name, reason = name.strip(), reason.strip()
+        if not name:
+            continue
+        if not reason:
+            # Loud rather than ignored. A silently-dropped entry reads as the
+            # checker being wrong, and the whole point of this file is that an
+            # exemption is a decision somebody wrote down.
+            print(f"{APP_EXEMPT_FILE}: {name} has no reason after the colon; "
+                  f"an exemption without one is not accepted")
+            continue
+        out[name] = reason
+    return out
+
 
 CHECK_SUFFIXES = {".css", ".html", ".js", ".mjs", ".htm", ".svg"}
 
@@ -235,10 +297,16 @@ def check_raw_colours(path, text, findings):
 
 def check_font_sizes(path, text, findings):
     for i, line in enumerate(lines_of(text), 1):
-        for m in re.finditer(r"font-size\s*:\s*([0-9.]+)(px|pt)", line, re.I):
-            findings.append(Finding(
-                path, i, "raw-font-size",
-                f"font-size: {m.group(1)}{m.group(2)}; use a --lt-text-* token"))
+        # Read the WHOLE declaration value, not just what follows the colon. The
+        # old form anchored the number to the colon, so a raw size could hide one
+        # bracket deep - font-size: var(--lt-text-invented, 13px) passed, exactly
+        # as the undefined name beside it did (second consumer report, 2026-08-20).
+        # Anywhere in a font-size value, a px or pt literal is the finding.
+        for decl in re.finditer(r"font-size\s*:\s*([^;}]*)", line, re.I):
+            for m in re.finditer(r"([0-9.]+)(px|pt)\b", decl.group(1), re.I):
+                findings.append(Finding(
+                    path, i, "raw-font-size",
+                    f"font-size: {m.group(1)}{m.group(2)}; use a --lt-text-* token"))
         # a px value inside a font shorthand
         for m in re.finditer(r"font\s*:\s*[^;]*?([0-9.]+)px", line, re.I):
             findings.append(Finding(
@@ -647,15 +715,32 @@ def check_token_graph(paths, findings):
         return
 
     for path, line, name, has_fallback in uses:
-        if has_fallback:
-            continue
         if name not in defs:
-            findings.append(Finding(
-                path, line, "undefined-token",
-                f"var({name}) has no fallback and nothing in the checked set "
-                f"defines it; it computes to nothing, silently. A typo, or a "
-                f"token dropped by a version bump"))
-        elif not defs[name]:
+            # A fallback answers "this could compute to nothing", which is what
+            # undefined-token exists to prevent, so skipping it looked sound. It
+            # is not, because it also answers nothing at all: invent a name the
+            # system has never defined, put a raw value in the fallback slot, and
+            # the declaration computes correctly forever while every check stays
+            # green. Second consumer report, 2026-08-20, shipped exactly that:
+            # z-index: var(--lt-z-tooltip, 60), where no --lt-z-tooltip exists and
+            # the 60 is a raw value no other rule looks for.
+            if has_fallback:
+                findings.append(Finding(
+                    path, line, "undefined-token-fallback",
+                    f"var({name}, ...) carries a fallback, but nothing in the "
+                    f"checked set defines {name}. A fallback is a legitimate "
+                    f"hedge on a token that EXISTS and may not have landed in "
+                    f"this version yet; against a name that exists nowhere it is "
+                    f"a typo or an invented token, and the fallback is a raw "
+                    f"value wearing a token's name. Define it, or use the token "
+                    f"that already does this job"))
+            else:
+                findings.append(Finding(
+                    path, line, "undefined-token",
+                    f"var({name}) has no fallback and nothing in the checked set "
+                    f"defines it; it computes to nothing, silently. A typo, or a "
+                    f"token dropped by a version bump"))
+        elif not defs[name] and not has_fallback:
             findings.append(Finding(
                 path, line, "conditional-token-no-fallback",
                 f"every definition of {name} sits inside a conditional "
@@ -758,7 +843,10 @@ def main():
         return 0
 
     findings = []
-    checkable = [p for p in paths if p.name not in EXEMPT]
+    app_exempt = load_app_exempt(args.target)
+    exempt = dict(EXEMPT)
+    exempt.update(app_exempt)
+    checkable = [p for p in paths if p.name not in exempt]
     for p in checkable:
         check_file(p, findings)
     check_custom_elements(checkable, findings)
@@ -784,6 +872,13 @@ def main():
             if len(group) > 12:
                 print(f"  ... and {len(group) - 12} more")
 
+    if app_exempt:
+        # Named out loud on every run. An exemption nobody sees is an exemption
+        # nobody re-examines, which is how an exempt list turns into a way of
+        # hiding drift rather than recording a decision.
+        print(f"\n{APP_EXEMPT_FILE}: {len(app_exempt)} file(s) exempted by this app")
+        for name, reason in sorted(app_exempt.items()):
+            print(f"  {name}  -  {reason}")
     print(f"\nchecked {len(paths)} file(s)")
     if errors:
         print(f"FAILED: {len(errors)} error(s)"

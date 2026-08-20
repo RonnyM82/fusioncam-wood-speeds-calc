@@ -14,6 +14,7 @@ component you have not used before.
 7. [Tables](#7-tables)
 8. [Row actions](#8-row-actions)
 9. [Icons and the lt glyph set](#9-icons-and-the-lt-glyph-set)
+9b. [Chart colours](#9b-chart-colours)
 10. [Kiosk patterns](#10-kiosk-patterns)
 11. [The traps, in full](#11-the-traps-in-full)
 
@@ -336,6 +337,14 @@ Attributes: `label`, `measure`, `system`, `value`, `unit`, `min`, `max`, `step`,
 `decimals`, `warn-above`, `warn-below`, `warn-message`, `hint`, `name`,
 `input-id`, `required`, `stepper`.
 
+**Replacing a native control: `stepper` is not optional in practice.** This
+element exists partly to get rid of `<input type="number">`, whose spinners are
+far below any sane target size and whose scroll wheel silently changes committed
+values. Swapping the native element in without adding `stepper` therefore takes
+the nudge away and gives nothing back, and the form ships with no way to step a
+value at all. That happened, 2026-08-20. If the field it replaces had spinners,
+it needs `stepper`.
+
 **`value` is ALWAYS the metric base unit**, whatever is on screen:
 
 ```js
@@ -371,6 +380,112 @@ range value is an error and blocks. Do not conflate them.
 and again on blur. Read `state`; never write the chip yourself. A plain
 `.lt-input` has nothing wired, so app code does both halves by hand, the same
 way round.
+
+### `lt-date-field`
+
+Not `<input type="date">`. The native picker cannot read the density tokens or
+join a surface context, gives a kiosk whatever day-cell size the OS chooses, and
+parses its text half **by locale**, so 03/04/2026 is the third of April on one
+machine and the fourth of March on another with nothing on screen to say which.
+
+```html
+<lt-date-field label="Due date" name="due" value="2026-04-03"
+               min="2026-01-01" max="2026-12-31"></lt-date-field>
+```
+
+Attributes: `label`, `hint`, `value` (ISO), `min`, `max`, `month-first`, `name`,
+`required`, `disabled`, `input-id`.
+
+**`value` is ALWAYS ISO `yyyy-mm-dd`**, whatever is displayed. `month-first`
+changes the display order only. A `name` puts a hidden input in the element
+carrying the ISO value; the visible input is nameless, so a local reading can
+never be what a form stores. Same construction as `lt-number-field` posting
+metric.
+
+```js
+field.value        // "2026-04-03"
+field.dateValue    // a local-midnight Date, or null
+field.valid        // false when unparseable or outside min/max
+field.addEventListener("lt-change", e => e.detail.value)
+```
+
+**The parsed date is echoed back in words** under the control. That is the
+point of the element: a numeric date is the one value in this system a reader
+cannot check by looking at it, and the month name is the only thing that settles
+03/04.
+
+Typing accepts `3/4/26`, `3-4-2026`, `03042026`, `3 Apr 2026` and ISO. Anything
+impossible is refused rather than guessed: 31 February returns nothing rather
+than rolling into March.
+
+The calendar is a real dialog with a real grid. Down or Alt+Down opens it.
+Arrows move a day or a week, PageUp and PageDown move a month, Shift with them
+moves a year, Home and End reach the ends of the week, Enter or Space picks, and
+Escape closes and returns focus to the field. Every day is a button at
+`--lt-control-height`, lifting to `--lt-target-touch` on a coarse pointer.
+
+**A move that would leave `min`/`max` lands on the boundary**, never on a
+disabled cell. Focusing a disabled button does nothing, and the cell the user
+came from has just been replaced, so focus would fall to `<body>` and strand a
+keyboard user outside the dialog. Found by driving the arrows in a real browser,
+2026-08-20; jsdom cannot see it because it does not run focus.
+
+### `lt-time-field`
+
+No popup: a time is two numbers and typing them beats any picker, which is not
+true of a date. 24-hour by default, because a job sheet that says 7:15 without
+saying which one has the same problem as a date that does not say its order.
+
+```html
+<lt-time-field label="Shift start" value="06:00" step="30"></lt-time-field>
+```
+
+Attributes: `label`, `hint`, `value` (`HH:MM`), `min`, `max`, `step` (minutes,
+default 15), `twelve-hour`, `name`, `required`, `disabled`, `input-id`.
+
+`value` is always 24-hour `HH:MM`; `twelve-hour` changes the display only. Up
+and Down step by `step`. Typing accepts `1430`, `14:30`, `14.30`, `2:30pm`,
+`2:30 pm` and a bare `9`. 12am is midnight and 12pm is noon; 13pm is refused
+rather than wrapped.
+
+**The echo shows the other clock.** Someone who typed 7:15 meaning the evening
+sees `19:15` underneath, and someone who typed 19:15 sees `7:15 pm`. Either way
+the reading they did not type is on screen.
+
+### `lt-file-drop`
+
+```html
+<lt-file-drop label="Drawings" name="drawings" accept=".pdf,.step"
+              multiple max-size="10MB" max-files="5"></lt-file-drop>
+```
+
+Attributes: `label`, `hint`, `accept`, `multiple`, `max-size` (`"10MB"`,
+`"500KB"` or bytes), `max-files`, `name`, `required`, `disabled`, `input-id`.
+
+```js
+drop.files                       // File[]
+drop.valid                       // required-but-empty, or any row erroring
+drop.setProgress(file, 0.5)      // 0..1, drives the row's bar
+drop.setError(file, "message")   // paints the row and marks the field
+drop.clearError(file)
+drop.clear()
+drop.addEventListener("lt-files-change", e => e.detail.added)
+```
+
+**It does not own the network.** An app owns its endpoint, its auth and its
+retry policy. This collects, validates, lists, and keeps the input's own
+FileList in step so a plain form post carries exactly what is on screen; without
+that last part a removed file still posts, which is the bug every hand-rolled
+version ships with.
+
+**The zone is a `<label>` around the real input**, so click, Enter, Space, the
+focus ring and the OS dialog all come from the platform. The input is visually
+hidden, never `display:none`, which would take it out of the tab order.
+`accept` is enforced in script as well as on the input, because the input only
+applies it inside its own dialog and a dropped file never goes near that dialog.
+
+**Dragging is pointer-only and never the only way in.** The browse action stays
+visible; the drag states only change how the same target looks.
 
 ### `lt-unit-toggle`
 
@@ -572,15 +687,44 @@ region at the bottom of `lt-elements.js`.
 
 ```html
 <span class="lt-state lt-state--running">Running</span>
-<span class="lt-badge lt-badge--warning">Low stock</span>
+
+<span class="lt-badge lt-badge--warning">
+  <svg aria-hidden="true" focusable="false"><use href="#lt-ic-warning"/></svg>Low stock
+</span>
+
+<!-- Title and body. The icon is a sibling of the wrapper, not inside it, so the
+     alert's flex row is icon-then-text and the wrapper stacks the two lines. -->
 <div class="lt-alert lt-alert--danger">
-  <div class="lt-alert__title">Spindle fault, cycle stopped</div>
-  <p>Machine 04 halted at operation 7.</p>
+  <svg aria-hidden="true" focusable="false"><use href="#lt-ic-alert"/></svg>
+  <div>
+    <strong class="lt-alert__title">Spindle fault, cycle stopped</strong>
+    <span class="lt-alert__body">Machine 04 halted at operation 7.</span>
+  </div>
+</div>
+
+<!-- One line only. No wrapper, because there is nothing to stack. -->
+<div class="lt-alert lt-alert--info">
+  <svg aria-hidden="true" focusable="false"><use href="#lt-ic-info"/></svg>
+  <span>Prices exclude GST.</span>
 </div>
 ```
 
 States: `running`, `warning`, `fault`, `waiting`, `idle`.
 Badge and alert variants: `danger`, `warning`, `success`, `info`, `neutral`.
+
+**The icon is a required slot, not an option**, for a badge and for an alert
+alike — rule 3, colour never carries meaning alone. The four alert icons are
+`lt-ic-alert`, `lt-ic-warning`, `lt-ic-success` and `lt-ic-info`, and each
+inherits the alert's ink through `currentColor`, so one drawing serves every
+variant.
+
+**A title and a body need a wrapper around them.** `.lt-alert` is
+`display: flex` with no wrap, so two children sit side by side on one line. The
+wrapper is a plain `<div>`; `.lt-alert__body` is the body text itself and only
+sets `--lt-text-sm`, so putting the title inside it shrinks the title to the
+body size and loses the distinction. Measured 2026-08-20, after the second
+consumer report found the earlier example here rendering its title and body on
+one line at the same 36px offset.
 
 ### Which status visual
 
@@ -980,6 +1124,86 @@ artwork, not a smaller render.
 
 ---
 
+## 9b. Chart colours
+
+No chart component ships. These are the colours to draw with, and the contract
+that makes them valid. Full reasoning and every measured figure are in
+`lt-tokens.css` section 3c.
+
+| Token | Job |
+|---|---|
+| `--lt-chart-track` | the plot background. **Paint it.** `--lt-grey-2` in every scheme and theme |
+| `--lt-chart-grid` | gridlines, deliberately faint at 1.42:1 on the track |
+| `--lt-chart-1` … `-8` | categorical series, taken in order, never cycled |
+| `--lt-chart-mark` | a single series, when identity is not in question |
+| `--lt-chart-mark-context` | a quieter mark: a reference, a previous period |
+| `--lt-chart-mark-emphasis` | the one mark that matters |
+
+```html
+<figure class="lt-panel">
+  <figcaption>Tool life by grade</figcaption>
+  <div style="background:var(--lt-chart-track);padding:var(--lt-space-4)">
+    <div style="block-size:60%;background:var(--lt-chart-1)"></div>
+    <div style="block-size:45%;background:var(--lt-chart-2)"></div>
+  </div>
+</figure>
+```
+
+**The track is load-bearing.** Every series colour is certified against
+`--lt-grey-2` and nothing else. A mark drawn straight onto a panel meets 3:1 on
+the light panel and the commercial dark panel, and four of the eight fall to
+2.38–2.45:1 on the **operational** dark panel, which is `--lt-grey-5`. Painting
+the plot area is what makes the palette valid, and it is also what stops a chart
+reflowing between day and night shift.
+
+**Order is the mechanism, not a convention.** The eight are sequenced so that
+every prefix is separable on its own: three series measure 20.4 apart, four
+14.9, six 13.0, all eight 10.3, under simulated red-green colour blindness where
+the floor is 8. Take the first N. Re-ordering them weakens every chart that
+draws fewer than eight, silently.
+
+**One series is grey.** `--lt-chart-mark` rather than slot 1. Colour is the
+identity channel and a lone series has no identity question to answer, so
+spending it there wastes the one signal you have left for
+`--lt-chart-mark-emphasis`.
+
+**Past eight, stop.** Fold the tail into "Other", facet into small multiples, or
+change the chart. A ninth generated hue is never the answer, and
+`verify-tokens.py` fails a `--lt-chart-9`.
+
+**Colour still never carries meaning alone.** Two or more series means a legend;
+four or fewer also means direct labels. The separation figures say a reader can
+tell two marks apart, not that they know which is which.
+
+**No red, and that was measured rather than assumed.** A red slot scored 10.4
+against this palette's 10.3 at eight series, and 10.5 against 13.0 at six, so it
+bought nothing and would have cost a second exception to "red is identity and
+danger". The rose at slot 3 is held off the red band on purpose.
+
+**Texture, for when colour is gone entirely.** The palette survives red-green
+colour blindness; a photocopy, a monochrome print and Windows High Contrast Mode
+do not leave any colour to survive. Add one class to a mark that already carries
+a chart colour.
+
+| Class | Fill |
+|---|---|
+| *(none)* | solid |
+| `.lt-hatch` | 45 degrees |
+| `.lt-hatch--back` | 135 degrees |
+| `.lt-hatch--cross` | both, crossed |
+
+Four fills, so four series are tellable apart with no colour at all. Past four
+the legend is doing the work again, which is another reason eight is the
+ceiling. The stripes are cut in `--lt-chart-track` rather than painted in a new
+colour, so hatching never introduces a second hue. **The legend key takes the
+same class**, via `.lt-chart-key`, or the texture is decoration rather than an
+encoding. In forced colours every fill collapses to one system colour and the
+texture is all that is left.
+
+There is no sequential or diverging ramp yet.
+
+---
+
 ## 10. Kiosk patterns
 
 Unattended screens need two things the desktop tools do not: targets a gloved
@@ -1018,6 +1242,20 @@ comment, invisible to the parser.
 share surplus height across its auto rows unless you set `align-content: start`.
 This hit `.lt-field` (label-to-control gap grew) and showed up again as an input
 group measuring 2px taller than all of its children.
+
+**An uppercased label mangling a symbol.** `.lt-field__label` sets
+`text-transform: uppercase`, and CSS uppercasing is lossy. Greek small mu
+(U+03BC) and the micro sign (U+00B5) both map to Greek capital Mu (U+039C),
+which Inter draws indistinguishably from a Latin M. Measured 2026-08-20: a label
+reading "Ra µm finish" paints "RA ΜM FINISH", so a machinist reads millimetres
+where the field means microns, a factor of a thousand out. A field labelled
+"Grip factor µ" comes out "GRIP FACTOR M", a different quantity.
+
+The remedy needs no new machinery. `.lt-affix` is `text-transform: none`, so the
+symbol goes in the affix where it is read as part of the value anyway, and the
+hint slot takes any qualifier. This is the argument the hint section already
+makes about parentheticals, one step further: an all-caps label is the wrong
+place for anything whose case carries meaning.
 
 **Stretch vs definite size.** `align-items: stretch` sizes a flex item's outer
 box to the line. An item with a border and no definite cross size can therefore
