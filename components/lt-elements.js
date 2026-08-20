@@ -2,6 +2,9 @@
    Livetools Design System, behavioural components
    lt-elements.js     requires lt-tokens.css and lt-components.css
 
+   Version 0.5.1  (2026-08-21)
+     ! <lt-file-drop> counts a batch it refused itself as invalid, and points
+       the input at the message that says why
    Version 0.5.0  (2026-08-20)
      + <lt-date-field>, <lt-time-field>, <lt-file-drop>
 
@@ -182,7 +185,13 @@ class LtNumberField extends HTMLElement {
   #state = "ok";    // ok | warn | error
 
   connectedCallback() {
-    if (this.#input) return;   // already upgraded
+    // Already upgraded AND still holding what we rendered. The second half
+    // matters in a server-rendered app: a partial-page swap that replaces this
+    // element's INNER html leaves the element in place with our cached nodes
+    // detached, and a guard that only asked "did we render once" then refused
+    // to render again, so the control stayed permanently blank. Reconnecting it
+    // now rebuilds. Swapping the element whole was always fine; see the traps.
+    if (this.#input && this.contains(this.#input)) return;
     this.#render();
     this.#syncFromAttribute();
   }
@@ -2455,7 +2464,9 @@ define("lt-wizard", LtWizard);
      disabled    zone and input both
      input-id    id for the input, generated when absent
 
-   Properties:  files (File[]), valid (bool)
+   Properties:  files (File[]), valid (bool) — false while the field is showing
+                a message about files it refused, as well as when it is
+                required and empty or an app has reported an error
    Events:      lt-files-change  { files, added, rejected }
    Methods:     setProgress(file|name, 0..1), setError(file|name, message),
                 clearError(file|name), clear()
@@ -2522,13 +2533,16 @@ class LtFileDrop extends HTMLElement {
   #files = [];          // the authoritative set; input.files is kept to match
   #errors = new Map();  // key -> message, for app-reported failures
   #progress = new Map();// key -> 0..1
+  #refused = false;     // the shown message is about files THIS element refused
+  #hintId = "";
+  #msgId = "";
   // dragleave fires when the pointer crosses onto a CHILD of the zone, so a
   // naive enter/leave pair flickers the highlight the whole time you are over
   // the icon or the hint text. Counting entries against leaves is the fix.
   #dragDepth = 0;
 
   connectedCallback() {
-    if (this.#input) return;
+    if (this.#input && this.contains(this.#input)) return;
     this.#render();
   }
 
@@ -2539,9 +2553,18 @@ class LtFileDrop extends HTMLElement {
 
   get files() { return this.#files.slice(); }
 
+  /**
+   * A batch this element refused counts, not only an error an app reported.
+   * #errors holds nothing but what setError() put there, so until 0.5.1 a .txt
+   * dropped on accept=".xlsx" painted "Not an accepted file type" and left the
+   * field reporting itself valid in the same pass, which also let <lt-wizard>
+   * enable Continue over it (first consumer report, 2026-08-20). Whether a
+   * refusal still stands is exactly whether the message is still on screen:
+   * #paint() sets both together.
+   */
   get valid() {
     if (this.hasAttribute("required") && this.#files.length === 0) return false;
-    return this.#errors.size === 0;
+    return this.#errors.size === 0 && !this.#refused;
   }
 
   #key(fileOrName) {
@@ -2582,6 +2605,9 @@ class LtFileDrop extends HTMLElement {
     );
     if (hint) parts.push(`<span class="lt-field__hint" id="${id}-hint">${hint}</span>`);
     parts.push(`<ul class="lt-filelist" hidden></ul>`);
+    // The message carries an id so aria-describedby can point at it, the same
+    // way <lt-number-field>'s does. role=alert announces it once as it appears;
+    // describedby is what makes it re-readable to somebody who tabs back.
     parts.push(`<span data-msg id="${id}-msg" hidden></span>`);
 
     this.innerHTML = parts.join("");
@@ -2590,7 +2616,9 @@ class LtFileDrop extends HTMLElement {
     this.#zone = this.querySelector(".lt-dropzone");
     this.#list = this.querySelector(".lt-filelist");
     this.#msg = this.querySelector("[data-msg]");
-    if (hint) this.#input.setAttribute("aria-describedby", `${id}-hint`);
+    this.#hintId = hint ? `${id}-hint` : "";
+    this.#msgId = `${id}-msg`;
+    if (hint) this.#input.setAttribute("aria-describedby", this.#hintId);
 
     this.#input.addEventListener("change", () => {
       this.#accept(Array.from(this.#input.files || []));
@@ -2785,7 +2813,13 @@ class LtFileDrop extends HTMLElement {
 
     // Rejections are about the batch rather than about any row, so they belong
     // in the field's own message rather than in the list.
-    if (rejected.length) {
+    //
+    // A refusal is a validity state and not only a paint. Every route back here
+    // — a clean batch, a remove, clear(), setError(), setProgress() — arrives
+    // with no rejections and clears the message, so the flag IS the message and
+    // the two cannot drift apart.
+    this.#refused = rejected.length > 0;
+    if (this.#refused) {
       this.#msg.hidden = false;
       this.#msg.className = "lt-field__error";
       this.#msg.setAttribute("role", "alert");
@@ -2798,7 +2832,25 @@ class LtFileDrop extends HTMLElement {
       this.#msg.removeAttribute("role");
       this.#msg.className = "";
     }
+
+    // The message and both attributes are ONE operation, the way they are in
+    // <lt-number-field>. aria-invalid on its own would only trade one broken
+    // field for another: the finding moves from a chip with no invalid control
+    // to an invalid control that describes nothing, and a screen reader
+    // announces a field as wrong with no reason it can reach. Rebuild the two
+    // ids this element owns and carry anything else through untouched, because
+    // an app is entitled to describe this input with a node of its own.
     this.#input.setAttribute("aria-invalid", String(!this.valid));
+    const owned = new Set([this.#hintId, this.#msgId].filter(Boolean));
+    const existing = (this.#input.getAttribute("aria-describedby") || "")
+      .split(/\s+/).filter((t) => t && !owned.has(t));
+    const described = [
+      ...(this.#hintId ? [this.#hintId] : []),
+      ...(this.#refused ? [this.#msgId] : []),
+      ...existing,
+    ];
+    if (described.length) this.#input.setAttribute("aria-describedby", described.join(" "));
+    else this.#input.removeAttribute("aria-describedby");
   }
 
   #remove(file) {
@@ -3013,7 +3065,7 @@ class LtDateField extends HTMLElement {
   #open = false;
 
   connectedCallback() {
-    if (this.#input) return;
+    if (this.#input && this.contains(this.#input)) return;
     this.#render();
     this.#iso = this.getAttribute("value") || "";
     this.#paint();
@@ -3442,7 +3494,7 @@ class LtTimeField extends HTMLElement {
   #minutes = null;
 
   connectedCallback() {
-    if (this.#input) return;
+    if (this.#input && this.contains(this.#input)) return;
     this.#render();
     const v = this.getAttribute("value");
     this.#minutes = v ? parseTimeInput(v) : null;

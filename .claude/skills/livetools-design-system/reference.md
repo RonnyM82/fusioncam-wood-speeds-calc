@@ -464,13 +464,21 @@ Attributes: `label`, `hint`, `accept`, `multiple`, `max-size` (`"10MB"`,
 
 ```js
 drop.files                       // File[]
-drop.valid                       // required-but-empty, or any row erroring
+drop.valid                       // required-but-empty, a row erroring, or a
+                                 // batch the element itself refused
 drop.setProgress(file, 0.5)      // 0..1, drives the row's bar
 drop.setError(file, "message")   // paints the row and marks the field
 drop.clearError(file)
 drop.clear()
 drop.addEventListener("lt-files-change", e => e.detail.added)
 ```
+
+**A file the element refuses makes the field invalid.** The message under the
+zone, `aria-invalid="true"` on the input and the `aria-describedby` that points
+at that message are one operation, so `lt-wizard` will not let a step past a
+refused file and somebody who tabs back can still hear why. A refusal clears on
+the next clean batch, on removing a file and on `clear()`. `setError()` is the
+app's own channel and clears with `clearError()`.
 
 **It does not own the network.** An app owns its endpoint, its auth and its
 retry policy. This collects, validates, lists, and keeps the input's own

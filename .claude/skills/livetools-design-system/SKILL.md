@@ -238,6 +238,16 @@ checks rendered HTML for it (consumers run it in their own tests, and
 `<body data-lt-audit>` to warn in the console. Neither repairs the markup, on
 purpose.
 
+**A chip that only exists in the browser needs the live check.** `conformance.py`
+reads the source you wrote and `lt_dom_audit.py` reads what the server sent, so a
+page whose errors are painted by an element — a refused file in `lt-file-drop`, a
+value out of range in `lt-number-field` — passes both while being wrong on
+screen. Drive that page to a failing state and then run `auditFields()` over the
+live DOM, or `lt_dom_audit.py` over the driven `page.content()`, which is the
+same rule applied to the same HTML. That is the step that caught `lt-file-drop`
+painting "Not an accepted file type" while reporting itself valid (first consumer
+report, 2026-08-20), and no other check in the set could have caught it.
+
 ## Colour has three jobs, not two
 
 Brand identity says **who we are**. Status severity says **how something is
@@ -623,6 +633,15 @@ see: a macro emits the error chip and a call site in another file owns the
 control. Import `audit()` and point it at a response in the test suite you
 already have, and make sure the test drives a **failing** submit — a happy-path
 page has no chips to audit and passes forever.
+
+None of the three sees a chip that only ever exists in a browser. `lt-file-drop`,
+`lt-number-field` and the date and time fields paint their own errors after the
+page has loaded, so a server response carries no chip and both static checks pass
+on a page that is wrong on screen. If your fields are elements, drive the page to
+a failing state in a browser test — refuse a file, submit a bad value — and then
+either call `auditFields()` from `lt-elements.js` over the live DOM or run
+`lt_dom_audit.py` over `page.content()`. `<body data-lt-audit>` turns the same
+check into console warnings while you click around by hand.
 
 `smoke-measure.py` renders a page in a headless Chromium and measures what was
 actually painted. It exists because markup and CSS can each be individually
