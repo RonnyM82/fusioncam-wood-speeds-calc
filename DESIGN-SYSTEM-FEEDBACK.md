@@ -40,7 +40,12 @@ reading carefully at the end of a long session.
 | D4 | An attribute list is not a migration checklist | `reference.md` | no |
 | C2 | An uppercased label mangles a symbol | `reference.md` | no |
 | D5 | "Do not stack" is filed under toasts, and banners need it | `SKILL.md` | no |
-| A3 | A unit-less number field prints a stray space | `lt-elements.js` | yes |
+| A3 | ~~A unit-less number field prints a stray space~~ | fixed in 80edf32 | closed |
+
+Two entries are no longer open. **A3** was fixed upstream and re-vendored here on
+2026-08-19, before this report was compiled. **E2**, which proposed hooks that
+refuse edits to the vendored files, was assessed and rejected; the section
+records the two reasons so it does not get proposed again.
 
 ---
 
@@ -112,22 +117,20 @@ wrapper, and add a single-line variant beside it. An example that does not
 render is worse than no example, because it is confidently wrong and it is the
 first thing anybody copies.
 
-### A3. A unit-less number field prints a stray space
+### A3. FIXED ALREADY: a unit-less number field printed a stray space
 
-`#validate` builds the range message as `Must be between ${lo} and ${hi}
-${spec.unit}.`. On a field with no measure and no `unit` attribute the unit is
-an empty string, so the message renders with a gap before its full stop.
+`#validate` built the range message as `Must be between ${lo} and ${hi}
+${spec.unit}.`. On a field declaring neither `measure` nor `unit`, the unit was
+an empty string, so the message rendered with a gap before its full stop:
+`Must be between 1 and 6 .`
 
-```
-Must be between 1 and 6 .
-```
+**Fixed upstream in 80edf32 and re-vendored into this consumer on 2026-08-19.**
+The message now reads `Must be between ${lo} and ${hi}${u}.` and this consumer's
+Flutes field is correct. Listed only so the report accounts for it; no action
+needed.
 
-**Reproduce:** `<lt-number-field label="Flutes" min="1" max="6" decimals="0">`,
-then type 9.
-
-**Proposed:** join the parts rather than templating them, and add a unit-less
-field to `test-elements.mjs`. Trivial, but it sits on screen beside a red border,
-which is where copy gets read most carefully.
+Worth keeping the second half of the original suggestion: a unit-less field in
+`test-elements.mjs`, so the case has a test rather than a fix.
 
 ---
 
@@ -377,43 +380,41 @@ done
 "$PY" conformance.py . || exit 1
 ```
 
-### E2. The vendoring fence is honour-system, and could be a hook
+### E2. WITHDRAWN: hooks that refuse edits to the vendored files
 
-The skill is clear that an application owns its copies and that upgrading is a
-deliberate re-copy. Nothing enforces it.
+**An earlier draft of this report proposed shipping two Claude Code hooks into
+scaffolded applications: a `PreToolUse` hook refusing edits under `tokens/`,
+`components/`, `fonts/` and `icons/`, and a `PostToolUse` hook running
+`conformance.py` after every source edit. The design-system repo assessed and
+rejected both, on two grounds, and both are right.**
 
-That fence was tested twice during this migration. Both upstream defects above
-(A1 and A3) would have been a **one-line change in the vendored file** and were
-far easier to fix there than in the app layer. Both went to the app layer
-instead, correctly, because the consumer happened to remember the rule. That
-should not depend on remembering.
+Recorded here so nobody proposes it again without answering them.
 
-A `PreToolUse` hook in the scaffolded application's `.claude/settings.json`
-refuses edits under `tokens/`, `components/`, `fonts/` and `icons/`, and names
-where the fix belongs instead:
+**It blocks the documented upgrade path.** An upgrade *is* a re-copy into those
+four directories. A hook that denies writes there denies the only sanctioned way
+to update an application. The proposal's own deny message read "upgrading is a
+clean re-copy" while blocking exactly that, which should have been caught before
+it was written down.
 
-```python
-VENDORED = ("tokens/", "components/", "fonts/", "icons/")
-payload = json.load(sys.stdin)
-rel = pathlib.Path(payload["tool_input"]["file_path"]).resolve().relative_to(ROOT).as_posix()
-if rel.startswith(VENDORED):
-    print(json.dumps({"hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "deny",
-        "permissionDecisionReason":
-            f"{rel} is a vendored copy of the design system. Put the fix in "
-            "styles.css (app CSS and component corrections) or app-tokens.css "
-            "(tokens the system does not define), and report it upstream.",
-    }}))
-```
+**Whole-repo conformance on every edit reports work you did not do.** The
+`PostToolUse` hook ran `conformance.py .` across the repository, with no notion
+of a baseline. Any application that is mid-migration, or that has a pre-existing
+finding anywhere, gets every one of them back on every single edit. This
+consumer started its migration at 262 findings. Installed then, the hook would
+have blocked every edit with 262 errors, none caused by that edit, during
+precisely the work it was meant to help.
 
-A matching `PostToolUse` hook runs `conformance.py` after any `.css`, `.html`,
-`.js`, `.mjs` or `.svg` edit and exits 2 with the finding. It costs 0.14s on a
-28-file repository, and the finding lands attached to the edit that caused it
-rather than at commit time behind a dozen other changes.
+The underlying problem in the first half is still real: the vendoring fence is
+honour-system, and it was tested twice during this migration. Both upstream
+defects above would have been a one-line change in the vendored file, and both
+went to the app layer only because the consumer happened to remember the rule.
 
-Both are in the consumer repo under `.claude/hooks/` if you want the full
-scripts.
+If that is worth closing, the shape that survives both objections is a **check,
+not a fence**. Record the published files' hashes in a manifest at vendor time
+and have `conformance.py` report a vendored file that no longer matches. An
+upgrade re-copies and re-records, so the sanctioned path stays open. Drift gets
+named instead of forbidden, which is the same posture the rest of this system
+already takes. Offered as a direction, not a design.
 
 ### E3. A hand-vendored application never gets the scaffold's output
 

@@ -46,8 +46,8 @@ are each right and whose painted result is wrong.
 node tools/serve.js 8081       # smoke-measure.py needs this running
 ```
 
-`.git/hooks/pre-commit` runs conformance and the tests. It is not a substitute
-for looking at the page.
+`.git/hooks/pre-commit` runs conformance. It is not a substitute for looking at
+the page.
 
 ## What the system does not cover
 
