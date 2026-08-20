@@ -6,6 +6,7 @@ import { loadData } from './load-node.js';
 import { calculate } from '../js/core/calculate.js';
 import { buildChips } from '../js/core/diagnostics.js';
 import { selectEntries } from '../js/core/chipload.js';
+import { machinePresets } from '../js/data/presets.js';
 
 const data = loadData();
 
@@ -263,4 +264,45 @@ test('SC26', 'first-cut mode scales the feed by the rules factor, notes it, and 
   assert(!off.notes.some((n) => /First-cut mode/.test(n)), 'note must not fire when off');
   const unspecified = calculate({ ...BASE, firstCut: undefined }, data);
   approx(unspecified.outputs.cuttingFeedMmMin, on.outputs.cuttingFeedMmMin, { rel: 0.001 });
+});
+
+// SC30 guards the ceiling the results column is built on. Every warning is a
+// banner, and the design system calls a pile of more than about three status
+// visuals a stream that belongs in a list instead. This page's pile is
+// bounded: the limit line plus at most three warnings. A 343,000-combination
+// sweep on 2026-08-20 (this grid, widened with flutes 2, thicknesses 6/18/36
+// and first-cut on) found the same ceiling. If this test fails, do not raise
+// the bound: a fourth concurrent warning means the pile has become a stream,
+// and the warnings then need folding into one banner that carries a list.
+test('SC30', 'no input stacks more than three warnings under the limit line', () => {
+  const presets = machinePresets(data.machines, data.rules);
+  // The UI's material table, reduced to what calculate() reads.
+  const sweepMaterials = [
+    { material: 'mdf', materials: ['mdf'] },
+    { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'] },
+    { material: 'plywood', materials: ['plywood'] },
+    { material: 'softwood_ply', materials: ['softwood_ply'], materialsFallback: ['plywood'] },
+    { material: 'hpl', materials: ['hpl'] },
+    { material: 'hardwood', materials: ['hardwood'] },
+    { material: 'softwood', materials: ['softwood'] },
+  ];
+  let worst = 0;
+  for (const mat of sweepMaterials)
+    for (const toolType of ['upcut', 'downcut', 'compression', 'straight'])
+      for (const diameterMm of [3.175, 6, 6.35, 12, 12.7, 19.05, 25.4])
+        for (const rpm of [8000, 18000, 30000])
+          for (const profile of ['gentle', 'standard', 'aggressive'])
+            for (const flutesTotal of [1, 4])
+              for (const preset of presets) {
+                const r = calculate({
+                  ...mat, toolType, diameterMm, rpm, profile, flutesTotal,
+                  thicknessMm: 18, firstCut: false, machine: preset.machine,
+                }, data);
+                if (r.status !== 'ok') continue;
+                worst = Math.max(worst, r.warnings.length);
+                assert(r.warnings.length <= 3,
+                  `${r.warnings.length} warnings (${r.warnings.map((w) => w.code).join(', ')}) ` +
+                  `for ${mat.material} ${toolType} D${diameterMm} ${rpm}rpm ${profile} Z${flutesTotal} on ${preset.id}`);
+              }
+  assert(worst === 3, `the sweep must reach the known ceiling of 3 warnings, found ${worst}`);
 });

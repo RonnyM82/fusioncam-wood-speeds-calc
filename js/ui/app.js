@@ -92,15 +92,21 @@ const $ = (id) => document.getElementById(id);
 init();
 
 async function init() {
+  // Both failures are conditions that stay true until someone fixes the
+  // deployment, so each is a danger banner with an icon and words. They land
+  // outside the #results live region, so they carry role="alert" themselves.
   try {
     data = await loadData();
   } catch (err) {
-    $('app').innerHTML = `<p class="error-card">The page could not load its data files: ${escapeHtml(err.message)}. Serve the page over HTTP, not from a file.</p>`;
+    $('app').innerHTML = alertHtml('danger', 'The page could not load its data files.',
+      `${err.message}. Serve the page over HTTP, not from a file.`, 'alert');
     return;
   }
   const { errors } = validateData(data);
   if (errors.length) {
-    $('app').innerHTML = `<p class="error-card">The data failed its integrity check, so the calculator shows no numbers:<br>${errors.slice(0, 5).map(escapeHtml).join('<br>')}</p>`;
+    $('app').innerHTML = alertHtml('danger',
+      'The data failed its integrity check, so the calculator shows no numbers.',
+      errors.slice(0, 5), 'alert');
     return;
   }
   presets = machinePresets(data.machines, data.rules);
@@ -364,19 +370,22 @@ function recalc() {
 // change, and a toast is gone in five seconds while the reader is looking at
 // the workpiece.
 //
-// No role="alert" or role="status" on these, deliberately. That rule exists
-// because a banner inserted by script is otherwise silent, and these are not:
-// #results is already an aria-live region, so a role inside it would announce
-// the same sentence twice.
-function alertHtml(variant, title, body = null) {
+// The results banners carry no role, deliberately: #results is already an
+// aria-live region, so a role inside it would announce the same sentence
+// twice. A banner inserted OUTSIDE that region is silent without one, which
+// is why the two load-failure banners in init() pass role="alert".
+//
+// A body given as an array renders as a list, one item per line.
+function alertHtml(variant, title, body = null, role = null) {
   const icon = `<svg class="lt-icon" aria-hidden="true" focusable="false"><use href="#${STATUS_GLYPH[variant]}"/></svg>`;
   const parts = [];
   if (title) parts.push(`<span class="lt-alert__title">${escapeHtml(title)}</span>`);
-  if (body) parts.push(`<p>${escapeHtml(body)}</p>`);
+  if (Array.isArray(body)) parts.push(`<ul>${body.map((b) => `<li>${escapeHtml(b)}</li>`).join('')}</ul>`);
+  else if (body) parts.push(`<p>${escapeHtml(body)}</p>`);
   const inner = title && parts.length === 1
     ? parts[0]
     : `<div class="lt-alert__body">${parts.join('')}</div>`;
-  return `<div class="lt-alert lt-alert--${variant}">${icon}${inner}</div>`;
+  return `<div class="lt-alert lt-alert--${variant}"${role ? ` role="${role}"` : ''}>${icon}${inner}</div>`;
 }
 
 function render(result) {
@@ -413,6 +422,11 @@ function render(result) {
   // hold no value at the chosen diameter. Nine banners is a stream, and a
   // stream belongs in the page rather than in a stack of banners that drowns
   // the numbers above it.
+  //
+  // The banner pile itself is bounded: the limit line plus at most three
+  // warnings, and test SC30 sweeps the input space to hold that ceiling. If
+  // a change lets a fourth warning through, fold the warnings into one
+  // banner carrying a list rather than raising the bound.
   const warnings = result.warnings.map((w) => alertHtml(
     w.code === 'chip_plough' || w.code === 'chip_below_min' ? 'danger' : 'warning',
     null,
@@ -457,7 +471,7 @@ function render(result) {
         data-tip-label="${escapeHtml(CAP_LABELS[k])}"
         data-tip-note="${escapeHtml(verdict)}" tabindex="-1">
         <span class="casc-label">${CAP_LABELS[k]}</span>
-        <span class="casc-bar"><span class="casc-fill" style="width:${w}%"></span></span>
+        <span class="casc-bar"><span class="casc-fill${binds ? ' lt-chart-emphasis' : ''}" style="width:${w}%"></span></span>
         <span class="casc-val">${pair.metric}<span class="imperial">${pair.imperial}</span></span>
       </div>`,
     };
@@ -642,7 +656,7 @@ function ladderHtml(result) {
       data-tip-note="${escapeHtml(verdictFor(b))}">
       <span class="ladder-label">${escapeHtml(b.label)}${tag}</span>
       <span class="ladder-track">
-        <span class="ladder-bar" style="left:${left}%;width:${width.toFixed(1)}%"></span>
+        <span class="ladder-bar${b.serves ? ' lt-chart-emphasis' : ''}" style="left:${left}%;width:${width.toFixed(1)}%"></span>
         <span class="ladder-mark" style="left:${pos(fz)}%"></span>
       </span>
       <span class="ladder-range">${range}</span>

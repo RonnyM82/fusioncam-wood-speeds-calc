@@ -11,7 +11,9 @@ Design System. They are not this repo's source.
 
 **Never edit a file in those four directories.** Upgrading is a deliberate
 re-copy from a newer published skill, and a local edit turns that into a merge
-nobody signed up for. A pre-tool hook refuses these edits.
+nobody signed up for. No hook enforces this: guard hooks were tried and
+removed on 2026-08-20 (the commit records why), so the fence is this file and
+the pre-commit conformance run.
 
 When the system itself is wrong, fix it in the app layer and say so in a
 comment:
@@ -21,9 +23,12 @@ comment:
 | `styles.css` | app CSS, and corrections to a component's own CSS. Loads last, unlayered, so it wins without a specificity fight. |
 | `app-tokens.css` | tokens the system does not define. Loads between the tokens and the components, and `conformance.py` exempts it by name. |
 
-Two upstream defects are corrected in `styles.css` today, both with the
-measurement that found them written above the rule. Report them upstream rather
-than patching the vendored copy.
+No correction is live today. Everything this app once corrected in its own
+layer was adopted upstream on 2026-08-20 and arrived back in a re-vendor: the
+stepper-width fix, the chart tokens and the forced-colours emphasis class.
+When the next defect appears, fix it in the app layer with the measurement
+that found it written above the rule, and report it upstream rather than
+patching the vendored copy.
 
 ## The four checks
 
@@ -31,7 +36,7 @@ Run the first two on any change. Run all four before calling a UI change done.
 
 ```bash
 python conformance.py .        # source: tokens, markup, accessibility basics
-node tests/run.js              # 67 tests, data and behaviour
+node tests/run.js              # 68 tests, data and behaviour
 python smoke-measure.py        # rendered geometry; needs a server, see below
 python lt_dom_audit.py <dir>   # rendered HTML: field errors only half wired
 ```
@@ -51,9 +56,12 @@ the page.
 
 ## What the system does not cover
 
-It has **no chart, plot or data-visualisation component**. The chip-load ladder
-and the capacity cascade are bespoke, built strictly on `--lt-*` tokens, with
-their marks named in `app-tokens.css`. Before touching either, load the
+It has **no chart, plot or data-visualisation component**, though since
+2026-08-20 it does own the chart colours: the track, the marks, the series
+slots and the `.lt-chart-emphasis` class all live in the vendored copies. The
+chip-load ladder and the capacity cascade are bespoke, built strictly on those
+system tokens, and each highlighted bar carries `.lt-chart-emphasis` so the
+emphasis survives forced colours. Before touching either chart, load the
 `dataviz` skill: they follow its emphasis pattern, its mark specs and its
 hover-plus-table-twin rule, and `smoke-measure.py` asserts they share a
 geometry.

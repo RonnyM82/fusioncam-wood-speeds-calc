@@ -1335,6 +1335,28 @@
         transparent 3.5px 16px);
   }
 
+  /* THE EMPHASISED MARK, and the one case texture cannot answer.
+
+     A single-series chart spends no colour on identity, so its emphasis is
+     carried by --lt-chart-mark-emphasis against the neutral --lt-chart-mark
+     around it. In forced colours both collapse to the same system colour and
+     the emphasis disappears entirely: the bar the chart exists to point at
+     stops being distinguishable from the five beside it.
+
+     Hatching it would work and is the wrong trade, because the class paints in
+     every mode: you would stripe that bar for every sighted user in order to
+     rescue it for the high-contrast one. The second consumer spotted exactly
+     that and declined to do it, which was right.
+
+     Highlight is the answer instead. It is the system's own "this is the
+     selected one" colour, it is available in forced colours by definition, and
+     .lt-btn--primary already takes the same route for the same reason. So this
+     class paints nothing of its own normally - the mark keeps whatever
+     --lt-chart-* it was given - and takes Highlight only where colour has been
+     taken away. Nobody sees a change who was not about to lose the emphasis
+     altogether. Added 2026-08-20 from the wood calculator's review. */
+  .lt-chart-emphasis { background-color: var(--lt-chart-mark-emphasis); }
+
   /* A legend key has to carry the same texture as the mark it names, or the
      texture is decoration rather than an encoding. Small keys need a finer
      period than a bar does, or one stripe fills the whole swatch. */
@@ -2761,6 +2783,17 @@
   .lt-hatch,
   .lt-hatch--back,
   .lt-hatch--cross { forced-color-adjust: none; background-color: CanvasText; }
+  /* The emphasised mark keeps its emphasis where colour is gone. Highlight is
+     the one tone forced colours reserves for "this is the one", which is
+     exactly what this mark means. */
+  .lt-chart-emphasis { forced-color-adjust: none; background-color: Highlight; }
+  /* A texture that paints ONLY here. For a chart that wants its emphasis to
+     survive as a pattern rather than as Highlight - a print, or a second
+     emphasised mark - without striping the bar for everyone else. */
+  .lt-hatch--forced { forced-color-adjust: none; background-color: CanvasText; }
+  .lt-hatch--forced {
+    background-image: repeating-linear-gradient(45deg, Canvas 0 3.5px, transparent 3.5px 9px);
+  }
   .lt-hatch {
     background-image: repeating-linear-gradient(45deg, Canvas 0 3.5px, transparent 3.5px 9px);
   }

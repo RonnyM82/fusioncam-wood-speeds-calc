@@ -85,31 +85,6 @@ main {
 .profile-group { display: flex; }
 .profile-group > .lt-btn { flex: 1; }
 
-/* UPSTREAM DEFECT IN lt-components.css, corrected here.
-   .lt-input-group is display:flex and only the input should flex. The stepper
-   buttons and the affix carry a definite inline-size but no flex: none, so
-   they shrink whenever the line overflows -- and it always overflows, because
-   .lt-input is inline-size: 100%. How much each one shrinks then depends on
-   how wide its neighbour's unit text happens to be, so no two steppers in the
-   form came out the same width.
-
-   Measured before this rule, against the 36px --lt-control-height that
-   .lt-btn--icon asks for:
-
-     Flutes (no affix)      29.41px
-     Grip factor            26.78px
-     Board thickness        25.77px
-     Spindle speed          25.63px
-     Machine max feed       24.00px   <- floored on --lt-target-min
-
-   The last one is the reason this is a defect and not a wobble: the widest
-   affix in the form squeezed its buttons onto the 24px WCAG minimum, and a
-   coarse pointer is supposed to floor them at --lt-target-touch, 44px, which
-   shrinking defeats. Fixed in the app layer so the vendored copy stays
-   byte-identical to upstream and an upgrade is still a clean re-copy. */
-.lt-input-group > .lt-btn,
-.lt-input-group > .lt-affix { flex: none; }
-
 /* Every bounded block on the panel pads the same: space-4 block, space-5
    inline. .out-card is the one exception and states its reason there. The
    details blocks were on space-4 all round, so they sat 4px narrower inside
@@ -185,12 +160,20 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 
 /* THE TWO CHARTS BELOW ARE BESPOKE ON PURPOSE. The capacity cascade and the
    chip-load ladder are bar and range visualisations, and the system has no
-   component for either. Their colours are named tokens in app-tokens.css,
-   which records what each one measures against the track it is painted on.
+   component for either. It does own the chart tokens: the track, the marks
+   and the series slots all live in tokens/lt-tokens.css, with the system's
+   measurements above them.
 
    Both are EMPHASIS charts: grey the rest, highlight the one that matters.
    Neither cycles hues, and neither leans on colour alone -- the serving and
    binding rows carry bold weight too.
+
+   The highlighted bar carries .lt-chart-emphasis in the markup and that class
+   owns its paint: the emphasis colour normally, Highlight in forced colours,
+   where every other fill collapses to one tone. The :not() below is what
+   keeps that working. This file loads last, so a plain .casc-fill background
+   would beat the class on source order and pin the bar to a colour forced
+   colours cannot see. The neutral rules therefore step aside by name.
 
    Neither uses opacity to separate a live mark from a context one. An opacity
    cannot be contrast-checked and is discarded under forced colours, so the
@@ -228,11 +211,10 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   position: absolute;
   inset-block: var(--lt-space-1);
   inset-inline-start: 0;
-  background: var(--lt-chart-mark);
   border-start-end-radius: var(--lt-radius-md);
   border-end-end-radius: var(--lt-radius-md);
 }
-.casc-row.is-bind .casc-fill { background: var(--lt-chart-mark-emphasis); }
+.casc-fill:not(.lt-chart-emphasis) { background: var(--lt-chart-mark); }
 .casc-row.is-bind { font-weight: var(--lt-weight-bold); }
 /* A cap so far above the served feed that it cannot bind. Dimmed with a
    real ink token rather than opacity: at 0.45 the label dropped under the
@@ -280,10 +262,9 @@ details summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
   position: absolute;
   top: var(--lt-space-1);
   bottom: var(--lt-space-1);
-  background: var(--lt-chart-mark-context);
   border-radius: var(--lt-radius-md);
 }
-.ladder-row.is-serving .ladder-bar { background: var(--lt-chart-mark-emphasis); }
+.ladder-bar:not(.lt-chart-emphasis) { background: var(--lt-chart-mark-context); }
 /* The served feed per tooth, marked in every row against the shared scale.
    Dotted stays: this is a threshold reference line, which is the one case
    the anti-pattern on dashed rules explicitly carves out. It is not a grid. */

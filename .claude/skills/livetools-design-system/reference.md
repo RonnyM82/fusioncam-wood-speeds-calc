@@ -1194,7 +1194,19 @@ a chart colour.
 
 Four fills, so four series are tellable apart with no colour at all. Past four
 the legend is doing the work again, which is another reason eight is the
-ceiling. The stripes are cut in `--lt-chart-track` rather than painted in a new
+ceiling.
+
+**An emphasised mark needs `.lt-chart-emphasis`, not a hatch.** A single-series
+chart spends no colour on identity, so its emphasis rides
+`--lt-chart-mark-emphasis` against the neutral marks around it, and in forced
+colours both collapse to one system colour and the emphasis disappears.
+Hatching it would work and is the wrong trade: the class paints in every mode,
+so you would stripe that bar for every sighted user to rescue it for the
+high-contrast one. `.lt-chart-emphasis` paints the emphasis colour normally and
+takes `Highlight` only in forced colours, which is the tone that mode reserves
+for "this is the one". `.lt-btn--primary` takes the same route. Use
+`.lt-hatch--forced` instead when you want a pattern rather than Highlight; it
+paints only in forced colours and nowhere else. The stripes are cut in `--lt-chart-track` rather than painted in a new
 colour, so hatching never introduces a second hue. **The legend key takes the
 same class**, via `.lt-chart-key`, or the texture is decoration rather than an
 encoding. In forced colours every fill collapses to one system colour and the
@@ -1242,6 +1254,16 @@ comment, invisible to the parser.
 share surplus height across its auto rows unless you set `align-content: start`.
 This hit `.lt-field` (label-to-control gap grew) and showed up again as an input
 group measuring 2px taller than all of its children.
+
+**A custom element blank after a partial-page swap.** These render into the
+light DOM and keep references to what they rendered. Replacing an element's
+inner html leaves the element in place with those references detached, and
+nothing fires to tell it, so the control stays blank for the life of the page.
+Swap the element whole, or a container around it. Reconnecting or reparenting
+recovers on its own since 2026-08-20; emptying in place does not, and cannot be
+caught without a mutation observer on every instance. In a server-rendered app
+doing partial swaps this is the one integration rule that matters: **never
+target the inside of an lt- element**.
 
 **An uppercased label mangling a symbol.** `.lt-field__label` sets
 `text-transform: uppercase`, and CSS uppercasing is lossy. Greek small mu

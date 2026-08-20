@@ -353,6 +353,13 @@ eight drop to about 2.4:1 on the operational dark theme, which fails SC 1.4.11.
 was measured separately so that a three-series chart is as readable as an
 eight-series one. Re-ordering them quietly weakens every small chart.
 
+**An emphasised mark takes `.lt-chart-emphasis`.** In forced colours the
+emphasis colour and the neutral marks collapse to one tone and the emphasis is
+gone. That class takes `Highlight` there and nothing anywhere else, so nobody
+who was not about to lose the emphasis sees a change. Do not reach for a hatch:
+it paints in every mode, so it stripes the bar for every sighted user to rescue
+it for one.
+
 **One series takes `--lt-chart-mark`, not slot 1.** Identity is not in question
 when there is only one thing on screen, so a lone series stays neutral grey and
 the colour channel is left free for `--lt-chart-mark-emphasis` on the one bar
@@ -522,6 +529,15 @@ These are real bugs that shipped, not hypotheticals. Full detail in
   and the rest of the file parses as garbage.
 - **A field's label-to-control gap changing** when a hint is present means
   `.lt-field` is stretching its grid rows. It needs `align-content: start`.
+- **A custom element that goes blank after a partial-page swap** was swapped
+  by its INNER html rather than whole. These elements render into the light
+  DOM and hold references to what they rendered; emptying an element's children
+  in place leaves the element standing with its references detached, and no
+  callback fires to tell it. Swap the element itself, or a container around it,
+  and it rebuilds. Reconnecting or reparenting one now recovers on its own
+  (2026-08-20); emptying it in place cannot be detected without an observer per
+  element and is not worth that, so it is a rule instead: never target the
+  inside of an lt- element with a swap.
 - **A chart mark that reads fine in the office and fades on the shop floor**
   means it was drawn straight onto the panel instead of onto
   `--lt-chart-track`. The panel is `--lt-grey-5` in the operational dark theme
