@@ -108,6 +108,18 @@
    "accel_m_s2": 3,
    "data_class": "derived",
    "notes": "Not a real model. This preset combines an HSD ES929-class 10 kW spindle, the heavy-nesting acceleration tier, and the reference defaults for feed, breakpoint and vacuum."
+  },
+  {
+   "make": "Heliner",
+   "model": "3-axis router",
+   "spindle": "GDL70-24Z/12.0, 380 V 20.0 A, 4-pole, air cooled",
+   "spindle_kw": 12,
+   "torque_nm": 4.78,
+   "breakpoint_rpm": 24000,
+   "rpm_max": 24000,
+   "duty": "S6 60% at 20 C ambient",
+   "data_class": "vendor",
+   "notes": "The GDL70-24Z/12.0 spindle holds 4.78 Nm to its 24,000 rpm top speed. It reaches 12 kW only at 24,000 rpm, and gives 6 kW at 12,000 rpm. The 12 kW figure is an S6 60% air-cooled rating, not a continuous one. For a long nesting run, reduce the spindle power in the advanced panel."
   }
  ],
  "spindles_hsd": [

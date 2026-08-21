@@ -36,7 +36,7 @@ Run the first two on any change. Run all four before calling a UI change done.
 
 ```bash
 python conformance.py .        # source: tokens, markup, accessibility basics
-node tests/run.js              # 68 tests, data and behaviour
+node tests/run.js              # 69 tests, data and behaviour
 python smoke-measure.py        # rendered geometry; needs a server, see below
 python lt_dom_audit.py <dir>   # rendered HTML: field errors only half wired
 ```

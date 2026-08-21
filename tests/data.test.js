@@ -1,10 +1,11 @@
 // Regression tests 15–17, 19, 20 plus envelope-behaviour checks, all against
 // the real JSON in data/.
 
-import { test, assert, approx } from './helpers.js';
+import { test, assert, approx, notApprox } from './helpers.js';
 import { loadData } from './load-node.js';
 import { validateData } from '../js/data/validate.js';
 import { machinePresets } from '../js/data/presets.js';
+import { availablePowerKw, torqueNm } from '../js/core/power.js';
 import { selectEntries, resolveBand, depthDerate } from '../js/core/chipload.js';
 import { calculate } from '../js/core/calculate.js';
 
@@ -189,6 +190,31 @@ test('PRESET', 'machine presets normalise, disclose assumptions, and the generic
     assert(p.machine.spindleKw > 0, `${p.id}: no usable spindle power`);
     assert(p.machine.feedMaxMmMin > 0, `${p.id}: no usable feed cap`);
   }
+});
+
+test('HELINER', 'the Heliner spindle stays constant-torque to 24,000 rpm', () => {
+  const preset = machinePresets(data.machines, data.rules).find((p) => p.id.includes('Heliner'));
+  assert(preset, 'Heliner preset missing');
+  const m = preset.machine;
+  approx(m.spindleKw, 12, { abs: 0.001 });
+  approx(m.rpmMax, 24000, { abs: 0.5 });
+
+  // The vendor chart holds 4.78 Nm flat to the top speed, so the breakpoint IS
+  // the top speed and 12 kW arrives only there. Reverting this field to the
+  // 12,000 rpm reference default would hand out 12 kW at 12,000 rpm — double
+  // the truth — with nothing else on the page contradicting it.
+  approx(m.breakpointRpm, 24000, { abs: 0.5 });
+  approx(availablePowerKw(m.spindleKw, m.breakpointRpm, 12000), 6, { abs: 0.001 });
+  approx(availablePowerKw(m.spindleKw, m.breakpointRpm, 18000), 9, { abs: 0.001 });
+  notApprox(availablePowerKw(m.spindleKw, m.breakpointRpm, 12000), 12, 5);
+
+  // The published torque and the published power must agree, or one was misread.
+  const row = data.machines.machines.find((x) => x.make === 'Heliner');
+  approx(torqueNm(row.spindle_kw, row.rpm_max), row.torque_nm, { abs: 0.01 });
+  approx(row.torque_nm, 4.78, { abs: 0.005 });
+
+  assert(/S6 60%/.test(preset.notes ?? ''), 'the S6 60% duty rating must stay disclosed');
+  assert(/no cutting feed/.test(preset.notes ?? ''), 'the substituted cutting feed must stay disclosed');
 });
 
 test('PIN', 'served data values are pinned so silent drift fails here first', () => {

@@ -48,5 +48,10 @@ Selection rules retained from the adversarial reviews (2026-08-18): a diameter-r
 ## machines.json amendments 2026-08-18
 A `Generic / Heavy nesting router (default)` preset was added, composed from already-sourced parts (HSD ES929-class 10 kW spindle, heavy-nesting acceleration default, reference default breakpoint and max feed), `data_class: derived`. HSD spindle rows now carry `data_class: vendor`.
 
+## machines.json amendment 2026-08-21
+A `Heliner / 3-axis router` preset was added from the spindle's own torque and power chart (GDL70-24Z/12.0, 380 V, 20.0 A, 4-pole, air cooled), `data_class: vendor`. The chart holds 4.78 Nm flat from zero to 24,000 rpm. On a 4-pole motor, 800 Hz is 24,000 rpm, so the whole speed range sits below base frequency. The spindle is constant torque to its top speed. `breakpoint_rpm` therefore equals `rpm_max` at 24,000, power rises with speed, and 12 kW arrives only at 24,000 rpm. At 12,000 rpm the spindle gives 6 kW. Test `HELINER` in `tests/data.test.js` pins the breakpoint and cross-checks the published torque against the published power, because a revert to the 12,000 rpm reference default would double the served power at 12,000 rpm with nothing on the page to contradict it.
+
+The 12 kW figure is the S6 60% air-cooled rating at 20 °C ambient. The chart publishes no continuous S1 figure, and none was derived, so the served `spindle_kw` is the S6 number and the preset note tells the user to reduce it for a long run. The machine publishes no cutting feed and no acceleration, so the reference default of 30 m/min and the heavy-nesting acceleration default serve, the same substitution every other preset without those figures takes. The entry was appended to the end of `machines` rather than inserted, because the UI writes the preset index into the share URL as `mc`.
+
 ## Update discipline
 New data lands as new entries with a new `source` key + retrieval date; superseded entries stay with a `superseded_by` field rather than being deleted. Chart-read values get `data_class: measured_chart_read`. Nothing enters without a source.
