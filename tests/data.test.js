@@ -103,10 +103,18 @@ test('ENV3', 'materials with only generic charts fall back with visible notes', 
   assert(env.notes.some((n) => /do not separate tool types/.test(n)), 'inert tool-type note missing');
 });
 
-test('ENV8', 'a chart that excludes a tool type never serves it, and the refusal says why', () => {
+test('ENV8', 'a chart that excludes a tool type never serves it, even when an in-scope chart takes over', () => {
+  // Before the firsthand Vortex chart landed (2026-08-26), hpl compression
+  // refused outright: the only hpl chart was Rennie, whose scope says NOT
+  // compression. Vortex states no tool-type exclusion, so it serves now —
+  // and Rennie must stay out entirely, as serving band and as context.
   const env = resolveBand(data.chiploads.entries, { material: 'hpl', toolType: 'compression', diameterMm: 12.7 }, data.rules.envelope_rules);
-  assert(env.served === false, 'Rennie must not serve compression - its chart says NOT compression');
-  assert(env.notes.some((n) => /scope excludes compression/.test(n)), `refusal note wrong: ${env.notes}`);
+  assert(env.served, `Vortex must serve hpl compression: ${env.notes}`);
+  assert(env.contributors.every((c) => c.includes('Vortex')), `only Vortex may serve: ${env.contributors}`);
+  assert(!env.context.some((b) => b.label.includes('Rennie')), 'Rennie must not appear even as context - its chart says NOT compression');
+  approx(env.fzMin, 0.584, { abs: 0.001 });
+  approx(env.fzMax, 0.635, { abs: 0.001 });
+  assert(env.notes.some((n) => /do not separate tool types/.test(n)), 'the inert tool-type note must disclose the generic serve');
   const melamine = resolveBand(data.chiploads.entries, { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], toolType: 'compression', diameterMm: 12.7 }, data.rules.envelope_rules);
   assert(melamine.served, 'melamine compression must still serve (ITA and Freud state no tool-type exclusion)');
 });

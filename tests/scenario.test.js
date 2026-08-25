@@ -151,7 +151,7 @@ test('SC17', 'missing thickness refuses with a message naming thickness', () => 
   assert(/thickness/.test(r.refusal.reason), r.refusal.reason);
 });
 
-test('SC18', 'a 12.7 mm-only generic chart cannot set the band for a 3.175 mm tool', () => {
+test('SC18', 'the big-iron generic charts stay context at 3.175 mm; the geometry chart serves', () => {
   const r = run({ diameterMm: 3.175, thicknessMm: 3 });
   assert(r.status === 'ok', `expected ok, got ${r.status}`);
   const names = r.meta.contributors.join(' ');
