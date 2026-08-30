@@ -646,6 +646,10 @@ function ladderHtml(result) {
   // Finishing nothing is compensated, so fzEff is the programmed chip, which
   // is the basis the finisher chart publishes.
   const fz = m.fzEff;
+  // In Finishing nothing is compensated, so the marker is the programmed
+  // chip and the words must match the legend. Everywhere else it is the
+  // effective chip. One name for one quantity: rows, header and legend.
+  const chip = m.finishing ? 'programmed chip' : 'effective chip';
   const lo = Math.min(...all.map((b) => b.lo), fz);
   const hi = Math.max(...all.map((b) => b.hi), fz);
   const span = hi - lo || 1;
@@ -658,13 +662,13 @@ function ladderHtml(result) {
     // A tolerance, because a value that IS the band edge can land an ulp
     // off it on the way through the feed maths.
     if (b.serves) {
-      if (fz < b.lo - 1e-6) return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.`;
-      if (fz > b.hi + 1e-6) return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits above this band.`;
-      return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits in this band.`;
+      if (fz < b.lo - 1e-6) return `Sets your numbers. The ${chip} ${fz.toFixed(3)} sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.`;
+      if (fz > b.hi + 1e-6) return `Sets your numbers. The ${chip} ${fz.toFixed(3)} sits above this band.`;
+      return `Sets your numbers. The ${chip} ${fz.toFixed(3)} sits in this band.`;
     }
-    if (fz < b.lo) return `The effective chip is below this band, by ${(b.lo - fz).toFixed(3)} mm/tooth.`;
-    if (fz > b.hi) return `The effective chip is above this band, by ${(fz - b.hi).toFixed(3)} mm/tooth.`;
-    return 'The effective chip falls inside this band, but this chart does not serve it.';
+    if (fz < b.lo) return `The ${chip} is below this band, by ${(b.lo - fz).toFixed(3)} mm/tooth.`;
+    if (fz > b.hi) return `The ${chip} is above this band, by ${(fz - b.hi).toFixed(3)} mm/tooth.`;
+    return `The ${chip} falls inside this band, but this chart does not serve it.`;
   };
 
   const rowsHtml = all.map((b) => {
@@ -686,7 +690,7 @@ function ladderHtml(result) {
   }).join('');
 
   const twin = tableTwin('Every published chart for this cut',
-    ['Chart', 'Published band (mm/tooth)', 'Against the effective chip'],
+    ['Chart', 'Published band (mm/tooth)', `Against the ${chip}`],
     all.map((b) => [
       b.label + (b.machineClass ? ' (10 hp+ charts)' : ''),
       `${b.lo.toFixed(3)}–${b.hi.toFixed(3)}`,

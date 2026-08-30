@@ -20,6 +20,11 @@ export function calculate(input, data) {
   const { chiploads, kc, rules } = data;
   const warnings = [];
   const notes = [];
+  // How the calculator chose its data. Kept for tests and headless callers,
+  // never rendered: the public page says what to do and what to watch, and
+  // chart attribution lives in the limit line and the chart ladder alone
+  // (Scott, 2026-08-31).
+  const chartNotes = [];
 
   if (input.material === 'osb') {
     return {
@@ -101,17 +106,17 @@ export function calculate(input, data) {
     rules.envelope_rules,
   );
   if (!env.served) {
-    const lead = finishing ? 'No published finisher chart covers this diameter, so Finishing gives no number. ' : '';
-    return {
-      status: 'refused',
-      refusal: {
-        reason: env.notes.length
-          ? lead + env.notes.join(' ')
-          : lead || 'No published chart covers this material and tool combination. The calculator gives no number without a source.',
-      },
-    };
+    // Scope notes (a chart's own exclusions) explain what the user can
+    // change, so they stay. Per-chart coverage narration does not.
+    const scopeNotes = (env.notes ?? []).filter((n) => !(env.coverageNotes ?? []).includes(n));
+    const reason = finishing
+      ? 'No published finisher chart covers this tool diameter, so Finishing gives no number. Pick a diameter between 5 and 19.05 mm, or use another profile.'
+      : scopeNotes.length
+        ? scopeNotes.join(' ')
+        : `No published chart covers this material and tool at ${round1(D)} mm. The calculator gives no number without a source.`;
+    return { status: 'refused', refusal: { reason } };
   }
-  notes.push(...env.notes);
+  chartNotes.push(...env.notes);
 
   const fzBase = profileFz(env, input.profile ?? 'standard');
   const docRatio = ap / D;
@@ -183,12 +188,12 @@ export function calculate(input, data) {
   const fzEff = lim.binding === 'ideal' ? fzTarget : fzDeliv / ctf;
 
   if (finishing) {
-    notes.push(`The finish chip comes from the ${env.contributors.join(', ')} finisher chart, the only published finishing chip loads. It is the chip you program on a finish pass, as the vendor intends, so the calculator does not compensate it for chip thinning.`);
+    chartNotes.push(`The finish chip comes from the ${env.contributors.join(', ')} finisher chart, the only published finishing chip loads. It is the chip you program on a finish pass, as the vendor intends, so the calculator does not compensate it for chip thinning.`);
     if (ctfPhysical > 1.001) {
-      notes.push(`On this ${round1(ae)} mm cut the physical chip is thinner than the programmed chip, about ${fz3(fzDeliv / ctfPhysical)} mm/tooth.`);
+      chartNotes.push(`On this ${round1(ae)} mm cut the physical chip is thinner than the programmed chip, about ${fz3(fzDeliv / ctfPhysical)} mm/tooth.`);
     }
     if (skimRegime && docRatio > 1) {
-      notes.push('The depth derate does not apply to a skim. It is the deep-slot rule, and this cut is under half the diameter wide.');
+      chartNotes.push('The depth derate does not apply to a skim. It is the deep-slot rule, and this cut is under half the diameter wide.');
     }
     if (!(input.aeMm > 0)) {
       notes.push(`Finishing assumes a ${round1(ae)} mm skim on the wall. Enter a width of cut to change the skim.`);
@@ -243,22 +248,22 @@ export function calculate(input, data) {
     warnings.push({ code: 'iwms25_speed', message: `Cutting-force values come from a low-speed test. Expect ${kc.speed_caveat.uplift} more power at production speed.` });
   }
   if (kcModel.legacy) {
-    notes.push('The power check uses a flat kc estimate for this material. No measured cutting-force model exists.');
+    chartNotes.push('The power check uses a flat kc estimate for this material. No measured cutting-force model exists.');
     if (input.direction) {
-      notes.push('The cut direction has no modelled effect for this material. No direction-resolved cutting-force data exists, so the same flat kc serves both directions.');
+      notes.push('The cut direction has no modelled effect for this material, so both directions serve the same numbers.');
     }
   }
   if (env.allBigIron && rules.big_iron_caveat) {
     warnings.push({ code: 'big_iron_only', message: rules.big_iron_caveat.message });
   }
   if (env.hasSwitchableBasis) {
-    notes.push('An ITA chart contributes here. ITA per-tooth values apply to the total flute count by default. The flute-basis switch in Advanced changes that reading.');
+    chartNotes.push('An ITA chart contributes here. ITA per-tooth values apply to the total flute count by default. The flute-basis switch in Advanced changes that reading.');
   }
   if (input.densityKgM3 != null && kc.solid_timber_model && !isPanelMaterial(input.material)) {
     const dv = checkDensity(input.densityKgM3, kc.solid_timber_model);
     if (!dv.valid) warnings.push({ code: 'density_out_of_validity', message: dv.warning });
     if (input.material === 'softwood') notes.push(radiataNote());
-    notes.push('The calculator checks the density against the solid-timber model range. The density does not change the served numbers yet.');
+    notes.push('The density does not change the served numbers yet.');
   }
 
   const h = meanChipThicknessMm(fzDeliv, ae, D);
@@ -282,7 +287,7 @@ export function calculate(input, data) {
       plungeFeedMmMin: final * plungeRatio,
     },
     outputNotes: {
-      leadInOut: rules.lead_in_out.note,
+      leadInOut: 'An arc lead-in enters at reduced engagement, so the full cutting feed is safe there.',
       plungeRamp: `Ramp and plunge at up to ${rules.plunge_ramp.angle_deg_max}° over ${rules.plunge_ramp.ramp_length_mm[0]}–${rules.plunge_ramp.ramp_length_mm[1]} mm at one third of the cutting feed.`,
     },
     limit: {
@@ -297,6 +302,7 @@ export function calculate(input, data) {
     warnings,
     notes,
     meta: {
+      chartNotes,
       contributors: env.contributors,
       sources: env.sources,
       band: { fzMin: env.fzMin, fzMax: env.fzMax },

@@ -96,7 +96,8 @@ test('SC10', 'plunge and ramp are one third of cutting feed; lead-in/out equal i
   approx(r.outputs.rampFeedMmMin, r.outputs.cuttingFeedMmMin * 0.3333, { rel: 0.001 });
   assert(r.outputs.leadInFeedMmMin === r.outputs.cuttingFeedMmMin, 'lead-in must equal cutting feed');
   assert(r.outputs.leadOutFeedMmMin === r.outputs.cuttingFeedMmMin, 'lead-out must equal cutting feed');
-  assert(r.outputNotes.leadInOut.includes('No vendor publishes'), 'lead-in note missing');
+  assert(/reduced engagement/.test(r.outputNotes.leadInOut), 'lead-in note missing');
+  assert(!/vendor|publishes/.test(r.outputNotes.leadInOut), 'the lead-in note must not talk about vendors on the page');
 });
 
 test('SC11', 'feed scales with the single flute count', () => {
@@ -159,7 +160,7 @@ test('SC18', 'the big-iron generic charts stay context at 3.175 mm; the geometry
     assert(!names.includes(v), `${v} contributed to a 3.175 mm envelope from a 12.7 mm-only chart`);
   }
   assert(r.meta.band.fzMax < 0.31, `band top ${r.meta.band.fzMax} is a half-inch chip load on a 1/8" tool`);
-  assert(r.notes.some((n) => /publishes no values near/.test(n)), 'missing the chart-excluded note');
+  assert(r.meta.chartNotes.some((n) => /publishes no values near/.test(n)), 'missing the chart-excluded record');
 });
 
 test('SC19', 'a cap that drives the feed to zero blocks with advice, never renders zeros', () => {
@@ -293,8 +294,8 @@ test('SC31', 'finishing serves the finisher chart as the programmed chip, uncomp
   // Ignoring first-cut means the toggle moves nothing.
   const off = run({ profile: 'finishing', firstCut: false });
   approx(fin.outputs.cuttingFeedMmMin, off.outputs.cuttingFeedMmMin, { rel: 1e-9 });
-  assert(fin.notes.some((n) => /finisher chart/.test(n)), 'finisher-chart note missing');
-  assert(fin.notes.some((n) => /does not compensate/.test(n)), 'no-compensation note missing');
+  assert(fin.meta.chartNotes.some((n) => /finisher chart/.test(n)), 'finisher-chart record missing');
+  assert(fin.meta.chartNotes.some((n) => /does not compensate/.test(n)), 'no-compensation record missing');
   assert(fin.notes.some((n) => /assumes a 1 mm skim/.test(n)), 'skim note missing');
   assert(fin.notes.some((n) => /first-cut reduction does not apply/.test(n)), 'first-cut inapplicability note missing');
   // A typed width of cut is respected, and the skim note goes away. A
@@ -321,14 +322,14 @@ test('SC32', 'panels without a finisher chart borrow the MDF chart; outside its 
     const r = run({ ...mat, profile: 'finishing' });
     assert(r.status === 'ok', `${mat.material}: expected ok, got ${r.status}`);
     assert(r.meta.contributors.some((c) => c.includes('60-200')), `${mat.material}: the MDF finisher chart must serve`);
-    assert(r.notes.some((n) => /MDF finisher chart serves/.test(n)), `${mat.material}: the borrow must be named`);
+    assert(r.meta.chartNotes.some((n) => /MDF finisher chart serves/.test(n)), `${mat.material}: the borrow must stay on record`);
     const mdf = run({ profile: 'finishing', diameterMm: mat.diameterMm ?? 12 });
     approx(r.meta.band.fzMin, mdf.meta.band.fzMin, { abs: 1e-9 });
     assert(r.meta.contextBands.length > 0, `${mat.material}: the tool charts must stay visible as context`);
   }
   // Solid timber never borrows: hardwood serves its own finisher row.
   const hw = run({ material: 'hardwood', materials: ['hardwood'], diameterMm: 12.7, thicknessMm: 12.7, profile: 'finishing' });
-  assert(!hw.notes.some((n) => /MDF finisher chart/.test(n)), 'hardwood must not borrow the MDF chart');
+  assert(!hw.meta.chartNotes.some((n) => /MDF finisher chart/.test(n)), 'hardwood must not borrow the MDF chart');
   approx(hw.meta.band.fzMin, 0.178, { abs: 0.002 });
   // Outside the finisher rows' ±25% coverage the profile refuses with the reason.
   for (const diameterMm of [3.175, 25.4]) {
@@ -375,6 +376,32 @@ test('SC34', 'the ITA chart contributes only near its 12 mm nesting tools', () =
     assert(big.status === 'refused', `${material} at 25.4 mm must refuse without ITA: ${big.status}`);
   }
   assert(data.chiploads.entries.filter((e) => e.source === 'ita').every((e) => e.diameter_mm === 12), 'ITA rows must carry 12 mm');
+});
+
+// SC35 guards the copy contract behind the 2026-08-31 sweep: the public page
+// never narrates how the calculator chose its data. That story lives in
+// meta.chartNotes for tests and headless callers, and on the page only the
+// limit line and the chart ladder name a chart.
+test('SC35', 'chart narration never reaches the rendered notes', () => {
+  const NARRATION = /publishes no|publishes nothing|chart serves|charts? do not|contributes|disagree by more than|does not compensate|Generic (vendor|chart) values|nearest match|flat kc estimate/;
+  const picks = [
+    {},
+    { profile: 'finishing' },
+    { material: 'plywood', materials: ['plywood'], profile: 'finishing' },
+    { material: 'softwood_ply', materials: ['softwood_ply'], materialsFallback: ['plywood'] },
+    { material: 'hpl', materials: ['hpl'], diameterMm: 12.7, toolType: 'straight' },
+    { material: 'hardwood', materials: ['hardwood'], direction: 'conventional', densityKgM3: 600 },
+    { diameterMm: 3.175, thicknessMm: 3 },
+    { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], diameterMm: 6.35, thicknessMm: 6 },
+  ];
+  for (const pick of picks) {
+    const r = run(pick);
+    if (r.status !== 'ok') continue;
+    for (const n of r.notes) {
+      assert(!NARRATION.test(n), `narration leaked into the rendered notes for ${JSON.stringify(pick)}: ${n}`);
+    }
+    assert(r.notes.length <= 5, `${r.notes.length} notes render for ${JSON.stringify(pick)}; the page carries guidance, not a log`);
+  }
 });
 
 // SC30 guards the ceiling the results column is built on. Every warning is a

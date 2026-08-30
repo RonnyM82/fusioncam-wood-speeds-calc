@@ -91,6 +91,20 @@ main {
    hides that field while the Finishing profile is on. */
 .lt-field[hidden] { display: none; }
 
+/* A grid item's minimum inline size is auto, so an expanded table twin's
+   min-content width (driven by the vendored nowrap header cells) pushed the
+   results column, the card and the body wide, and .lt-table-wrap never got
+   to scroll. Measured 2026-08-31: body scrollWidth 853 in a 704px body.
+   A zero minimum keeps wide content inside the column, where the wrapper
+   contains and scrolls it. */
+#results > *, #diagnostics > * { min-inline-size: 0; }
+
+/* The vendored .lt-table makes every th nowrap, which is right for its
+   short uppercase column headings and wrong for this app's row headers,
+   which carry chart names. Let the row headers wrap, so the table twin
+   lays out inside the column instead of scrolling sideways. */
+.table-twin th[scope="row"] { white-space: normal; }
+
 /* Every bounded block on the panel pads the same: space-4 block, space-5
    inline. .out-card is the one exception and states its reason there. The
    details blocks were on space-4 all round, so they sat 4px narrower inside

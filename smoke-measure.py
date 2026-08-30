@@ -109,6 +109,17 @@ def run(page, label, coarse):
     if coarse:
         touch = [s for s in d["steppers"] if min(s["w"], s["h"]) < 44 - 0.5]
         ok &= check("steppers reach the touch floor", not touch, f"{len(touch)} under 44px")
+
+    # An expanded table twin must scroll inside its own wrapper, never widen
+    # the page. This shipped broken (found 2026-08-31): the results grid let
+    # the table's min-content width through, the card and the body followed,
+    # and the page scrolled sideways with the layout torn above it.
+    page.evaluate("() => document.querySelectorAll('.table-twin').forEach((d) => { d.open = true; })")
+    page.wait_for_timeout(100)
+    flow = page.evaluate(
+        "() => ({ body: document.body.scrollWidth <= document.body.clientWidth + 1,"
+        " doc: document.documentElement.scrollWidth <= window.innerWidth + 1 })")
+    ok &= check("expanded tables stay inside the page", flow["body"] and flow["doc"], flow)
     return ok
 
 
