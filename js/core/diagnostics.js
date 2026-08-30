@@ -14,7 +14,11 @@ export function buildChips(result) {
 
   const x = m.fzEff.toFixed(3);
   const warnBelow = m.chipFloor?.warn_below ?? 0.1;
-  if (codes.has('chip_plough')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, the tool ploughs and burns` });
+  // Finishing serves the finisher chart's programmed chip and checks it
+  // against that chart, not against the panel floor (see calculate.js).
+  if (m.finishing && codes.has('chip_below_chart')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm programmed, below the finisher chart` });
+  else if (m.finishing) chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm programmed, per the finisher chart` });
+  else if (codes.has('chip_plough')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, the tool ploughs and burns` });
   else if (codes.has('chip_below_min')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, below the ${warnBelow.toFixed(2)} minimum` });
   else if (codes.has('chip_marginal')) chips.push({ key: 'chip', level: 'warm', text: `Chip ${x} mm, close to the minimum` });
   else if (codes.has('chip_thin')) chips.push({ key: 'chip', level: 'warm', text: `Chip ${x} mm, thin for solid timber` });
@@ -32,7 +36,7 @@ export function buildChips(result) {
     chips.push({
       key: 'thinning',
       level: m.chipThinningFactor > 1.5 ? 'warm' : 'cool',
-      text: `Chip thinning ${m.chipThinningFactor.toFixed(2)}× at ${Math.round((m.aeMm / m.dMm) * 100)}% radial`,
+      text: `Chip thinning ${m.chipThinningFactor.toFixed(2)}× at ${Math.round((m.aeMm / m.dMm) * 100)}% radial${m.thinningCompensated === false ? ', not compensated' : ''}`,
     });
   }
 

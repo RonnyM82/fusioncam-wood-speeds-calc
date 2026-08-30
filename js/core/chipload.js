@@ -18,8 +18,9 @@ export function rpmFromSurfaceSpeed(vcMMin, dMm) {
 }
 
 // Published bands assume DOC <= 1×D. Continuous piecewise derate through the
-// anchors published in chiploads.json depth_derating (100/75/50% at 1×/2×/3×D);
-// the hyperbolic tail past 3×D is the project extension recorded in rules.json.
+// anchors published in chiploads.json depth_derating (100/75/50% at 1×/2×/3×D).
+// calculate() blocks past 3×D (rules.json depth_limit, 2026-08-29), so the
+// hyperbolic tail below only serves a headless caller that skips the block.
 export function depthDerate(docRatio, anchors) {
   const a1 = anchors?.['1xD'] ?? 1;
   const a2 = anchors?.['2xD'] ?? 0.75;
@@ -80,11 +81,35 @@ function inScope(e, toolType) {
   return !(e.excludes_tool_types ?? []).includes(toolType);
 }
 
-export function selectEntries(entries, { material, materials, materialsFallback, toolType }) {
+export function selectEntries(entries, { material, materials, materialsFallback, toolType, finishing }) {
   const wanted = GEOMETRY_FOR_TOOL[toolType];
   if (!wanted) throw new Error(`Unknown tool type: ${toolType}`);
   const matSet = new Set(materials ?? [material]);
   const ofMaterial = entries.filter((e) => matSet.has(e.material) && !e.superseded_by);
+  // Finishing serves the finisher-series charts: the only published finishing
+  // chip loads (research session 4, Scott's serving decision 2026-08-29). The
+  // borrow across tool families is deliberate and calculate() names it in a
+  // note. Every chart the tool itself could read stays visible as context.
+  // When no finisher chart covers the pick, this returns empty and the caller
+  // falls back to the published minimum chip; the generic charts must not
+  // serve a finish target, so no generic fallback applies here.
+  if (finishing) {
+    const finisherOf = (rows) => rows.filter((e) => e.tool_geometry === 'finisher');
+    let finisherRows = finisherOf(ofMaterial);
+    const finNotes = [];
+    // No finisher chart is published for the other panels. The MDF finisher
+    // chart, the lowest of the three, serves them as the nearest published
+    // finishing chip (Scott, 2026-08-29), the same shape as the soft-ply
+    // borrow below. Solid timber never borrows: both species have rows.
+    if (!finisherRows.length && isPanelMaterial(material)) {
+      finisherRows = finisherOf(entries.filter((e) => e.material === 'mdf' && !e.superseded_by));
+      if (finisherRows.length) {
+        finNotes.push(`No finisher chart is published for ${matProse(material)}. The MDF finisher chart serves the finish chip as the nearest published finishing chip loads. It is the lowest of the three finisher charts.`);
+      }
+    }
+    const context = ofMaterial.filter((e) => e.tool_geometry !== 'finisher' && inScope(e, toolType));
+    return { entries: finisherRows, primary: finisherRows, context, notes: finNotes };
+  }
   const exact = ofMaterial.filter((e) => wanted.includes(e.tool_geometry) && servesDirection(e, toolType));
   const generic = ofMaterial.filter((e) => e.tool_geometry === 'unspecified');
   const notes = [];
@@ -185,14 +210,19 @@ const GEO_PROSE = {
   finisher: 'finisher', straight: 'straight', straight_o_flute: 'O-flute', unspecified: 'generic chart',
 };
 
-export function resolveBand(entries, { material, materials, materialsFallback, toolType, diameterMm }, envRules) {
+export function resolveBand(entries, { material, materials, materialsFallback, toolType, diameterMm, finishing }, envRules) {
   const coverageTol = envRules?.coverage_tolerance ?? 0.25;
   const disagreement = envRules?.disagreement_ratio ?? 2.0;
-  const sel = selectEntries(entries, { material, materials, materialsFallback, toolType });
+  const sel = selectEntries(entries, { material, materials, materialsFallback, toolType, finishing });
   const notes = [...sel.notes];
   const primary = chartBands(sel.primary, diameterMm, coverageTol);
   const contextResult = chartBands(sel.context, diameterMm, coverageTol);
-  notes.push(...primary.notes, ...contextResult.notes);
+  // Coverage notes ("publishes no values near...") stay true whatever serves.
+  // The serving narrative in `notes` does not, so the two return separately
+  // and a caller that overrides the serve (the finishing floor fallback)
+  // can keep the first without repeating the second.
+  const coverageNotes = [...primary.notes, ...contextResult.notes];
+  notes.push(...coverageNotes);
   const servedGeometries = new Set(sel.primary.map((e) => e.tool_geometry));
   let serving = primary.bands;
   // Context bands from a different tool family than the pick are labelled
@@ -201,7 +231,7 @@ export function resolveBand(entries, { material, materials, materialsFallback, t
   let context = [...contextResult.bands].map((b) => (
     servedGeometries.has(b.geometry) ? b : { ...b, label: `${b.label} (${GEO_PROSE[b.geometry] ?? b.geometry})` }
   ));
-  if (!serving.length && context.length) {
+  if (!finishing && !serving.length && context.length) {
     const generic = context.filter((b) => b.geometry === 'unspecified');
     if (generic.length) {
       serving = generic;
@@ -209,7 +239,7 @@ export function resolveBand(entries, { material, materials, materialsFallback, t
       notes.push('The geometry-matched charts do not cover this diameter. Generic chart values serve instead.');
     }
   }
-  if (!serving.length) return { served: false, notes };
+  if (!serving.length) return { served: false, notes, coverageNotes };
   if (serving.length > 1) {
     const mids = serving.map((b) => b.mid);
     if (Math.max(...mids) / Math.min(...mids) > disagreement) {
@@ -231,6 +261,7 @@ export function resolveBand(entries, { material, materials, materialsFallback, t
     servingBands: serving,
     context,
     notes,
+    coverageNotes,
     hasSwitchableBasis: serving.some((b) => b.switchable),
     allBigIron: serving.every((b) => b.machineClass === 'big_iron_10hp_plus'),
   };
@@ -258,8 +289,11 @@ function interpolateBand(sortedRows, dMm) {
 
 // D7: gentle/standard/aggressive are the low edge, midpoint and high edge of
 // the merged envelope — a project convention recorded in chiploads.json.
+// Finishing also serves the low edge: the measured surface-quality lever is a
+// smaller chip (research session 4), and the low edge is the smallest sourced
+// number. What separates it from gentle is the assumed skim in calculate().
 export function profileFz(envelope, profile) {
-  if (profile === 'gentle') return envelope.fzMin;
+  if (profile === 'gentle' || profile === 'finishing') return envelope.fzMin;
   if (profile === 'aggressive') return envelope.fzMax;
   return (envelope.fzMin + envelope.fzMax) / 2;
 }

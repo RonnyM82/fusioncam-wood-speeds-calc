@@ -23,12 +23,14 @@ comment:
 | `styles.css` | app CSS, and corrections to a component's own CSS. Loads last, unlayered, so it wins without a specificity fight. |
 | `app-tokens.css` | tokens the system does not define. Loads between the tokens and the components, and `conformance.py` exempts it by name. |
 
-No correction is live today. Everything this app once corrected in its own
-layer was adopted upstream on 2026-08-20 and arrived back in a re-vendor: the
-stepper-width fix, the chart tokens and the forced-colours emphasis class.
-When the next defect appears, fix it in the app layer with the measurement
-that found it written above the rule, and report it upstream rather than
-patching the vendored copy.
+One correction is live today: `.lt-field[hidden]` in `styles.css`
+(2026-08-29), because the field class sets its own display and beats the
+hidden attribute. It is reported in DESIGN-SYSTEM-FEEDBACK.md (the addendum).
+Everything this app corrected before that was adopted upstream on 2026-08-20
+and arrived back in a re-vendor: the stepper-width fix, the chart tokens and
+the forced-colours emphasis class. When the next defect appears, fix it in
+the app layer with the measurement that found it written above the rule, and
+report it upstream rather than patching the vendored copy.
 
 ## The four checks
 
@@ -36,7 +38,7 @@ Run the first two on any change. Run all four before calling a UI change done.
 
 ```bash
 python conformance.py .        # source: tokens, markup, accessibility basics
-node tests/run.js              # 69 tests, data and behaviour
+node tests/run.js              # 75 tests, data and behaviour
 python smoke-measure.py        # rendered geometry; needs a server, see below
 python lt_dom_audit.py <dir>   # rendered HTML: field errors only half wired
 ```

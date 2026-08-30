@@ -4506,13 +4506,14 @@
    "tool_geometry": "unspecified",
    "flutes": null,
    "material": "laminated_chipboard",
-   "diameter_mm": null,
+   "diameter_mm": 12,
+   "diameter_display": "12 mm",
    "fz_min_mm": 0.15,
    "fz_max_mm": 0.25,
    "doc_basis": "1xD",
    "flute_basis": "per_tooth_total_user_switchable",
    "data_class": "vendor",
-   "notes": "not diameter-resolved; total-flute reading"
+   "notes": "the ITA guide states its ranges for 12 mm nesting tools (research sessions 1 and 3); the diameter was set on 2026-08-29 so the +/-25% coverage rule applies, after the unsized row stretched the 1/8 in melamine band to 0.194 mm/tooth; total-flute reading"
   },
   {
    "source": "ita",
@@ -4521,13 +4522,14 @@
    "tool_geometry": "unspecified",
    "flutes": null,
    "material": "mdf",
-   "diameter_mm": null,
+   "diameter_mm": 12,
+   "diameter_display": "12 mm",
    "fz_min_mm": 0.1,
    "fz_max_mm": 0.2,
    "doc_basis": "1xD",
    "flute_basis": "per_tooth_total_user_switchable",
    "data_class": "vendor",
-   "notes": ""
+   "notes": "the ITA guide states its ranges for 12 mm nesting tools (research sessions 1 and 3); the diameter was set on 2026-08-29 so the +/-25% coverage rule applies, after the unsized row stretched the 1/8 in melamine band to 0.194 mm/tooth; total-flute reading"
   },
   {
    "source": "ita",
@@ -4536,13 +4538,14 @@
    "tool_geometry": "unspecified",
    "flutes": null,
    "material": "hardwood",
-   "diameter_mm": null,
+   "diameter_mm": 12,
+   "diameter_display": "12 mm",
    "fz_min_mm": 0.15,
    "fz_max_mm": 0.3,
    "doc_basis": "1xD",
    "flute_basis": "per_tooth_total_user_switchable",
    "data_class": "vendor",
-   "notes": ""
+   "notes": "the ITA guide states its ranges for 12 mm nesting tools (research sessions 1 and 3); the diameter was set on 2026-08-29 so the +/-25% coverage rule applies, after the unsized row stretched the 1/8 in melamine band to 0.194 mm/tooth; total-flute reading"
   },
   {
    "source": "freud",

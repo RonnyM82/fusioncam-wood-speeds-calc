@@ -32,6 +32,7 @@ const PROFILES = [
   { id: 'gentle', label: 'Gentle' },
   { id: 'standard', label: 'Standard' },
   { id: 'aggressive', label: 'Aggressive' },
+  { id: 'finishing', label: 'Finishing' },
 ];
 
 const OUTPUT_ROWS = [
@@ -205,6 +206,10 @@ function buildProfile() {
 
   const apply = (id, { recalculate = true } = {}) => {
     state.profile = id;
+    // Finishing has no first-cut choice: the reduction guards a heavy proving
+    // cut, and on a finish skim it drives the chip toward the rubbing floor.
+    // The stored choice is kept and returns with the other profiles.
+    $('firstcut-field').hidden = id === 'finishing';
     buttons.forEach((b) => {
       const on = b.dataset.profile === id;
       b.setAttribute('aria-checked', String(on));
@@ -424,14 +429,18 @@ function render(result) {
   // the numbers above it.
   //
   // The banner pile itself is bounded: the limit line plus at most three
-  // warnings, and test SC30 sweeps the input space to hold that ceiling. If
-  // a change lets a fourth warning through, fold the warnings into one
-  // banner carrying a list rather than raising the bound.
-  const warnings = result.warnings.map((w) => alertHtml(
-    w.code === 'chip_plough' || w.code === 'chip_below_min' ? 'danger' : 'warning',
-    null,
-    w.message,
-  )).join('');
+  // banners. Up to three warnings render one each. Four or more fold into
+  // one banner carrying a list, at the worst severity among them, because
+  // past about three the correct visual has become a stream. Test SC30
+  // sweeps the input space to hold the ceiling at four.
+  const isDanger = (w) => w.code === 'chip_plough' || w.code === 'chip_below_min';
+  const warnings = result.warnings.length > 3
+    ? alertHtml(
+      result.warnings.some(isDanger) ? 'danger' : 'warning',
+      `${result.warnings.length} things to check on this cut`,
+      result.warnings.map((w) => w.message),
+    )
+    : result.warnings.map((w) => alertHtml(isDanger(w) ? 'danger' : 'warning', null, w.message)).join('');
 
   const notes = result.notes.length
     ? `<div class="notes">
@@ -629,20 +638,33 @@ function ladderHtml(result) {
   const context = (m.contextBands ?? []).map((b) => ({ ...b, serves: false }));
   const all = [...serving, ...context].sort((a, b) => a.lo - b.lo || a.hi - b.hi);
   if (!all.length) return '';
-  const fz = m.fzDeliv;
+  // The marker draws the chip on the chart's own basis. For the roughing
+  // charts that is the EFFECTIVE chip: chip thinning raises the programmed
+  // feed above the band on a light cut and the first-cut reduction lowers it
+  // below, and marking the programmed value made the serving chart claim a
+  // fit it did not have whenever either applied (found 2026-08-29). In
+  // Finishing nothing is compensated, so fzEff is the programmed chip, which
+  // is the basis the finisher chart publishes.
+  const fz = m.fzEff;
   const lo = Math.min(...all.map((b) => b.lo), fz);
   const hi = Math.max(...all.map((b) => b.hi), fz);
   const span = hi - lo || 1;
   const pos = (v) => (((v - lo) / span) * 100).toFixed(1);
   // The bar's position on the shared scale is the one thing this chart shows
   // that its own text does not, so that is what the tip says: whether the
-  // served feed falls inside this chart's published band, and which way out
-  // it sits when it does not.
+  // effective chip falls inside this chart's published band, and which way
+  // out it sits when it does not.
   const verdictFor = (b) => {
-    if (b.serves) return `Sets your numbers. The served ${fz.toFixed(3)} sits in this band.`;
-    if (fz < b.lo) return `Served feed is below this band, by ${(b.lo - fz).toFixed(3)} mm/tooth.`;
-    if (fz > b.hi) return `Served feed is above this band, by ${(fz - b.hi).toFixed(3)} mm/tooth.`;
-    return 'Served feed falls inside this band, but this chart does not serve it.';
+    // A tolerance, because a value that IS the band edge can land an ulp
+    // off it on the way through the feed maths.
+    if (b.serves) {
+      if (fz < b.lo - 1e-6) return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.`;
+      if (fz > b.hi + 1e-6) return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits above this band.`;
+      return `Sets your numbers. The effective chip ${fz.toFixed(3)} sits in this band.`;
+    }
+    if (fz < b.lo) return `The effective chip is below this band, by ${(b.lo - fz).toFixed(3)} mm/tooth.`;
+    if (fz > b.hi) return `The effective chip is above this band, by ${(fz - b.hi).toFixed(3)} mm/tooth.`;
+    return 'The effective chip falls inside this band, but this chart does not serve it.';
   };
 
   const rowsHtml = all.map((b) => {
@@ -664,7 +686,7 @@ function ladderHtml(result) {
   }).join('');
 
   const twin = tableTwin('Every published chart for this cut',
-    ['Chart', 'Published band (mm/tooth)', 'Against the served feed'],
+    ['Chart', 'Published band (mm/tooth)', 'Against the effective chip'],
     all.map((b) => [
       b.label + (b.machineClass ? ' (10 hp+ charts)' : ''),
       `${b.lo.toFixed(3)}–${b.hi.toFixed(3)}`,
@@ -674,7 +696,7 @@ function ladderHtml(result) {
   return `<div class="ladder">
     <div class="ladder-head"><h2>Every published chart for this cut</h2><span class="ladder-units">mm/tooth</span></div>
     ${rowsHtml}
-    <p class="ladder-legend">The highlighted chart sets your numbers. The dotted line marks the served feed per tooth, ${fz.toFixed(3)} mm/tooth. The other charts are context, and their numbers do not serve.</p>
+    <p class="ladder-legend">The highlighted chart sets your numbers. The dotted line marks ${m.finishing ? 'the programmed chip per tooth' : 'the effective chip this cut delivers'}, ${fz.toFixed(3)} mm/tooth. The other charts are context, and their numbers do not serve.</p>
     ${twin}
   </div>`;
 }

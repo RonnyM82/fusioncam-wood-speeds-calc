@@ -190,7 +190,8 @@ test('SC21', 'an up-cut-only spiral row cannot serve down-cut without covers_dir
 test('SC23', 'both plywoods and HPL resolve at every published diameter, not just 12.7', () => {
   for (const mat of ['plywood', 'softwood_ply', 'hpl']) {
     for (const dia of [3.175, 6.35, 9.525, 12.7]) {
-      const r = run({ material: mat, materials: [mat], diameterMm: dia, thicknessMm: 12 });
+      // Never deeper than 3xD: the depth block (SC33) is not what this test reads.
+      const r = run({ material: mat, materials: [mat], diameterMm: dia, thicknessMm: Math.min(12, 3 * dia) });
       assert(r.status === 'ok', `${mat} at ${dia} mm returned ${r.status}`);
       assert(r.meta.fzDeliv > 0, `${mat} at ${dia} mm gave no chip load`);
     }
@@ -266,15 +267,128 @@ test('SC26', 'first-cut mode scales the feed by the rules factor, notes it, and 
   approx(unspecified.outputs.cuttingFeedMmMin, on.outputs.cuttingFeedMmMin, { rel: 0.001 });
 });
 
+test('SC31', 'finishing serves the finisher chart as the programmed chip, uncompensated, first-cut ignored', () => {
+  const fin = run({ profile: 'finishing', firstCut: true });
+  assert(fin.status === 'ok', `expected ok, got ${fin.status}`);
+  assert(fin.meta.contributors.some((c) => c.includes('60-200')),
+    `the finisher chart must serve, got ${fin.meta.contributors}`);
+  approx(fin.meta.aeMm, data.rules.finishing.skim_ae_mm, { abs: 1e-9 });
+  assert(fin.meta.firstCut.applied === false, 'first-cut must never apply in finishing');
+  assert(fin.limit.binding === 'ideal', `expected ideal, got ${fin.limit.binding}`);
+  // The programmed chip IS the chart's low edge: no thinning compensation,
+  // no derate on a skim, no first-cut. The feed is the plain identity.
+  approx(fin.outputs.feedPerToothMm, fin.meta.band.fzMin, { rel: 1e-9 });
+  approx(fin.outputs.cuttingFeedMmMin, fin.meta.band.fzMin * 18000 * 2, { rel: 1e-9 });
+  assert(fin.meta.thinningCompensated === false, 'finishing must not compensate for thinning');
+  assert(fin.meta.chipThinningFactor > 1.5, `the physical thinning must still report, got ${fin.meta.chipThinningFactor}`);
+  assert(fin.meta.fzPhysical < fin.meta.band.fzMin, 'the physical chip must read thinner than the programmed chip');
+  assert(!fin.warnings.some((w) => /^chip_/.test(w.code)), `no chip warning may fire at the chart's own value: ${fin.warnings.map((w) => w.code)}`);
+  // The number Scott rejected was 24,300 mm/min for a half-inch MDF skim at
+  // 18k rpm and two flutes; its compensated sibling was 8,488. The vendor's
+  // programmed chip gives 4,572. Pin the class of number, not just the value.
+  const half = run({ toolType: 'compression', diameterMm: 12.7, thicknessMm: 18, profile: 'finishing', rpm: 18000, flutesTotal: 2 });
+  approx(half.outputs.cuttingFeedMmMin, 0.127 * 18000 * 2, { rel: 0.001 });
+  assert(half.outputs.cuttingFeedMmMin < 6000, `a half-inch MDF finish skim at 18k rpm must stay under 6 m/min, got ${half.outputs.cuttingFeedMmMin}`);
+  assert(half.meta.derate === 1, 'the deep-slot derate must not touch a skim');
+  // Ignoring first-cut means the toggle moves nothing.
+  const off = run({ profile: 'finishing', firstCut: false });
+  approx(fin.outputs.cuttingFeedMmMin, off.outputs.cuttingFeedMmMin, { rel: 1e-9 });
+  assert(fin.notes.some((n) => /finisher chart/.test(n)), 'finisher-chart note missing');
+  assert(fin.notes.some((n) => /does not compensate/.test(n)), 'no-compensation note missing');
+  assert(fin.notes.some((n) => /assumes a 1 mm skim/.test(n)), 'skim note missing');
+  assert(fin.notes.some((n) => /first-cut reduction does not apply/.test(n)), 'first-cut inapplicability note missing');
+  // A typed width of cut is respected, and the skim note goes away. A
+  // full-width cut in Finishing derates like any other profile and says so.
+  const typed = run({ profile: 'finishing', aeMm: 3 });
+  approx(typed.meta.aeMm, 3, { abs: 1e-9 });
+  assert(!typed.notes.some((n) => /assumes a 1 mm skim/.test(n)), 'the skim note must not claim an assumption the user overrode');
+  const slot = run({ profile: 'finishing', aeMm: 12, thicknessMm: 24 });
+  assert(slot.meta.derate < 1, 'a full-width finishing cut at 2xD must derate');
+  assert(slot.warnings.some((w) => w.code === 'chip_below_chart'), 'a derated finishing chip must warn against the chart minimum');
+  // A cap that holds the programmed chip under the chart names itself.
+  const capped = run({ profile: 'finishing' }, { feedMaxMmMin: 2000 });
+  const w = capped.warnings.find((x) => x.code === 'chip_below_chart');
+  assert(w && /machine maximum feed/.test(w.message), `the cap must be named: ${w && w.message}`);
+});
+
+test('SC32', 'panels without a finisher chart borrow the MDF chart; outside its diameters Finishing refuses', () => {
+  for (const mat of [
+    { material: 'plywood', materials: ['plywood'] },
+    { material: 'softwood_ply', materials: ['softwood_ply'], materialsFallback: ['plywood'] },
+    { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'] },
+    { material: 'hpl', materials: ['hpl'], diameterMm: 12.7 },
+  ]) {
+    const r = run({ ...mat, profile: 'finishing' });
+    assert(r.status === 'ok', `${mat.material}: expected ok, got ${r.status}`);
+    assert(r.meta.contributors.some((c) => c.includes('60-200')), `${mat.material}: the MDF finisher chart must serve`);
+    assert(r.notes.some((n) => /MDF finisher chart serves/.test(n)), `${mat.material}: the borrow must be named`);
+    const mdf = run({ profile: 'finishing', diameterMm: mat.diameterMm ?? 12 });
+    approx(r.meta.band.fzMin, mdf.meta.band.fzMin, { abs: 1e-9 });
+    assert(r.meta.contextBands.length > 0, `${mat.material}: the tool charts must stay visible as context`);
+  }
+  // Solid timber never borrows: hardwood serves its own finisher row.
+  const hw = run({ material: 'hardwood', materials: ['hardwood'], diameterMm: 12.7, thicknessMm: 12.7, profile: 'finishing' });
+  assert(!hw.notes.some((n) => /MDF finisher chart/.test(n)), 'hardwood must not borrow the MDF chart');
+  approx(hw.meta.band.fzMin, 0.178, { abs: 0.002 });
+  // Outside the finisher rows' ±25% coverage the profile refuses with the reason.
+  for (const diameterMm of [3.175, 25.4]) {
+    const r = run({ diameterMm, thicknessMm: Math.min(diameterMm, 18), profile: 'finishing' });
+    assert(r.status === 'refused', `${diameterMm} mm: expected refused, got ${r.status}`);
+    assert(/finisher chart/.test(r.refusal.reason), `${diameterMm} mm: the reason must name the finisher chart: ${r.refusal.reason}`);
+  }
+  // The 60-300 chipbreaker finishers never serve: only the finisher class does.
+  const fin = run({ profile: 'finishing' });
+  assert(!fin.meta.contributors.some((c) => /60-3/.test(c)), `chipbreaker finishers must stay context: ${fin.meta.contributors}`);
+});
+
+test('SC33', 'a cut deeper than three diameters blocks and names the maximum pass', () => {
+  const deep = run({ diameterMm: 3.175, thicknessMm: 18 });
+  assert(deep.status === 'blocked', `expected blocked, got ${deep.status}`);
+  assert(/3 tool diameters/.test(deep.block.reason), deep.block.reason);
+  assert(/passes of 9.5 mm or less/.test(deep.block.reason), `the maximum pass must be named: ${deep.block.reason}`);
+  assert(!('outputs' in deep), 'a block must not carry outputs');
+  // Exactly three diameters still serves; a hair past it does not.
+  assert(run({ apMm: 36 }).status === 'ok', '3.0xD must serve');
+  assert(run({ apMm: 37 }).status === 'blocked', '3.1xD must block');
+  // Every profile blocks, Finishing included: no chart goes deeper.
+  assert(run({ diameterMm: 3.175, thicknessMm: 18, profile: 'finishing' }).status === 'blocked', 'finishing must block too');
+  assert(data.rules.depth_limit.max_ratio_of_d === 3, 'the depth limit must stay at the vendors 3xD anchor');
+});
+
+test('SC34', 'the ITA chart contributes only near its 12 mm nesting tools', () => {
+  const small = run({ material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], diameterMm: 3.175, thicknessMm: 3, profile: 'aggressive' });
+  assert(small.status === 'ok', `expected ok, got ${small.status}`);
+  assert(!small.meta.contributors.some((c) => /ITA/.test(c)), `ITA must not serve a 3.175 mm tool: ${small.meta.contributors}`);
+  assert(small.outputs.feedPerToothMm < 0.19, `a 1/8 in melamine chip must stay under the stretched 0.194: ${small.outputs.feedPerToothMm}`);
+  approx(small.outputs.feedPerToothMm, 0.15, { abs: 0.001 });
+  // At 1/4 in Freud's own row serves alone now. Its low edge (0.25) sits above
+  // the 0.15 the unsized ITA row used to pull Gentle down to. That is Freud's
+  // published 1/4 in value, and the big-iron caveat now fires with it.
+  const quarter = run({ material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], diameterMm: 6.35, thicknessMm: 6, profile: 'gentle' });
+  assert(!quarter.meta.contributors.some((c) => /ITA/.test(c)), `ITA must not serve a 6.35 mm tool: ${quarter.meta.contributors}`);
+  assert(quarter.warnings.some((w) => w.code === 'big_iron_only'), 'a Freud-only melamine band must carry the big-iron caveat');
+  const mid = run({ material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], diameterMm: 12.7 });
+  assert(mid.meta.contributors.some((c) => /ITA/.test(c)), `ITA must still serve melamine at 12.7 mm: ${mid.meta.contributors}`);
+  // At 1 in the unsized row used to serve MDF and hardwood spirals alone.
+  for (const material of ['mdf', 'hardwood']) {
+    const big = run({ material, materials: [material], diameterMm: 25.4, thicknessMm: 25 });
+    assert(big.status === 'refused', `${material} at 25.4 mm must refuse without ITA: ${big.status}`);
+  }
+  assert(data.chiploads.entries.filter((e) => e.source === 'ita').every((e) => e.diameter_mm === 12), 'ITA rows must carry 12 mm');
+});
+
 // SC30 guards the ceiling the results column is built on. Every warning is a
 // banner, and the design system calls a pile of more than about three status
 // visuals a stream that belongs in a list instead. This page's pile is
-// bounded: the limit line plus at most three warnings. A 343,000-combination
-// sweep on 2026-08-20 (this grid, widened with flutes 2, thicknesses 6/18/36
-// and first-cut on) found the same ceiling. If this test fails, do not raise
-// the bound: a fourth concurrent warning means the pile has become a stream,
-// and the warnings then need folding into one banner that carries a list.
-test('SC30', 'no input stacks more than three warnings under the limit line', () => {
+// bounded: the limit line plus at most three banners. Up to three warnings
+// render as separate banners; four or more fold into ONE banner carrying a
+// list (render() in js/ui/app.js), which is what the design system asks for
+// when the correct visual arrives too many times. The fourth warning became
+// reachable on 2026-08-29, when the ITA rows took their 12 mm diameter and
+// Freud-only melamine bands at small diameters picked up the big-iron
+// caveat beside the rpm clamp, the chip floor and the low-speed kc caveat.
+// If this test fails at five, look at what the fifth is before raising it.
+test('SC30', 'no input stacks more than four warnings, and four fold into one banner', () => {
   const presets = machinePresets(data.machines, data.rules);
   // The UI's material table, reduced to what calculate() reads.
   const sweepMaterials = [
@@ -291,7 +405,7 @@ test('SC30', 'no input stacks more than three warnings under the limit line', ()
     for (const toolType of ['upcut', 'downcut', 'compression', 'straight'])
       for (const diameterMm of [3.175, 6, 6.35, 12, 12.7, 19.05, 25.4])
         for (const rpm of [8000, 18000, 30000])
-          for (const profile of ['gentle', 'standard', 'aggressive'])
+          for (const profile of ['gentle', 'standard', 'aggressive', 'finishing'])
             for (const flutesTotal of [1, 4])
               for (const preset of presets) {
                 const r = calculate({
@@ -300,9 +414,9 @@ test('SC30', 'no input stacks more than three warnings under the limit line', ()
                 }, data);
                 if (r.status !== 'ok') continue;
                 worst = Math.max(worst, r.warnings.length);
-                assert(r.warnings.length <= 3,
+                assert(r.warnings.length <= 4,
                   `${r.warnings.length} warnings (${r.warnings.map((w) => w.code).join(', ')}) ` +
                   `for ${mat.material} ${toolType} D${diameterMm} ${rpm}rpm ${profile} Z${flutesTotal} on ${preset.id}`);
               }
-  assert(worst === 3, `the sweep must reach the known ceiling of 3 warnings, found ${worst}`);
+  assert(worst === 4, `the sweep must reach the known ceiling of 4 warnings, found ${worst}`);
 });

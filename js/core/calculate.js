@@ -32,7 +32,11 @@ export function calculate(input, data) {
   let rpm = input.rpm ?? rules.defaults.rpm;
   const zEff = input.flutesTotal ?? rules.defaults.flutes_total;
   const ap = input.apMm ?? input.thicknessMm;
-  const ae = input.aeMm ?? D;
+  // The Finishing profile models a wall skim: with no width of cut given it
+  // assumes the rules.json skim instead of a full slot (research session 4).
+  const finishing = input.profile === 'finishing';
+  const skimMm = finishing && rules.finishing ? Math.min(rules.finishing.skim_ae_mm, D) : null;
+  const ae = input.aeMm ?? skimMm ?? D;
   const direction = input.direction ?? 'climb';
   const machine = input.machine ?? {};
 
@@ -69,18 +73,41 @@ export function calculate(input, data) {
     }
   }
 
+  // No chart publishes a cut deeper than three diameters: the vendor depth
+  // rule ends at its 3xD anchor. Past it the old hyperbolic extension shrank
+  // the chip until the floor warning fired against the served number and
+  // told the user to raise a feed the calculator had just lowered (review
+  // sweep, 2026-08-29). So it blocks, like the compression minimum pass,
+  // and says what to do instead.
+  const maxRatio = rules.depth_limit?.max_ratio_of_d ?? 3;
+  if (ap / D > maxRatio + 1e-9) {
+    return {
+      status: 'blocked',
+      block: {
+        reason: `No published chart covers a cut deeper than ${maxRatio} tool diameters. At ${round1(ap)} mm on a ${round1(D)} mm tool this cut is ${(ap / D).toFixed(1)}×D. Cut in passes of ${round1(maxRatio * D)} mm or less, or use a bigger tool.`,
+        maxPassMm: maxRatio * D,
+        docRatio: ap / D,
+      },
+    };
+  }
+
+  // Finishing serves the finisher-series charts and nothing else (Scott,
+  // 2026-08-29). Outside their diameter coverage it refuses with the reason,
+  // because every substitute tried, the tool chart's own low edge and a
+  // diameter-blind floor target, served a number a machinist rejected.
   const env = resolveBand(
     chiploads.entries,
-    { material: input.material, materials: input.materials, materialsFallback: input.materialsFallback, toolType: input.toolType, diameterMm: D },
+    { material: input.material, materials: input.materials, materialsFallback: input.materialsFallback, toolType: input.toolType, diameterMm: D, finishing },
     rules.envelope_rules,
   );
   if (!env.served) {
+    const lead = finishing ? 'No published finisher chart covers this diameter, so Finishing gives no number. ' : '';
     return {
       status: 'refused',
       refusal: {
         reason: env.notes.length
-          ? env.notes.join(' ')
-          : 'No published chart covers this material and tool combination. The calculator gives no number without a source.',
+          ? lead + env.notes.join(' ')
+          : lead || 'No published chart covers this material and tool combination. The calculator gives no number without a source.',
       },
     };
   }
@@ -88,11 +115,28 @@ export function calculate(input, data) {
 
   const fzBase = profileFz(env, input.profile ?? 'standard');
   const docRatio = ap / D;
-  const derate = depthDerate(docRatio, chiploads.depth_derating);
-  const firstCut = input.firstCut ?? rules.first_cut?.default_on ?? false;
+  // The depth derate is the vendors' deep-slot rule: chip evacuation and
+  // deflection at 2x and 3x diameter in a full-width cut. A finish skim has
+  // neither, and derating it drove the served chip under the floor the
+  // profile exists to respect (review, 2026-08-29). So Finishing skips the
+  // derate in the light-radial regime, below half the diameter, the same
+  // boundary where chip thinning starts. A full-width cut in Finishing
+  // still derates like every other profile.
+  const skimRegime = finishing && ae < D / 2;
+  const derate = skimRegime ? 1 : depthDerate(docRatio, chiploads.depth_derating);
+  // A finish pass follows a proven cut, and the first-cut reduction guards
+  // heavy engagement. On a skim it would drive the chip under the rubbing
+  // floor, so the Finishing profile ignores it (research session 4).
+  const firstCut = !finishing && (input.firstCut ?? rules.first_cut?.default_on ?? false);
   const fcFactor = firstCut && rules.first_cut ? rules.first_cut.factor : 1;
   const fzTarget = fzBase * derate * fcFactor;
-  const ctf = chipThinningFactor(D, ae);
+  // The finisher charts publish the chip you PROGRAM on a finish pass, light
+  // radial engagement included, so Finishing does not compensate them for
+  // chip thinning. Stacking the compensation on top scaled the chip with
+  // diameter twice and reached the machine cap on a 3/4 in three-flute skim
+  // (sweep review, 2026-08-29). The physical factor still reports.
+  const ctfPhysical = chipThinningFactor(D, ae);
+  const ctf = finishing ? 1 : ctfPhysical;
   const fzProg = fzTarget * ctf;
 
   const kcModel = selectKcModel(kc, input.material, toolFamilyFor(input.toolType), direction);
@@ -132,8 +176,33 @@ export function calculate(input, data) {
   }
 
   const fzDeliv = final / (rpm * zEff);
-  const fzEff = fzDeliv / ctf;
+  // Uncapped, the effective chip IS the target. Recovering it from the
+  // delivered feed loses an ulp on the round trip, which put a served 0.14
+  // one ulp under the 0.14 floor boundary and fired a warning at the
+  // profile's own number (review, 2026-08-29).
+  const fzEff = lim.binding === 'ideal' ? fzTarget : fzDeliv / ctf;
 
+  if (finishing) {
+    notes.push(`The finish chip comes from the ${env.contributors.join(', ')} finisher chart, the only published finishing chip loads. It is the chip you program on a finish pass, as the vendor intends, so the calculator does not compensate it for chip thinning.`);
+    if (ctfPhysical > 1.001) {
+      notes.push(`On this ${round1(ae)} mm cut the physical chip is thinner than the programmed chip, about ${fz3(fzDeliv / ctfPhysical)} mm/tooth.`);
+    }
+    if (skimRegime && docRatio > 1) {
+      notes.push('The depth derate does not apply to a skim. It is the deep-slot rule, and this cut is under half the diameter wide.');
+    }
+    if (!(input.aeMm > 0)) {
+      notes.push(`Finishing assumes a ${round1(ae)} mm skim on the wall. Enter a width of cut to change the skim.`);
+    }
+    if (input.firstCut ?? rules.first_cut?.default_on) {
+      notes.push('The first-cut reduction does not apply to a finish pass. A finish pass follows a proven cut, and a reduced feed on a light cut rubs.');
+    }
+    // The flat spiral models (Int = 0) carry no thin-chip rise at all. The
+    // straight-tool models carry an intercept that already lifts kc as the
+    // chip thins, so the caveat is overstated there.
+    if (availKw !== undefined && ctfPhysical > 1.001 && !(kcModel.Int > 0)) {
+      notes.push('On a chip this thin the power check reads low. The true draw is higher.');
+    }
+  }
   const HOLDER = { vac: 'hold-down', pow: 'spindle power', vmax: 'machine maximum feed', corn: 'corner' };
   const capHeld = lim.binding !== 'ideal';
   if (fcFactor !== 1) {
@@ -146,7 +215,10 @@ export function calculate(input, data) {
     : fcFactor !== 1
       ? 'first-cut mode holds the feed down. If the cut is good, switch first-cut mode off.'
       : null;
-  const floor = chipFloorStatus(fzEff, input.material, rules.chip_floor_mm_per_tooth);
+  // The panel floor is a slotting-practice number on the effective chip. In
+  // Finishing the chart's own minimum is the floor, checked on the
+  // programmed chip, because that is the basis the finisher chart publishes.
+  const floor = finishing ? 'ok' : chipFloorStatus(fzEff, input.material, rules.chip_floor_mm_per_tooth);
   if (floor === 'plough') {
     warnings.push({ code: 'chip_plough', message: heldAdvice
       ? `The effective chip is ${fz3(fzEff)} mm/tooth. Below ${rules.chip_floor_mm_per_tooth.plough_below} mm the tool ploughs and burns, and ${heldAdvice}`
@@ -159,6 +231,12 @@ export function calculate(input, data) {
     warnings.push({ code: 'chip_marginal', message: `The effective chip is ${fz3(fzEff)} mm/tooth. This is close to the ${rules.chip_floor_mm_per_tooth.warn_below} mm minimum.` });
   } else if (floor === 'thin') {
     warnings.push({ code: 'chip_thin', message: `The effective chip is ${fz3(fzEff)} mm/tooth. This is thin for solid timber.` });
+  }
+  if (finishing && fzDeliv < env.fzMin - 1e-9) {
+    const holder = capHeld
+      ? `The ${HOLDER[lim.binding]} limit holds the feed this low. Correct that limit first.`
+      : 'The depth derate holds it there, because this cut is wider than half the diameter and deeper than the diameter.';
+    warnings.push({ code: 'chip_below_chart', message: `The programmed chip is ${fz3(fzDeliv)} mm/tooth, below the ${env.contributors.join(', ')} finisher chart's minimum of ${fz3(env.fzMin)}. ${holder} A finish cut this slow rubs.` });
   }
 
   if (kcModel.source === 'iwms25') {
@@ -225,7 +303,9 @@ export function calculate(input, data) {
       servingBands: env.servingBands,
       contextBands: env.context,
       fzBase, fzTarget, fzProg, fzDeliv, fzEff,
-      docRatio, derate, chipThinningFactor: ctf,
+      docRatio, derate, chipThinningFactor: ctfPhysical, thinningCompensated: !finishing,
+      finishing,
+      fzPhysical: fzDeliv / ctfPhysical,
       firstCut: { applied: fcFactor !== 1, factor: fcFactor },
       kcModel: { Ks: kcModel.Ks, Int: kcModel.Int, source: kcModel.source, data_class: kcModel.data_class },
       kcUsedNmm2: kcUsed,

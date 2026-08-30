@@ -81,9 +81,15 @@ main {
 .tool-hint { font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
 
 /* The button group is inline-flex by default. The profile picker spans the
-   field, and its three options share the width evenly. */
+   field, and its four options share the width evenly. */
 .profile-group { display: flex; }
 .profile-group > .lt-btn { flex: 1; }
+
+/* .lt-field sets its own display, which beats the UA's [hidden] rule — the
+   fight the vendored sheet documents at .lt-affix[hidden]. Measured here on
+   2026-08-29: the first-cut field stayed painted with hidden set. The app
+   hides that field while the Finishing profile is on. */
+.lt-field[hidden] { display: none; }
 
 /* Every bounded block on the panel pads the same: space-4 block, space-5
    inline. .out-card is the one exception and states its reason there. The

@@ -468,3 +468,24 @@ mistake and will never remove it. The findings worth spending on first are the
 ones that end in a check, because a check does not read carelessly at the end of
 a long session. That is why B1 and B2 sit near the top rather than the more
 interesting wording changes below them.
+
+# Addendum, 29 August 2026: the hidden attribute loses to every component that sets its own display
+
+Found while adding a fourth calculation profile, which hides one form field
+while it is active.
+
+- **Finding:** `.lt-field` sets `display: grid`, so an author rule beats the
+  user agent's `[hidden] { display: none }` and `el.hidden = true` leaves the
+  field painted. The vendored sheet knows this fight and guards its own two
+  cases (`.lt-affix[hidden]`, `.lt-calendar[hidden]`), but there is no general
+  guard, so the first app-owned hide of a component element hits it again.
+- **Measured:** driven page over :8081 on 2026-08-29. Set `hidden` on a
+  `.lt-field` div, the field still painted, and a Playwright `is_hidden()`
+  assertion failed on it.
+- **Suggested landing:** one `[hidden]:not([hidden="until-found"])` guard at
+  the reset layer, or the per-class guard extended to every component class
+  that sets `display`. A machine can catch the class of bug: flag any class
+  that sets `display` and has no `[hidden]` twin.
+- **Until then:** this app carries `.lt-field[hidden] { display: none; }` in
+  `styles.css` with the measurement written above the rule, per the correction
+  policy.

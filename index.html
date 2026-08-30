@@ -53,7 +53,7 @@
       <div class="lt-form-grid">
         <lt-number-field id="f-woc" input-id="woc" label="Width of cut"
                          measure="length" decimals="1" min="0.1" step="0.5" stepper
-                         hint="Leave empty to cut a full slot, one tool diameter wide."></lt-number-field>
+                         hint="Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead."></lt-number-field>
         <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
                          measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
       </div>
@@ -73,7 +73,11 @@
         <div id="profile" class="lt-btn-group profile-group" role="radiogroup" aria-labelledby="profile-label"></div>
       </div>
 
-      <div class="lt-field">
+      <!-- Hidden while the Finishing profile is on: a finish pass follows a
+           proven cut, and the reduction would drive a thin skim into rubbing
+           (research session 4). The choice is kept and returns with the other
+           profiles. -->
+      <div class="lt-field" id="firstcut-field">
         <label class="lt-check">
           <input type="checkbox" id="firstcut">
           <span id="firstcut-label">First cut: run a reduced feed until the cut proves good</span>

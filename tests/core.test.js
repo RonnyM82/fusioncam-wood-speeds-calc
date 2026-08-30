@@ -5,7 +5,7 @@
 import { test, assert, approx, notApprox } from './helpers.js';
 import { ipmToMMin, fzInToMm } from '../js/core/convert.js';
 import {
-  fzFromFeed, surfaceSpeedMMin, depthDerate, chipThinningFactor,
+  fzFromFeed, surfaceSpeedMMin, depthDerate, chipThinningFactor, profileFz,
 } from '../js/core/chipload.js';
 import {
   kcOfH, cuttingPowerKw, mrrMm3Min, torqueNm, availablePowerKw,
@@ -149,4 +149,12 @@ test('TIES', 'binding-limit tie-break: ties go to "no limit applies"', () => {
   assert(lim.binding === 'ideal', `expected ideal on tie, got ${lim.binding}`);
   const lim2 = applyLimits(10000, { vmax: 8000, pow: 9000 });
   assert(lim2.binding === 'vmax', `expected vmax, got ${lim2.binding}`);
+});
+
+test('PROF', 'profile positions on the band: finishing joins gentle at the low edge', () => {
+  const env = { fzMin: 0.2, fzMax: 0.3 };
+  approx(profileFz(env, 'gentle'), 0.2, { abs: 1e-9 });
+  approx(profileFz(env, 'standard'), 0.25, { abs: 1e-9 });
+  approx(profileFz(env, 'aggressive'), 0.3, { abs: 1e-9 });
+  approx(profileFz(env, 'finishing'), 0.2, { abs: 1e-9 });
 });

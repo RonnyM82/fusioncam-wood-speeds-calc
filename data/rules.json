@@ -12,6 +12,10 @@
   "project-decision": {
    "document": "Build-plan decision register, D2 and D7 (approved 2026-08-18)",
    "retrieved": "2026-08-18"
+  },
+  "session-4-finishing": {
+   "document": "research/research-session-4-finishing.md (manufacturer, practitioner and physics sweeps for finish passes)",
+   "retrieved": "2026-08-29"
   }
  },
  "plunge_ramp": {
@@ -37,9 +41,10 @@
   "source": "reference-v4",
   "data_class": "practitioner"
  },
- "depth_derating_extension": {
-  "form": "beyond 3xD: derate = 0.5 x (3 / ratio)",
-  "note": "hyperbolic continuation past the published 1x/2x/3xD anchors in chiploads.json depth_derating; the anchors themselves are the source through 3xD",
+ "depth_limit": {
+  "max_ratio_of_d": 3,
+  "behaviour": "block, not warn",
+  "note": "the vendor depth rule (Onsrud, Amana, Freud) ends at its 3xD anchor and no chart publishes deeper. Until 2026-08-29 a hyperbolic extension (0.5 x 3/ratio) served past it, which shrank the chip until the floor warning fired against the served number and told the user to raise a feed the calculator had just lowered. A review sweep found 1,260 such results per profile. The calculator now blocks past 3xD and names the maximum pass (Scott, 2026-08-29).",
   "source": "project-decision",
   "data_class": "project_decision"
  },
@@ -71,6 +76,12 @@
  "profile_bands": {
   "note": "gentle/standard/aggressive = lower edge/midpoint/upper edge of the SERVED band (decision D11, 2026-08-18): the geometry-and-diameter-matched charts when they exist, otherwise the generic charts; other vendors render as named context",
   "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "finishing": {
+  "skim_ae_mm": 1.0,
+  "note": "the Finishing profile serves the finisher-series charts (Onsrud 60-200), the only published finishing chip loads, at their low edge, as the PROGRAMMED chip with no chip-thinning compensation, because the vendor publishes them for a finish pass with its light radial engagement already inside the number. Panels with no finisher chart (plywood, soft plywood, melamine, HPL) borrow the MDF finisher chart, the lowest of the three, with a note. Outside the finisher rows' diameter coverage the profile refuses. The deep-slot depth derate does not apply to a skim (under half the diameter wide). When no width of cut is given it assumes 1 mm of radial stock on the wall. All of these are Scott's calls (2026-08-29): the skim sits inside Leitz's published 1-2 mm finish allowance, and the programmed-chip serve replaced two earlier builds the same day, one serving the tool chart's own low edge (24,300 mm/min on an MDF half-inch skim) and one compensating the finisher chip for thinning (30,000 mm/min on a 3/4 in three-flute hardwood skim), both rejected as numbers no machinist would run. The first-cut reduction never applies in this profile: it compensates heavy engagement, and on a thin skim a reduced feed drives the chip under the rubbing floor.",
+  "source": "session-4-finishing",
   "data_class": "project_decision"
  },
  "first_cut": {

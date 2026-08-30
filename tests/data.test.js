@@ -1,6 +1,7 @@
 // Regression tests 15–17, 19, 20 plus envelope-behaviour checks, all against
 // the real JSON in data/.
 
+import { readFileSync } from 'node:fs';
 import { test, assert, approx, notApprox } from './helpers.js';
 import { loadData } from './load-node.js';
 import { validateData } from '../js/data/validate.js';
@@ -252,6 +253,18 @@ test('PIN', 'served data values are pinned so silent drift fails here first', ()
   approx(data.rules.envelope_rules.disagreement_ratio, 2.0, { abs: 0.0001 });
   approx(data.rules.first_cut.factor, 0.65, { abs: 0.0001 });
   assert(data.rules.first_cut.default_on === true, 'first-cut mode must default on');
+});
+
+test('FIN', 'the finishing skim is pinned, sourced, and quoted by the UI hint', () => {
+  approx(data.rules.finishing.skim_ae_mm, 1.0, { abs: 0.0001 });
+  assert(data.rules.finishing.source === 'session-4-finishing', 'the finishing rule must cite the session-4 research file');
+  assert(data.rules.finishing.data_class === 'project_decision', 'the finishing skim is a project decision');
+  // The width-of-cut hint states the skim as static markup, because the
+  // element reads its hint attribute once at render. This keeps the two from
+  // drifting apart.
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  assert(html.includes(`assumes a ${data.rules.finishing.skim_ae_mm} mm skim`),
+    'the width-of-cut hint must quote the rules.json skim value');
 });
 
 test('CORRUPT', 'the validator rejects stripped provenance, bad vocabulary, and stringified numbers', () => {
