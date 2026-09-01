@@ -33,11 +33,48 @@ body {
   line-height: var(--lt-leading-md);
 }
 
+/* The header takes the panel's inline padding so its text lines up with
+   the controls below it instead of the panel's border (Scott, 2026-09-01,
+   from the first run inside Fusion). */
+header {
+  padding: var(--lt-space-3) var(--lt-space-5);
+}
 header h1 {
   font-size: var(--lt-text-lg);
   line-height: var(--lt-leading-lg);
   margin: var(--lt-space-2) 0;
 }
+
+/* The machine picker: the select and one icon button that carries the
+   preset note as a tip. The note left the page flow on 2026-09-01 (Scott,
+   first run inside Fusion): five lines of spindle prose under every
+   machine pick buried the controls. The note still reaches assistive
+   technology through a visually hidden span the select describes itself
+   by, and each option carries it as a native title as well. */
+.machine-row {
+  display: flex;
+  gap: var(--lt-space-2);
+  align-items: center;
+}
+.machine-row .lt-select { flex: 1 1 auto; min-inline-size: 0; }
+
+/* A floating light card takes a surface context (.lt-panel in the markup)
+   and paints no background of its own. Same construction as the site's
+   chart tip in styles.css: an anchored layer under the overlay, modal and
+   toast levels. There is no --lt-z-tooltip. */
+.machine-tip {
+  position: fixed;
+  z-index: var(--lt-z-dropdown);
+  max-inline-size: 22rem;
+  padding: var(--lt-space-3) var(--lt-space-4);
+  border: var(--lt-border-width-thin) solid var(--lt-border-default);
+  border-radius: var(--lt-radius-md);
+  box-shadow: var(--lt-shadow-overlay);
+  font-size: var(--lt-text-sm);
+  line-height: var(--lt-leading-sm);
+  pointer-events: none;
+}
+.machine-tip[hidden] { display: none; }
 .tagline {
   color: var(--lt-text-secondary);
   margin-top: 0;

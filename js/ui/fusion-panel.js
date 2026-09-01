@@ -29,7 +29,7 @@ import { mapOperation } from '../fusion/map-operation.js';
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-01b';
+const PAGE_BUILD = '2026-09-01c';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -425,9 +425,13 @@ function buildTools(job) {
       state.toolKeyByOp.set(op.opId, id.key);
       if (seen.has(id.key)) continue;
       seen.add(id.key);
-      state.toolRows.push({ key: id.key, guess: id.guess, guessSource: id.guessSource, tool: op.tool });
+      state.toolRows.push({ key: id.key, kind: id.kind, guess: id.guess, guessSource: id.guessSource, tool: op.tool });
       if (!state.tools.has(id.key)) {
-        state.tools.set(id.key, { geometry: id.guess, confirmed: false, upcutLengthMm: null });
+        state.tools.set(id.key, { kind: id.kind, geometry: id.guess, confirmed: false, upcutLengthMm: null });
+      } else {
+        // A record restored from memory carries no kind: the kind is a fact
+        // about the tool Fusion sent, never a stored choice (2026-09-01).
+        state.tools.get(id.key).kind = id.kind;
       }
     }
   }
@@ -574,8 +578,11 @@ function renderContext() {
 }
 
 function renderSettings() {
+  // Each option carries its preset note as a native title, so a browser that
+  // shows option tooltips shows the note in the open list. The info button
+  // beside the select is the path that works everywhere (2026-09-01).
   const machineOptions = state.presets.map((p) =>
-    `<option value="${escapeHtml(p.id)}" ${p.id === state.machineId ? 'selected' : ''}>${escapeHtml(p.label)}</option>`).join('');
+    `<option value="${escapeHtml(p.id)}" title="${escapeHtml(p.notes ?? '')}" ${p.id === state.machineId ? 'selected' : ''}>${escapeHtml(p.label)}</option>`).join('');
   const fc = state.data.rules.first_cut;
   const fcLabel = fc
     ? `First cut: run ${Math.round(fc.factor * 100)}% of the chart feed until the cut proves good`
@@ -586,8 +593,14 @@ function renderSettings() {
     <div class="lt-form-grid">
       <div class="lt-field">
         <label class="lt-field__label" for="machine">Machine</label>
-        <select class="lt-select" id="machine" aria-describedby="machine-note">${machineOptions}</select>
-        <span class="lt-field__hint" id="machine-note"></span>
+        <div class="machine-row">
+          <select class="lt-select" id="machine" aria-describedby="machine-note">${machineOptions}</select>
+          <button type="button" class="lt-btn lt-btn--ghost lt-btn--icon" id="machine-info"
+                  aria-label="About this machine" aria-describedby="machine-note">
+            <svg class="lt-icon" aria-hidden="true" focusable="false"><use href="#lt-ic-info"/></svg>
+          </button>
+        </div>
+        <span class="lt-sr-only" id="machine-note"></span>
       </div>
       <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
                        measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
@@ -605,11 +618,38 @@ function renderSettings() {
       </label>
     </div>`;
 
-  const machineNote = () => { $('machine-note').textContent = presetById().notes ?? ''; };
+  // The preset note left the page flow on 2026-09-01 (Scott, first run inside
+  // Fusion). It lives in a visually hidden span the select and the button
+  // describe themselves by, and shows as a tip on the info button. The tip
+  // enhances and never gates: the same text is announced without it.
+  const tip = $('machine-tip');
+  const info = $('machine-info');
+  const machineNote = () => {
+    const note = presetById().notes ?? 'This machine preset carries no note.';
+    $('machine-note').textContent = note;
+    tip.textContent = note;
+  };
+  const showTip = () => {
+    tip.hidden = false;
+    const r = info.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const gap = 8;
+    tip.style.left = `${Math.min(Math.max(gap, r.right - t.width), window.innerWidth - t.width - gap)}px`;
+    tip.style.top = `${r.bottom + t.height + gap < window.innerHeight ? r.bottom + gap : r.top - t.height - gap}px`;
+  };
+  const hideTip = () => { tip.hidden = true; };
   machineNote();
+  info.addEventListener('pointerenter', showTip);
+  info.addEventListener('pointerleave', hideTip);
+  info.addEventListener('focus', showTip);
+  info.addEventListener('blur', hideTip);
+  // A tap has no hover: the button toggles the tip for a touch user.
+  info.addEventListener('click', () => (tip.hidden ? showTip() : hideTip()));
+  info.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTip(); });
   $('machine').addEventListener('change', (e) => {
     state.machineId = e.target.value;
     machineNote();
+    hideTip();
     persistDoc();
     renderSetups();
   });
@@ -679,9 +719,38 @@ function buildProfile() {
   apply(state.profile, { commit: false });
 }
 
+// Tools that are not router bits take no geometry question. Fusion knows the
+// tool type, and a drill or a ball-nose asked for a spiral direction is the
+// wrong question (Scott, 2026-09-01, first run inside Fusion). Their rows
+// refuse in the operation table with the strategy's own reason.
+const KIND_NOTE = {
+  drill: {
+    label: 'Drill',
+    note: 'A drill takes no spiral direction. Drill rows serve when the drilling numbers reach the panel.',
+  },
+  ball: {
+    label: 'Ball-nose or form tool',
+    note: 'No published chart covers 3D surfacing yet, so this tool\'s rows are not served.',
+  },
+  chamfer: {
+    label: 'Chamfer or engraving tool',
+    note: 'No published chart covers this tool, so its rows are not served.',
+  },
+};
+
 function renderTools() {
   const rows = state.toolRows.map((t, i) => {
     const st = state.tools.get(t.key);
+    if (t.kind !== 'router') {
+      const k = KIND_NOTE[t.kind] ?? KIND_NOTE.chamfer;
+      return `<div class="tool-row">
+        <div class="tool-id">
+          <span class="tool-desc">${escapeHtml(toolLabel(t.tool))}</span>
+          ${badgeHtml('info', 'lt-ic-info', k.label)}
+        </div>
+        <p class="section-note">${escapeHtml(k.note)}</p>
+      </div>`;
+    }
     const badge = st.confirmed
       ? badgeHtml('success', 'lt-ic-check', 'Confirmed')
       : badgeHtml(ROW_BADGE.confirm.variant, ROW_BADGE.confirm.glyph,
@@ -720,7 +789,7 @@ function renderTools() {
 
   $('tools').innerHTML = `
     <h2>Tools</h2>
-    <p class="section-note">Confirm each tool's geometry once. The answer is remembered for every document.</p>
+    <p class="section-note">Confirm each router bit's geometry once. The answer is remembered for every document. Drills and 3D tools need no answer.</p>
     <div class="tool-rows">${rows.join('') || '<p class="section-note">The document has no tools to confirm.</p>'}</div>`;
 
   for (const sel of $('tools').querySelectorAll('select[data-key]')) {
@@ -763,10 +832,19 @@ function confirmGeometry(key, geometry) {
   });
 }
 
+// A length for display. The add-in now rounds what it ships, but an older
+// add-in build can still send 3.0000000000000004 for a 3 mm drill (seen on
+// the first run inside Fusion, 2026-09-01), and the page owes the reader a
+// clean number whatever build sent it. Three decimals is finer than any
+// catalogue and keeps 3.175 intact.
+function roundMm(value) {
+  return Math.round(value * 1000) / 1000;
+}
+
 function toolLabel(tool) {
   const name = tool.description || tool.typeString || 'Unnamed tool';
   const parts = [name];
-  if (tool.diameterMm > 0) parts.push(diameterLabel(tool.diameterMm));
+  if (tool.diameterMm > 0) parts.push(diameterLabel(roundMm(tool.diameterMm)));
   if (tool.flutes > 0) parts.push(`${tool.flutes} ${tool.flutes === 1 ? 'flute' : 'flutes'}`);
   const vendor = [tool.vendor, tool.productId].filter(Boolean).join(' ');
   return vendor ? `${parts.join(', ')} (${vendor})` : parts.join(', ');
@@ -774,7 +852,7 @@ function toolLabel(tool) {
 
 function upcutHint(tool) {
   return tool.diameterMm > 0
-    ? `Leave empty to use one tool diameter, ${tool.diameterMm} mm.`
+    ? `Leave empty to use one tool diameter, ${roundMm(tool.diameterMm)} mm.`
     : 'Leave empty to use one tool diameter.';
 }
 
@@ -890,8 +968,21 @@ function opRow(op, setup) {
     : '';
 
   const tool = state.tools.get(state.toolKeyByOp.get(op.opId));
-  if (!tool || !tool.confirmed || !tool.geometry) {
+  // A drill, a ball-nose or a chamfer tool takes no geometry question
+  // (2026-09-01). Its row refuses with the strategy's own reason through
+  // mapOperation, and a routing strategy run with such a tool refuses here,
+  // because the charts cover router bits only and calculate() has no tool
+  // type to serve.
+  const routerBit = !tool || tool.kind == null || tool.kind === 'router';
+  if (routerBit && (!tool || !tool.confirmed || !tool.geometry)) {
     return reasonRow(op, 'confirm', 'Confirm the tool geometry first, in the tools section above.', finishToggle);
+  }
+  if (!routerBit) {
+    const probe = mapOperation(op, { toolType: null, finishing: false });
+    const reason = probe.status === 'mapped'
+      ? `This operation runs a ${(KIND_NOTE[tool.kind]?.label ?? 'non-router').toLowerCase()} on a routing strategy. The charts cover router bits only.`
+      : probe.reason;
+    return reasonRow(op, probe.status === 'mapped' ? 'refused' : probe.status, reason, finishToggle);
   }
 
   const mapped = mapOperation(op, {

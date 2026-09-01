@@ -25,10 +25,16 @@ def internal_length_to_mm(value):
     lengths are centimetres. tool_diameter read 0.95 for 9.5 mm,
     maximumStepdown read 0.6 for 6 mm, tool_feedPerTooth read 0.01
     for 0.1 mm. The feed per tooth is a length and takes this factor.
+
+    The product is rounded to six decimals of a millimetre. A raw 0.3
+    times ten is 3.0000000000000004 in binary floating point, and that
+    noise reached the panel as a tool diameter on the first run inside
+    Fusion (Scott, 2026-09-01). Six decimals is a thousand times finer
+    than any tool catalogue states.
     """
     if value is None:
         return None
-    return float(value) * MM_PER_CM
+    return round(float(value) * MM_PER_CM, 6)
 
 
 def mm_to_internal_length(value):

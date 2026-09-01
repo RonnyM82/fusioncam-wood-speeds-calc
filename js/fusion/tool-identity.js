@@ -148,21 +148,49 @@ function guessFromText(rawTool) {
 
 // rawTool is the job message tool shape in fusion-addin/protocol.md.
 // Returns { key, guess, guessSource, seriesMatches }.
+// The tool kind, from Fusion's own tool type string (spike-results-windows.md
+// section 4: "flat end mill", "ball end mill", "drill" were read on the test
+// file inside Fusion; the tool library schema names the rest). The geometry question,
+// up-cut or down-cut or compression or straight, is a router-bit question.
+// A drill is a drill and a ball-nose is 3D tooling, and asking either for a
+// spiral direction is wrong (Scott, 2026-09-01, first run inside Fusion).
+//   router:  flat end mill, and any type the list does not name, because a
+//            router bit is the only kind the charts serve today
+//   drill:   drill, spot drill, centre drill, counter bore, counter sink,
+//            reamer, tap, bore bar
+//   ball:    ball end mill, bull nose end mill, lollipop mill, radius mill,
+//            form mill, tapered mill, dovetail mill, slot mill, thread mill
+//   chamfer: chamfer mill, engrave chamfer mill
+export function toolKind(typeString) {
+  const t = String(typeString ?? '').trim().toLowerCase();
+  if (!t) return 'router';
+  if (/\b(drill|counter bore|counter sink|reamer|tap|bore bar)\b/.test(t)) return 'drill';
+  if (/\b(ball end mill|bull nose end mill|lollipop|radius mill|form mill|tapered mill|dovetail|slot mill|thread mill)\b/.test(t)) return 'ball';
+  if (/\bchamfer\b/.test(t)) return 'chamfer';
+  return 'router';
+}
+
 export function identifyTool(rawTool, chiploads) {
+  const kind = toolKind(rawTool?.typeString);
   const { matches, idGuess } = matchSeries(rawTool, chiploads);
 
+  // Only a router bit takes a geometry guess. The series matches still
+  // return for every kind, because a drill's chart is a later concern and
+  // the match is a fact about the tool, not a pick.
   let guess = null;
   let guessSource = null;
-  if (idGuess) {
-    guess = idGuess;
-    guessSource = 'product_id';
-  } else {
-    const textGuess = guessFromText(rawTool);
-    if (textGuess) {
-      guess = textGuess;
-      guessSource = 'description';
+  if (kind === 'router') {
+    if (idGuess) {
+      guess = idGuess;
+      guessSource = 'product_id';
+    } else {
+      const textGuess = guessFromText(rawTool);
+      if (textGuess) {
+        guess = textGuess;
+        guessSource = 'description';
+      }
     }
   }
 
-  return { key: toolKey(rawTool), guess, guessSource, seriesMatches: matches };
+  return { key: toolKey(rawTool), kind, guess, guessSource, seriesMatches: matches };
 }

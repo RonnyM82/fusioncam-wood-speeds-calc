@@ -168,3 +168,32 @@ test('FI17', 'a missing vendor matches no series even with a plausible id', () =
   assert(r.guess === null, 'no guess without a vendor to match on');
   assert(r.key === '|60-104', `unexpected key ${r.key}`);
 });
+
+// The tool kind comes from Fusion's own type string (2026-09-01). Only a
+// router bit takes the geometry question; a drill or a ball-nose asked for a
+// spiral direction was the wrong question on the first run inside Fusion.
+test('FI18', 'a drill is kind drill and takes no geometry guess, whatever its description says', () => {
+  const r = identifyTool(tool({ typeString: 'drill', description: '3dia Brad Point compression', vendor: 'Heliner', productId: '' }), chiploads);
+  assert(r.kind === 'drill', `expected kind drill, got ${r.kind}`);
+  assert(r.guess === null && r.guessSource === null, 'a drill must carry no geometry guess');
+  const spot = identifyTool(tool({ typeString: 'spot drill', productId: '' }), chiploads);
+  assert(spot.kind === 'drill', 'a spot drill is a drill');
+});
+
+test('FI19', 'a ball-nose or bull-nose is kind ball, a chamfer mill is kind chamfer', () => {
+  const ball = identifyTool(tool({ typeString: 'ball end mill', description: '9.5dia Bullnose up cut', productId: '' }), chiploads);
+  assert(ball.kind === 'ball', `expected kind ball, got ${ball.kind}`);
+  assert(ball.guess === null, 'a ball-nose must carry no geometry guess');
+  const bull = identifyTool(tool({ typeString: 'bull nose end mill', productId: '' }), chiploads);
+  assert(bull.kind === 'ball', 'a bull nose is kind ball');
+  const chamfer = identifyTool(tool({ typeString: 'chamfer mill', productId: '' }), chiploads);
+  assert(chamfer.kind === 'chamfer', `expected kind chamfer, got ${chamfer.kind}`);
+});
+
+test('FI20', 'a flat end mill, an empty type and an unknown type are kind router and still guess', () => {
+  for (const typeString of ['flat end mill', '', null, 'some future type']) {
+    const r = identifyTool(tool({ typeString, description: 'compression 2FL', productId: '' }), chiploads);
+    assert(r.kind === 'router', `expected kind router for ${JSON.stringify(typeString)}, got ${r.kind}`);
+    assert(r.guess === 'compression', `a router bit keeps its description guess for ${JSON.stringify(typeString)}`);
+  }
+});
