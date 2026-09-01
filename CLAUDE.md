@@ -106,3 +106,22 @@ Load the `livetools-design-system` skill. It is pinned at `.claude/skills/` so a
 clone carries it. Its first rule is that no raw value ever gets written, and its
 harder rule is that the nearest *wrong token* is the same mistake as the nearest
 hex: a border token used as a fill passes every check and is still wrong.
+
+## TODO
+
+- **Tool identity in the Fusion panel: use the library GUID before the
+  fingerprint (Scott, 2026-09-02).** The panel remembers each confirmed tool
+  (geometry, up-cut length, drill type) against a key from
+  `js/fusion/tool-identity.js`. Today that key is vendor plus product number
+  when both exist, else a fingerprint of type, diameter, flutes and
+  description, so a description edit on a tool with no product number detaches
+  its stored answer. Fusion's tool JSON carries a `guid` the snapshot does not
+  ship yet (`op.tool.toJson()`, see spike-results-windows.md section 4). The
+  work: ship the guid in the job message tool shape (additive field, no
+  protocol bump), prefer vendor|productId, then guid, then fingerprint in
+  `toolKey()`, and on restore adopt an answer stored under the old fingerprint
+  the first time the same tool arrives under its guid, so nobody loses a
+  confirmed tool in the change. Know the guid's own limits before leaning
+  harder on it: the same physical cutter in two libraries carries two guids,
+  and a duplicated or rebuilt library entry gets a fresh one. Touches
+  snapshot.py, protocol.md, tool-identity.js and the FI tests.
