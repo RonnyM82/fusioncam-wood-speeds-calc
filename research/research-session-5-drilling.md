@@ -157,6 +157,64 @@ Scott answered the six decision points above the same day. His calls, and what e
 6. **A pick whose drill window sits below the spindle's rated floor serves with a quiet warning** and the honest derated power figure, never a refusal. The preset loader must start reading the bottom of each published speed range, which it currently ignores.
 7. **Leitz is the core drilling data, and no vendor name renders in the drilling UI (Scott, 2026-09-01, later).** The drilling numbers build on the Leitz windows, bands and factors alone. The other sources from this session stay as research cross-checks and do not serve. No vendor name appears next to the suggested drilling speeds and feeds, which is a deliberate departure from the routing convention of naming the serving chart in the limit line and the chart ladder. The provenance stays complete in the data files, per the update discipline. Only the rendering changes. If a cross-check later contradicts a Leitz band beyond the routing disagreement ratio, that surfaces to Scott in research rather than changing what serves.
 
+## What was built, 2026-09-02
+
+The drilling mode shipped on branch `drilling-mode`. Twelve tool subfamilies serve:
+three dowel drills, four through-hole drills and five hinge drills. The read, the
+data, the calculation and the page are each in their own commit, and every number
+is reproducible by re-running `tools/read-leitz-drilling.py` and then
+`tools/build-drill-entries.py`.
+
+The band read turned out to be the whole job. It is a filled polygon in the PDF's
+vector art, sliced by crossing every edge of the outline at the sampled speed, with
+each axis calibrated by least squares over its own tick labels. Seventeen of the
+eighteen in-scope diagrams pass their acceptance checks, and all seventeen print an
+operating point that converts and lands inside the band read off them. The
+eighteenth is the boring pins, which print no correction factor table.
+
+Four things the build learned that the research did not know:
+
+1. **The band is not "about 2:1".** Across the seventeen accepted diagrams it runs
+   1.64x to 4.94x, widest at the slow end of each range. The earlier figure came
+   from the hinge-drill diagram alone.
+2. **Standard against the vendor's marked point is not a constant either.** The
+   marked point sits from 22% to 93% up its band, so Standard runs from 20% under
+   it to 26% over, above on three tools of twelve. The research generalised "about
+   11% under" from one diagram.
+3. **Holding feed per revolution flat outside a diagram is not conservative.** Feed
+   rate is speed times feed per revolution, so a flat feed per revolution keeps the
+   feed climbing. The feed rate is what holds.
+4. **Chapter 6.4 is not the drill-press chapter.** Its twist and Levin drills list
+   CNC machining centres on their own pages, whatever the chapter's opening page
+   says. Parts of 6.4 are inside the served scope and are simply not read yet.
+
+## The queue, in order
+
+1. **The 6.4 twist and Levin drills.** In scope on their own machine lists, not yet
+   read. This is the largest remaining gap and it is the one that closes small
+   diameters: those are the tools that go below 3 mm.
+2. **The boring pins, 6.1.4.** They carry the only published chip-clearing rules
+   anywhere near the served sections, so they are what turns the peck output on.
+   Their diagram prints no factor table and their baseline is the compound
+   "Chipboard / MDF", so they need a decision about what to serve from.
+3. **The hinge-drill tables on pages that print no diagram.** Section 6.3.2 prints
+   further tables for WB 310 0 13 whose diameters are not in the union today, so
+   that entry's range may be understated.
+4. **A second source, for the disagreement rule to have anything to do.** Decision 4
+   is recorded and dormant: only Leitz serves, so nothing can disagree. The Amana
+   and Onsrud numbers in this file remain the cross-checks.
+
+## Still open
+
+- Whether the page heading and title widen beyond routing. The site still calls
+  itself a router calculator and now does two things.
+- Whether "most conservative" is the right reading for a feed correction factor.
+  The build implements Scott's decision 9 as the lowest published factor, and adds
+  an absolute chip-floor check because that reading can put the chip under the
+  thickness at which an edge rubs. The two pull against each other, and the check
+  is a guard rather than a resolution.
+- The Fusion add-in still refuses drills with a pinned message, untouched.
+
 ## Amendment 2026-09-01 (later): the band supports four profiles
 
 Scott asked whether the drilling data can carry Gentle, Standard, Aggressive and Finishing, or only a single served number. A scripted read of all 24 feed diagrams in the chapter answers it: the data is a band, and the band is wide.
