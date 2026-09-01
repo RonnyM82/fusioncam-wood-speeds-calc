@@ -80,15 +80,22 @@ main {
 .tool-name { font-weight: var(--lt-weight-semibold); }
 .tool-hint { font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
 
-/* The button group is inline-flex by default. The profile picker spans the
-   field, and its four options share the width evenly. */
-.profile-group { display: flex; }
-.profile-group > .lt-btn { flex: 1; }
+/* The button group is inline-flex by default. Both segmented pickers on this
+   page — what to cut, and how hard to run it — span the field and share the
+   width evenly between their options. One rule, two users, so the two groups
+   cannot drift apart. */
+.seg-group { display: flex; }
+.seg-group > .lt-btn { flex: 1; }
 
 /* .lt-field sets its own display, which beats the UA's [hidden] rule — the
    fight the vendored sheet documents at .lt-affix[hidden]. Measured here on
-   2026-08-29: the first-cut field stayed painted with hidden set. The app
-   hides that field while the Finishing profile is on. */
+   2026-08-29: the first-cut field stayed painted with hidden set.
+   This correction now carries the whole mode switch (2026-09-02), not just the
+   one field it was measured for. Every control that belongs to routing and not
+   to drilling, or the other way about, is hidden by that attribute, so losing
+   this rule paints both modes' fields at once. smoke-measure.py asserts that
+   every .lt-field[hidden] is genuinely unpainted, so the loss cannot be
+   silent. */
 .lt-field[hidden] { display: none; }
 
 /* A grid item's minimum inline size is auto, so an expanded table twin's

@@ -2,8 +2,10 @@ import { loadData } from '../data/load-browser.js';
 import { validateData } from '../data/validate.js';
 import { machinePresets } from '../data/presets.js';
 import { calculate } from '../core/calculate.js';
+import { calculateDrilling } from '../core/drilling.js';
 import { buildChips } from '../core/diagnostics.js';
 import { feedPair, rpmPair, surfacePair, fzPair, diameterLabel } from './format.js';
+import { DRILL_TOOLS, DRILL_DIAMETERS, DRILL_OUTPUT_ROWS, drillSubfamilyFor } from './drill-tables.js';
 
 // Beginner picks. Each material merges the vendor naming synonyms for the same
 // physical board (documented in data/schema.md); kcMaterial is the canonical
@@ -33,6 +35,11 @@ const PROFILES = [
   { id: 'standard', label: 'Standard' },
   { id: 'aggressive', label: 'Aggressive' },
   { id: 'finishing', label: 'Finishing' },
+];
+
+const MODES = [
+  { id: 'rout', label: 'Routing' },
+  { id: 'drill', label: 'Drilling' },
 ];
 
 const OUTPUT_ROWS = [
@@ -71,6 +78,7 @@ const CAP_LABELS = {
 };
 
 const state = {
+  mode: 'rout',
   material: 'mdf',
   toolType: 'compression',
   diameterMm: 12.7,
@@ -83,7 +91,24 @@ const state = {
   profile: 'standard',
   firstCut: true,
   adv: {},
+  // Drilling keeps its own tool, diameter and speed. Sharing the diameter would
+  // carry a 12.7 mm router bit into a drill list of whole millimetres.
+  drillTool: 'hinge',
+  drillDiameterMm: 35,
+  holeDepthMm: 13,
+  drillRpm: null,
+  drillBank: false,
+  // Drilling offers no Finishing profile, so switching modes has to park the
+  // choice rather than lose it.
+  profileByMode: { rout: 'standard', drill: 'standard' },
 };
+
+// Which profiles each mode offers. Drilling has no finish pass: a hole cannot be
+// skimmed, and no source publishes a finishing drill feed. Serving one from the
+// band's low edge would be a fourth name for Gentle with a claim attached.
+const profilesFor = (mode) => (mode === 'drill'
+  ? PROFILES.filter((p) => p.id !== 'finishing')
+  : PROFILES);
 
 let data;
 let presets;
@@ -121,25 +146,39 @@ async function init() {
 }
 
 function buildForm() {
+  buildRadioGroup('mode', MODES, state.mode, (id) => {
+    state.mode = id;
+    state.profile = state.profileByMode[id] ?? 'standard';
+    // The profile group has to be rebuilt before anything recalculates: drilling
+    // offers three buttons where routing offers four, and the first-cut field's
+    // visibility is computed from the profile.
+    buildProfile();
+    buildToolCards();
+    fillDiameters();
+    applyMode();
+  });
+
   fillSelect($('material'), MATERIALS.map((m) => ({ value: m.id, label: m.label })), state.material);
   $('material').addEventListener('change', (e) => { state.material = e.target.value; recalc(); });
 
-  // The card is the hit area and the radio inside it is a real .lt-check, so
-  // the control is visible and its focus ring is too. The old card hid the
-  // radio with opacity, which left a keyboard user with nothing to see.
-  const toolBox = $('tooltype');
-  toolBox.innerHTML = TOOL_TYPES.map((t) => `
-    <label class="tool-card lt-check">
-      <input type="radio" name="tooltype" value="${t.id}" ${t.id === state.toolType ? 'checked' : ''} aria-describedby="tool-${t.id}-hint">
-      <span class="tool-body">
-        <span class="tool-name">${t.label}</span>
-        <span class="tool-hint" id="tool-${t.id}-hint">${t.hint}</span>
-      </span>
-    </label>`).join('');
-  toolBox.addEventListener('change', (e) => { state.toolType = e.target.value; recalc(); });
+  buildToolCards();
+  $('tooltype').addEventListener('change', (e) => {
+    if (state.mode === 'drill') {
+      state.drillTool = e.target.value;
+      fillDiameters();
+    } else {
+      state.toolType = e.target.value;
+    }
+    recalc();
+  });
 
-  fillSelect($('diameter'), DIAMETERS.map((d) => ({ value: String(d), label: diameterLabel(d) })), String(state.diameterMm));
-  $('diameter').addEventListener('change', (e) => { state.diameterMm = Number(e.target.value); recalc(); });
+  fillDiameters();
+  $('diameter').addEventListener('change', (e) => {
+    const v = Number(e.target.value);
+    if (state.mode === 'drill') state.drillDiameterMm = v;
+    else state.diameterMm = v;
+    recalc();
+  });
 
   // <lt-number-field> carries the metric base value on .value and reports it
   // on lt-change. It also owns its own error chip and aria-invalid, set in one
@@ -161,6 +200,17 @@ function buildForm() {
   });
   optionalMm('f-doc', 'apMm');
   optionalMm('f-woc', 'aeMm');
+
+  numberField('f-holedepth', state.holeDepthMm, (v) => {
+    state.holeDepthMm = Number.isFinite(v) && v > 0 ? v : null;
+  });
+  // Empty means "run the published speed", which is how a value the source
+  // chose beats a value the calculator would have to invent.
+  optionalMm('f-drillrpm', 'drillRpm');
+
+  const bank = $('drillbank');
+  bank.checked = state.drillBank;
+  bank.addEventListener('change', (e) => { state.drillBank = e.target.checked; recalc(); });
 
   fillSelect($('machine'), presets.map((p, i) => ({ value: String(i), label: p.label })), String(state.machineIdx));
   const machineNote = () => { $('machine-note').textContent = presets[state.machineIdx].notes ?? ''; };
@@ -185,6 +235,38 @@ function buildForm() {
   applyMachineToAdvanced({ keepExisting: true });
 }
 
+// The card is the hit area and the radio inside it is a real .lt-check, so
+// the control is visible and its focus ring is too. The old card hid the
+// radio with opacity, which left a keyboard user with nothing to see.
+function buildToolCards() {
+  const drilling = state.mode === 'drill';
+  const list = drilling ? DRILL_TOOLS : TOOL_TYPES;
+  const chosen = drilling ? state.drillTool : state.toolType;
+  $('tooltype').innerHTML = list.map((t) => `
+    <label class="tool-card lt-check">
+      <input type="radio" name="tooltype" value="${t.id}" ${t.id === chosen ? 'checked' : ''} aria-describedby="tool-${t.id}-hint">
+      <span class="tool-body">
+        <span class="tool-name">${escapeHtml(t.label)}</span>
+        <span class="tool-hint" id="tool-${t.id}-hint">${escapeHtml(t.hint)}</span>
+      </span>
+    </label>`).join('');
+}
+
+// Changing the drill family re-fills the diameters and pulls the current value
+// to the nearest one the family offers, so the select can never show a size the
+// family does not publish.
+function fillDiameters() {
+  const drilling = state.mode === 'drill';
+  const list = drilling ? (DRILL_DIAMETERS[state.drillTool] ?? []) : DIAMETERS;
+  if (drilling && !list.includes(state.drillDiameterMm)) {
+    state.drillDiameterMm = list.reduce((a, b) =>
+      (Math.abs(b - state.drillDiameterMm) < Math.abs(a - state.drillDiameterMm) ? b : a), list[0]);
+  }
+  const current = drilling ? state.drillDiameterMm : state.diameterMm;
+  fillSelect($('diameter'), list.map((d) => ({ value: String(d), label: diameterLabel(d) })), String(current));
+  $('diameter-label').textContent = drilling ? 'Drill diameter' : 'Tool diameter';
+}
+
 // Wire one <lt-number-field>. The element carries the metric base value on
 // .value whatever unit is on screen, and reports it on lt-change.
 function numberField(hostId, initial, apply) {
@@ -198,31 +280,34 @@ function numberField(hostId, initial, apply) {
 // role=radio buttons in an .lt-btn-group, primary when on and secondary when
 // off, arrow keys per the APG radiogroup pattern. State is toggled on the
 // existing buttons rather than re-rendered, so arrow-key focus survives.
-function buildProfile() {
-  const box = $('profile');
-  box.innerHTML = PROFILES.map((p) =>
-    `<button type="button" role="radio" data-profile="${p.id}" class="lt-btn">${p.label}</button>`).join('');
-  const buttons = [...box.querySelectorAll('[data-profile]')];
+// One builder for both segmented pickers on this page, so the mode switch cannot
+// acquire a different keyboard contract from the profile picker. Returns the
+// setter, which the caller uses to move the selection without a click.
+function buildRadioGroup(hostId, options, selected, onPick) {
+  const box = $(hostId);
+  box.innerHTML = options.map((o) =>
+    `<button type="button" role="radio" data-value="${escapeHtml(o.id)}" class="lt-btn">${escapeHtml(o.label)}</button>`).join('');
+  const buttons = [...box.querySelectorAll('[data-value]')];
 
-  const apply = (id, { recalculate = true } = {}) => {
-    state.profile = id;
-    // Finishing has no first-cut choice: the reduction guards a heavy proving
-    // cut, and on a finish skim it drives the chip toward the rubbing floor.
-    // The stored choice is kept and returns with the other profiles.
-    $('firstcut-field').hidden = id === 'finishing';
+  const apply = (id, { fire = true } = {}) => {
     buttons.forEach((b) => {
-      const on = b.dataset.profile === id;
+      const on = b.dataset.value === id;
       b.setAttribute('aria-checked', String(on));
       b.tabIndex = on ? 0 : -1;
       b.classList.toggle('lt-btn--primary', on);
       b.classList.toggle('lt-btn--secondary', !on);
     });
-    if (recalculate) recalc();
+    if (fire) onPick(id);
   };
 
   box.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-profile]');
-    if (btn) apply(btn.dataset.profile);
+    const btn = e.target.closest('[data-value]');
+    if (!btn) return;
+    apply(btn.dataset.value);
+    // Clicking a button focuses it in Chrome and Firefox but not in Safari, and
+    // a mode switch that hides the control the user was on would otherwise drop
+    // focus to the document.
+    btn.focus();
   });
   box.addEventListener('keydown', (e) => {
     const i = buttons.findIndex((b) => b.tabIndex === 0);
@@ -232,11 +317,61 @@ function buildProfile() {
     if (next === null) return;
     e.preventDefault();
     buttons[next].focus();
-    apply(buttons[next].dataset.profile);
+    apply(buttons[next].dataset.value);
   });
 
-  apply(state.profile, { recalculate: false });
+  apply(selected, { fire: false });
+  return apply;
 }
+
+let setProfile = () => {};
+
+function buildProfile() {
+  const options = profilesFor(state.mode);
+  if (!options.some((p) => p.id === state.profile)) state.profile = 'standard';
+  setProfile = buildRadioGroup('profile', options, state.profile, (id) => {
+    state.profile = id;
+    state.profileByMode[state.mode] = id;
+    // Finishing has no first-cut choice: the reduction guards a heavy proving
+    // cut, and on a finish skim it drives the chip toward the rubbing floor.
+    // The stored choice is kept and returns with the other profiles.
+    applyMode({ recalculate: false });
+    recalc();
+  });
+  applyMode({ recalculate: false });
+}
+
+// Which controls belong to the mode on screen. Everything hides with the hidden
+// property, which depends on the app-layer correction in styles.css.
+function applyMode({ recalculate = true } = {}) {
+  const drilling = state.mode === 'drill';
+  const show = (id, on) => { const el = $(id); if (el) el.hidden = !on; };
+
+  show('f-flutes', !drilling);
+  show('f-thickness', !drilling);
+  show('f-doc', !drilling);
+  show('f-woc', !drilling);
+  show('f-rpm', !drilling);
+  show('f-holedepth', drilling);
+  show('f-drillrpm', drilling);
+  show('drillbank-field', drilling);
+  show('firstcut-field', !drilling && state.profile !== 'finishing');
+  $('defects-rout').hidden = drilling;
+  $('defects-drill').hidden = !drilling;
+  $('tooltype-legend').textContent = drilling ? 'Drill type' : 'Tool type';
+
+  for (const f of ADV_FIELDS) {
+    const host = $(f.select ? `adv-${f.id}` : `advf-${f.id}`);
+    const field = f.select ? host?.closest('.lt-field') : host;
+    if (field) field.hidden = drilling && !DRILL_ADV.has(f.id);
+  }
+  if (recalculate) recalc();
+}
+
+// A plunge has no radial engagement, no corners and no lateral force, so the
+// hold-down, corner, direction, flute-basis and timber-density fields have
+// nothing to act on in drilling. Machine power and feed still do.
+const DRILL_ADV = new Set(['spindleKw', 'breakpointRpm', 'feedMaxMMin']);
 
 // The unit lives in the field's affix, never in the label. An all-caps label
 // carrying "(m/s²)" is a label nobody finishes reading, and the affix puts the
@@ -337,6 +472,7 @@ function currentInput() {
     spindleKw: adv.spindleKw ?? preset.machine.spindleKw,
     breakpointRpm: adv.breakpointRpm ?? preset.machine.breakpointRpm,
     rpmMax: preset.machine.rpmMax,
+    rpmMin: preset.machine.rpmMin,
     feedMaxMmMin: adv.feedMaxMMin != null ? adv.feedMaxMMin * 1000 : preset.machine.feedMaxMmMin,
     accelMs2: adv.accelMs2 ?? preset.machine.accelMs2,
     vacuum: { mu: adv.vacMu ?? preset.machine.vacuum.mu, dPkPa: adv.vacDPkPa ?? preset.machine.vacuum.dPkPa },
@@ -364,9 +500,32 @@ function currentInput() {
   };
 }
 
+function currentDrillInput() {
+  const mat = MATERIALS.find((m) => m.id === state.material);
+  const preset = presets[state.machineIdx];
+  const adv = state.adv;
+  return {
+    drillType: drillSubfamilyFor(state.drillTool, state.drillDiameterMm, data.drills.entries),
+    material: mat.kcMaterial,
+    diameterMm: state.drillDiameterMm,
+    holeDepthMm: state.holeDepthMm ?? undefined,
+    rpm: state.drillRpm ?? undefined,
+    profile: state.profile,
+    drillBank: state.drillBank,
+    machine: {
+      spindleKw: adv.spindleKw ?? preset.machine.spindleKw,
+      breakpointRpm: adv.breakpointRpm ?? preset.machine.breakpointRpm,
+      rpmMax: preset.machine.rpmMax,
+      rpmMin: preset.machine.rpmMin,
+      feedMaxMmMin: adv.feedMaxMMin != null ? adv.feedMaxMMin * 1000 : preset.machine.feedMaxMmMin,
+    },
+  };
+}
+
 function recalc() {
-  const input = currentInput();
-  const result = calculate(input, data);
+  const result = state.mode === 'drill'
+    ? calculateDrilling(currentDrillInput(), data)
+    : calculate(currentInput(), data);
   render(result);
   writeUrlState();
 }
@@ -407,19 +566,29 @@ function render(result) {
     return;
   }
 
+  const drilling = result.meta.mode === 'drilling';
+
   // A description list, so the pairing of a label to its number is in the
   // markup rather than implied by two columns lining up.
-  const rows = OUTPUT_ROWS.map((row) => {
-    const pair = row.fmt(result.outputs[row.key]);
-    const note = row.noteKey ? `<dd class="row-note">${escapeHtml(result.outputNotes[row.noteKey])}</dd>` : '';
-    return `<div class="out-row${row.secondary ? ' secondary' : ''}">
-      <dt class="out-label">${row.label}</dt>
-      <dd class="out-vals"><span class="metric">${pair.metric}</span>${pair.imperial ? `<span class="imperial">${pair.imperial}</span>` : ''}</dd>
-      ${note}
-    </div>`;
-  }).join('');
+  const rows = (drilling ? DRILL_OUTPUT_ROWS : OUTPUT_ROWS)
+    .filter((row) => !row.when || row.when(result.outputs))
+    .map((row) => {
+      const pair = row.fmt(result.outputs[row.key]);
+      const noteText = row.noteKey ? result.outputNotes[row.noteKey] : null;
+      const note = noteText ? `<dd class="row-note">${escapeHtml(noteText)}</dd>` : '';
+      return `<div class="out-row${row.secondary ? ' secondary' : ''}">
+        <dt class="out-label">${row.label}</dt>
+        <dd class="out-vals"><span class="metric">${pair.metric}</span>${pair.imperial ? `<span class="imperial">${pair.imperial}</span>` : ''}</dd>
+        ${note}
+      </div>`;
+    }).join('');
 
-  const limitVariant = result.limit.binding === 'ideal' ? 'success'
+  // The limit line reports on the feed cap alone. In drilling a cut can have no
+  // binding cap while the machine cannot reach the drill's speed at all, and a
+  // green tick above that warning claims a soundness the cut does not have. So
+  // the success tone is reserved for a cut with nothing else to say about it.
+  const limitVariant = result.limit.binding === 'ideal'
+    ? (drilling && result.warnings.length ? 'info' : 'success')
     : (result.limit.binding === 'pow' || result.limit.binding === 'vac') ? 'danger' : 'info';
 
   // A warning asks for judgement, so it is a banner. A note is provenance
@@ -433,7 +602,11 @@ function render(result) {
   // one banner carrying a list, at the worst severity among them, because
   // past about three the correct visual has become a stream. Test SC30
   // sweeps the input space to hold the ceiling at four.
-  const isDanger = (w) => w.code === 'chip_plough' || w.code === 'chip_below_min';
+  // Routing warnings carry no severity of their own, so their two loud codes are
+  // named here. Drilling's core sets a severity on every warning, because it is
+  // the half that knows whether a condition is quiet.
+  const isDanger = (w) => w.severity === 'danger'
+    || w.code === 'chip_plough' || w.code === 'chip_below_min';
   const warnings = result.warnings.length > 3
     ? alertHtml(
       result.warnings.some(isDanger) ? 'danger' : 'warning',
@@ -454,8 +627,14 @@ function render(result) {
     <dl class="out-card">${rows}</dl>
     ${warnings}
     ${notes}
-    ${ladderHtml(result)}
+    ${drilling ? drillFeedChart(result) : ladderHtml(result)}
   `;
+
+  if (drilling) {
+    diag.innerHTML = drillSpeedChart(result);
+    labelChartRows();
+    return;
+  }
 
   const chips = buildChips(result);
   const caps = result.limit.caps;
@@ -705,6 +884,122 @@ function ladderHtml(result) {
   </div>`;
 }
 
+// Drilling cannot use the chart ladder: that chart exists to show which of many
+// competing charts won, and its whole content is chart identity, which decision 7
+// removes. These two take its class family instead, so they inherit the geometry
+// smoke-measure.py already pins and add no new CSS.
+//
+// Chart one: the published feed range at the served speed, with the three
+// profiles on it. It answers the question the numbers cannot: how much room is
+// there either side of the setting you picked.
+function drillFeedChart(result) {
+  const m = result.meta;
+  const b = m.bandServed;
+  const served = m.fnDeliv;
+  // The chart's own marked point belongs to the speed it was printed at. Drawn
+  // against a band read at some other speed it compares two different things,
+  // and at a speed outside the published range it lands past the whole band and
+  // reads as a target. So it appears only at the speed it was printed for.
+  const marked = (m.workedExample && m.workedExample.rpm === result.outputs.spindleRpm)
+    ? m.workedExample.fn_mm_rev * m.materialFactor
+    : null;
+  const lo = Math.min(b.fnMin, served, marked ?? Infinity);
+  const hi = Math.max(b.fnMax, served, marked ?? -Infinity);
+  const span = hi - lo || 1;
+  const pos = (v) => (((v - lo) / span) * 100).toFixed(1);
+
+  const positions = { gentle: b.fnMin, standard: b.fnMin + m.standardPosition * (b.fnMax - b.fnMin), aggressive: b.fnMax };
+  const rows = profilesFor('drill').map((p) => {
+    const fn = positions[p.id];
+    const on = p.id === m.profile;
+    const feed = feedPair(fn * result.outputs.spindleRpm);
+    const verdict = on
+      ? `The setting you picked. It plunges at ${feed.metric}.`
+      : `${p.label} would plunge at ${feed.metric}.`;
+    const left = Number(pos(b.fnMin));
+    const width = Math.max(Number(pos(fn)) - left, 0.8);
+    return {
+      label: p.label, value: `${fn.toFixed(2)} mm/rev`, verdict, feed: feed.metric,
+      html: `<div class="ladder-row${on ? ' is-serving' : ''}" tabindex="-1"
+        data-tip-value="${fn.toFixed(2)} mm/rev"
+        data-tip-label="${escapeHtml(p.label)}"
+        data-tip-note="${escapeHtml(verdict)}">
+        <span class="ladder-label">${p.label}</span>
+        <span class="ladder-track">
+          <span class="ladder-bar${on ? ' lt-chart-emphasis' : ''}" style="left:${left}%;width:${width.toFixed(1)}%"></span>
+          ${marked != null ? `<span class="ladder-mark" style="left:${pos(marked)}%"></span>` : ''}
+        </span>
+        <span class="ladder-range">${fn.toFixed(2)}</span>
+      </div>`,
+    };
+  });
+
+  const legend = marked != null
+    ? `The highlighted bar is the setting you picked. The dotted line marks the operating point the published chart itself prints, ${marked.toFixed(2)} mm/rev. The bars run from the slowest published feed, which is the point below which the drill rubs instead of cutting.`
+    : 'The highlighted bar is the setting you picked. The bars run from the slowest published feed, which is the point below which the drill rubs instead of cutting.';
+
+  return `<div class="ladder">
+    <div class="ladder-head"><h2>The published feed range at this speed</h2><span class="ladder-units">mm/rev</span></div>
+    ${rows.map((r) => r.html).join('')}
+    <p class="ladder-legend">${legend}</p>
+    ${tableTwin('The published feed range at this speed', ['Setting', 'Feed per rev', 'What it means'],
+      rows.map((r) => [r.label, r.value, r.verdict]))}
+  </div>`;
+}
+
+// Chart two: the drill's published speed range against the machine's own, with
+// the served speed marked on both. It turns the low-speed mismatch from a
+// sentence into a picture.
+function drillSpeedChart(result) {
+  const m = result.meta;
+  const preset = presets[state.machineIdx].machine;
+  const bank = m.drillBank;
+  const machineLo = bank ? null : preset.rpmMin;
+  const machineHi = bank ? null : preset.rpmMax;
+
+  const bars = [{ label: 'This drill', lo: m.rpmRangeMin, hi: m.rpmRangeMax, on: true }];
+  if (machineLo != null || machineHi != null) {
+    bars.push({ label: 'This machine', lo: machineLo ?? m.rpmRangeMin, hi: machineHi ?? m.rpmRangeMax, on: false });
+  }
+  const served = result.outputs.spindleRpm;
+  const lo = Math.min(...bars.map((x) => x.lo), served);
+  const hi = Math.max(...bars.map((x) => x.hi), served);
+  const span = hi - lo || 1;
+  const pos = (v) => (((v - lo) / span) * 100).toFixed(1);
+
+  const rows = bars.map((x) => {
+    const range = `${rpmPair(x.lo).metric} to ${rpmPair(x.hi).metric}`;
+    const inside = served >= x.lo && served <= x.hi;
+    const verdict = x.on
+      ? (inside ? `The served speed sits inside what this drill is published for.` : `The served speed sits outside what this drill is published for, so the feed holds at the nearest published value.`)
+      : (inside ? 'The served speed is inside what this machine is rated for.' : 'The served speed is outside what this machine is rated for.');
+    const left = Number(pos(x.lo));
+    const width = Math.max(Number(pos(x.hi)) - left, 0.8);
+    return {
+      label: x.label, range, verdict,
+      html: `<div class="ladder-row${x.on ? ' is-serving' : ''}" tabindex="-1"
+        data-tip-value="${escapeHtml(range)}"
+        data-tip-label="${escapeHtml(x.label)}"
+        data-tip-note="${escapeHtml(verdict)}">
+        <span class="ladder-label">${x.label}</span>
+        <span class="ladder-track">
+          <span class="ladder-bar${x.on ? ' lt-chart-emphasis' : ''}" style="left:${left}%;width:${width.toFixed(1)}%"></span>
+          <span class="ladder-mark" style="left:${pos(served)}%"></span>
+        </span>
+        <span class="ladder-range">${x.lo}–${x.hi}</span>
+      </div>`,
+    };
+  });
+
+  return `<div class="ladder">
+    <div class="ladder-head"><h2>Speed range for this drill</h2><span class="ladder-units">rpm</span></div>
+    ${rows.map((r) => r.html).join('')}
+    <p class="ladder-legend">The dotted line marks the ${rpmPair(served).metric} being served. ${bank ? 'On a drill bank the router spindle range does not apply, so it is not drawn.' : ''}</p>
+    ${tableTwin('Speed range for this drill', ['Range', 'From and to', 'Where the served speed sits'],
+      rows.map((r) => [r.label, r.range, r.verdict]))}
+  </div>`;
+}
+
 function fillSelect(el, options, selected) {
   el.innerHTML = options.map((o) => `<option value="${escapeHtml(o.value)}" ${o.value === selected ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('');
 }
@@ -715,19 +1010,40 @@ function escapeHtml(s) {
 
 function writeUrlState() {
   const q = new URLSearchParams({
-    m: state.material, t: state.toolType, d: String(state.diameterMm),
-    f: String(state.flutes), th: String(state.thicknessMm),
-    r: String(state.rpm), mc: String(state.machineIdx), p: state.profile,
-    fc: state.firstCut ? '1' : '0',
+    k: state.mode,
+    m: state.material, mc: String(state.machineIdx), p: state.profile,
   });
-  if (state.apMm != null) q.set('ap', String(state.apMm));
-  if (state.aeMm != null) q.set('ae', String(state.aeMm));
+  if (state.mode === 'drill') {
+    q.set('dt', state.drillTool);
+    q.set('dd', String(state.drillDiameterMm));
+    if (state.holeDepthMm != null) q.set('hd', String(state.holeDepthMm));
+    if (state.drillRpm != null) q.set('dr', String(state.drillRpm));
+    if (state.drillBank) q.set('db', '1');
+  } else {
+    q.set('t', state.toolType);
+    q.set('d', String(state.diameterMm));
+    q.set('f', String(state.flutes));
+    q.set('th', String(state.thicknessMm));
+    q.set('r', String(state.rpm));
+    q.set('fc', state.firstCut ? '1' : '0');
+    if (state.apMm != null) q.set('ap', String(state.apMm));
+    if (state.aeMm != null) q.set('ae', String(state.aeMm));
+  }
   for (const [k, v] of Object.entries(state.adv)) q.set(`a_${k}`, String(v));
   history.replaceState(null, '', `?${q}`);
 }
 
 function readUrlState() {
   const q = new URLSearchParams(location.search);
+  // The mode is read first, because each mode validates the profile and the
+  // diameter against its own list. Every link shared before drilling existed
+  // carries no mode key at all, and must keep reading as routing.
+  if (q.get('k') && MODES.some((x) => x.id === q.get('k'))) state.mode = q.get('k');
+  if (q.get('dt') && DRILL_TOOLS.some((x) => x.id === q.get('dt'))) state.drillTool = q.get('dt');
+  if (q.get('dd') && (DRILL_DIAMETERS[state.drillTool] ?? []).includes(Number(q.get('dd')))) state.drillDiameterMm = Number(q.get('dd'));
+  if (q.get('hd') && Number(q.get('hd')) > 0) state.holeDepthMm = Number(q.get('hd'));
+  if (q.get('dr') && Number(q.get('dr')) > 0) state.drillRpm = Number(q.get('dr'));
+  if (q.get('db') != null) state.drillBank = q.get('db') === '1';
   if (q.get('m') && MATERIALS.some((x) => x.id === q.get('m'))) state.material = q.get('m');
   if (q.get('t') && TOOL_TYPES.some((x) => x.id === q.get('t'))) state.toolType = q.get('t');
   if (q.get('d') && DIAMETERS.includes(Number(q.get('d')))) state.diameterMm = Number(q.get('d'));
@@ -737,7 +1053,10 @@ function readUrlState() {
   if (q.get('ap') && Number(q.get('ap')) > 0) state.apMm = Number(q.get('ap'));
   if (q.get('ae') && Number(q.get('ae')) > 0) state.aeMm = Number(q.get('ae'));
   if (q.get('mc') && presets[Number(q.get('mc'))]) state.machineIdx = Number(q.get('mc'));
-  if (q.get('p') && PROFILES.some((x) => x.id === q.get('p'))) state.profile = q.get('p');
+  // A finishing link opened in drilling falls back to Standard: drilling offers
+  // no finish pass, so that button does not exist there.
+  if (q.get('p') && profilesFor(state.mode).some((x) => x.id === q.get('p'))) state.profile = q.get('p');
+  state.profileByMode[state.mode] = state.profile;
   if (q.get('fc') != null) state.firstCut = q.get('fc') === '1';
   for (const [k, v] of q.entries()) {
     if (k.startsWith('a_')) {

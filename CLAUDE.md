@@ -38,16 +38,18 @@ Run the first two on any change. Run all four before calling a UI change done.
 
 ```bash
 python conformance.py .        # source: tokens, markup, accessibility basics
-node tests/run.js              # 76 tests, data and behaviour
+node tests/run.js              # data and behaviour, both modes
 python smoke-measure.py        # rendered geometry; needs a server, see below
 python lt_dom_audit.py <dir>   # rendered HTML: field errors only half wired
 ```
 
 They read different things and none replaces another. `conformance.py` reads the
 source you wrote. `lt_dom_audit.py` reads HTML a browser produced, and only
-reports on a page that carries a **failing** field, so drive one. `smoke-measure.py`
-computes a layout, which is the only way to catch a control whose markup and CSS
-are each right and whose painted result is wrong.
+reports on a page that carries a **failing** field, so drive one: switch to
+drilling, put 0 in the hole depth, save `page.content()` and audit that.
+`smoke-measure.py` computes a layout, which is the only way to catch a control
+whose markup and CSS are each right and whose painted result is wrong. It drives
+both modes on both pointer types, so it measures four states.
 
 ```bash
 node tools/serve.js 8081       # smoke-measure.py needs this running
@@ -68,10 +70,30 @@ emphasis survives forced colours. Before touching either chart, load the
 hover-plus-table-twin rule, and `smoke-measure.py` asserts they share a
 geometry.
 
+## Two modes, two calculators
+
+The page serves routing and drilling. They share the material, the machine and
+the profile, and share nothing else, so the mode is a radio group rather than a
+tab: tabs say "two views of one thing", and these are two operations with two
+output vocabularies. `calculate()` serves routing and `calculateDrilling()`
+serves drilling; they return the same envelope, which is what lets one `render()`
+handle both.
+
+Drilling data has a different shape from routing data, and `data/schema.md`
+records why it lives in its own file. Three rules there differ from routing and
+are deliberate, not oversights. No vendor name renders in the drilling output,
+so a drilling result carries no `contributors` or `servingBands` key and the
+chart ladder structurally cannot be pointed at one. Drilling caps only on the
+machine feed, because no source publishes a cutting-force model for a drill.
+And drilling never multiplies by a flute count: the published band already
+counts every cutting edge.
+
 ## Boundaries inside the app
 
 - `js/core/*` is pure calculation. **No DOM, no fetch, no CSS.** `tests/run.js`
-  enforces it and fails the whole suite if that breaks.
+  enforces it and fails the whole suite if that breaks. The scan is a plain
+  regex over the source, comments included, so the words it bans cannot appear
+  in prose either. "Speed range", never the other word for it.
 - `js/ui/app.js` renders every result. Markup and CSS change together; the class
   names live in template strings here, not in the HTML.
 - `reference/cnc-router-speeds-feeds-reference_4.html` is an archived

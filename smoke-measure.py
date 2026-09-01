@@ -44,10 +44,16 @@ MEASURE_JS = r"""() => {
   const px = n => parseFloat(root.getPropertyValue(n));
   const controlH = parseFloat(getComputedStyle(document.querySelector('.lt-select')).blockSize);
 
-  const sizes = sel => [...document.querySelectorAll(sel)].map(el => {
-    const r = box(el);
-    return { w: +r.width.toFixed(2), h: +r.height.toFixed(2) };
-  });
+  // Only what is actually painted. The page hides the controls belonging to the
+  // other mode, and an unpainted element measures 0x0, which would fail every
+  // size assertion below for a page that is correct. #chart-tip is position:
+  // fixed so its offsetParent is null too, and it holds no control.
+  const sizes = sel => [...document.querySelectorAll(sel)]
+    .filter(el => el.offsetParent !== null)
+    .map(el => {
+      const r = box(el);
+      return { w: +r.width.toFixed(2), h: +r.height.toFixed(2) };
+    });
 
   return {
     controlHeight: controlH,
@@ -56,6 +62,12 @@ MEASURE_JS = r"""() => {
     steppers: sizes('[data-step]'),
     tracks: sizes('.casc-bar, .ladder-track'),
     marks: sizes('.casc-fill, .ladder-bar'),
+    // The whole mode switch rests on .lt-field[hidden] in styles.css. If that
+    // correction is ever lost in a re-vendor, both modes' fields paint at once,
+    // and this is the line that says so.
+    paintedHidden: [...document.querySelectorAll('.lt-field[hidden], lt-number-field[hidden]')]
+      .filter(el => el.offsetParent !== null)
+      .map(el => el.id || el.tagName),
     // Anything a pointer can act on, measured at its HIT AREA rather than at
     // its painted box. For a checkbox or a radio those differ on purpose: the
     // box draws at --lt-check-size, 18px, and the .lt-check label wrapping it
@@ -86,6 +98,7 @@ def run(page, label, coarse):
 
     heights = sorted({c["h"] for c in d["controls"]})
     ok &= check("every control hits the control height", heights == [d["controlHeight"]], heights)
+    ok &= check("a hidden field paints nothing", not d["paintedHidden"], d["paintedHidden"] or "none painted")
 
     # A stepper is an icon button: square, at the control height, every time.
     ssz = sorted({(s["w"], s["h"]) for s in d["steppers"]})
@@ -150,7 +163,12 @@ def main():
                 return 1
             page.click("#advanced summary")
             page.wait_for_timeout(400)
-            ok &= run(page, label, coarse=kw.get("has_touch", False))
+            # Both modes, in the same context. The advanced panel stays open
+            # across the switch, so the drilling pass measures its fields too.
+            ok &= run(page, f"{label} / routing", coarse=kw.get("has_touch", False))
+            page.click('#mode [data-value="drill"]')
+            page.wait_for_timeout(400)
+            ok &= run(page, f"{label} / drilling", coarse=kw.get("has_touch", False))
             ctx.close()
         browser.close()
 

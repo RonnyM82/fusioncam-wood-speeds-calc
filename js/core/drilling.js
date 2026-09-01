@@ -265,6 +265,7 @@ export function calculateDrilling(input, data) {
     notes,
     meta: {
       mode: 'drilling',
+      profile: input.profile ?? 'standard',
       drillType: entry.subfamily_id,
       label: entry.label,
       section: entry.section,

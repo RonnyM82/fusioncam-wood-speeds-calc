@@ -6,6 +6,7 @@ import { test, assert, approx } from './helpers.js';
 import { loadData } from './load-node.js';
 import { machinePresets } from '../js/data/presets.js';
 import { calculateDrilling, bandAtRpm, peckPlan } from '../js/core/drilling.js';
+import { DRILL_TOOLS, DRILL_DIAMETERS, DRILL_OUTPUT_ROWS, drillSubfamilyFor } from '../js/ui/drill-tables.js';
 
 const data = loadData();
 const presets = machinePresets(data.machines, data.rules);
@@ -229,6 +230,40 @@ test('DR19', 'with no speed entered, the tool runs at the speed its own diagram 
   const plain = calculateDrilling({ ...BASE, drillType: 'dowel_drill_hw_tipped', diameterMm: 8, rpm: undefined }, data);
   assert(plain.meta.rpmSource === 'published', `expected the published fallback, got ${plain.meta.rpmSource}`);
   assert(plain.outputs.spindleRpm === 6000, `expected the range midpoint 6000, got ${plain.outputs.spindleRpm}`);
+});
+
+test('DRUI1', 'every drill the picker offers serves a number at every size it offers', () => {
+  const entries = data.drills.entries;
+  const offered = new Set(DRILL_TOOLS.flatMap((t) => t.subfamilies));
+  for (const id of offered) {
+    assert(entries.some((e) => e.subfamily_id === id && e.serves), `the picker offers ${id}, which does not serve`);
+  }
+  // The other direction: a subfamily nobody can reach is data with no way in.
+  for (const e of entries) {
+    if (e.serves) assert(offered.has(e.subfamily_id), `${e.subfamily_id} serves but no drill family offers it`);
+  }
+  for (const family of DRILL_TOOLS) {
+    for (const d of DRILL_DIAMETERS[family.id]) {
+      const id = drillSubfamilyFor(family.id, d, entries);
+      const r = calculateDrilling({ ...BASE, drillType: id, diameterMm: d, rpm: undefined }, data);
+      assert(r.status === 'ok', `${family.label} at ${d} mm gave ${r.status}: ${r.refusal?.reason ?? ''}`);
+    }
+  }
+});
+
+test('DRUI2', 'every row the page draws exists in a real result, or is guarded', () => {
+  const r = run();
+  for (const row of DRILL_OUTPUT_ROWS) {
+    if (row.when) continue;
+    assert(row.key in r.outputs, `the page draws ${row.key}, which the core does not return`);
+    assert(Number.isFinite(r.outputs[row.key]), `${row.key} is not a number`);
+    // A row that names a note must find one, or it draws a label with nothing
+    // under it.
+    if (row.noteKey) assert(r.outputNotes[row.noteKey], `${row.key} names note ${row.noteKey}, which is empty`);
+  }
+  // The guarded row must genuinely be absent, not merely undefined-tolerant.
+  const peckRow = DRILL_OUTPUT_ROWS.find((x) => x.key === 'peckStepMm');
+  assert(!peckRow.when(r.outputs), 'the peck row must stay hidden while no rule is published');
 });
 
 test('DR18', 'no input stacks more than four warnings, the ceiling the page folds at', () => {

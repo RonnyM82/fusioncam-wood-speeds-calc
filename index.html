@@ -23,19 +23,29 @@
        schemes. The header and the footer sit on the page surface. -->
   <main id="app" class="lt-panel">
     <form id="inputs" onsubmit="return false">
+      <!-- Routing and drilling share the material, the machine and how hard to
+           run it, and share nothing else. A radio group says "pick one of two
+           operations", which is what this is; tabs would say "two views of one
+           thing", which it is not. Same keyboard contract as the profile group
+           below, from the same builder. -->
+      <div class="lt-field">
+        <span class="lt-field__label" id="mode-label">What are you cutting</span>
+        <div id="mode" class="lt-btn-group seg-group" role="radiogroup" aria-labelledby="mode-label"></div>
+      </div>
+
       <div class="lt-field">
         <label class="lt-field__label" for="material">Material</label>
         <select class="lt-select" id="material"></select>
       </div>
 
       <fieldset class="lt-fieldset">
-        <legend>Tool type</legend>
+        <legend id="tooltype-legend">Tool type</legend>
         <div id="tooltype" class="tool-grid"></div>
       </fieldset>
 
       <div class="lt-form-grid">
         <div class="lt-field">
-          <label class="lt-field__label" for="diameter">Tool diameter</label>
+          <label class="lt-field__label" id="diameter-label" for="diameter">Tool diameter</label>
           <select class="lt-select" id="diameter"></select>
         </div>
         <lt-number-field id="f-flutes" input-id="flutes" label="Flutes"
@@ -48,6 +58,18 @@
         <lt-number-field id="f-doc" input-id="doc" label="Depth per pass"
                          measure="length" decimals="1" min="0.1" step="0.5" stepper
                          hint="Leave empty to cut the full board thickness."></lt-number-field>
+      </div>
+
+      <!-- Hole depth is its own field rather than a relabelled board thickness.
+           Reusing that control would keep its value while changing its meaning,
+           so someone who typed 18 for a board would bore an 18 mm hinge cup. -->
+      <div class="lt-form-grid">
+        <lt-number-field id="f-holedepth" input-id="holedepth" label="Hole depth"
+                         measure="length" decimals="1" min="1" max="120" step="1" stepper
+                         hint="The depth of the hole, not the thickness of the panel. A 35 mm hinge cup is usually about 13 mm."></lt-number-field>
+        <lt-number-field id="f-drillrpm" input-id="drillrpm" label="Spindle speed"
+                         measure="rotation" min="500" max="30000" step="500" stepper
+                         hint="Leave empty to run at the speed this drill is published for."></lt-number-field>
       </div>
 
       <div class="lt-form-grid">
@@ -70,7 +92,7 @@
            the APG radiogroup pattern. -->
       <div class="lt-field">
         <span class="lt-field__label" id="profile-label">How hard to run it</span>
-        <div id="profile" class="lt-btn-group profile-group" role="radiogroup" aria-labelledby="profile-label"></div>
+        <div id="profile" class="lt-btn-group seg-group" role="radiogroup" aria-labelledby="profile-label"></div>
       </div>
 
       <!-- Hidden while the Finishing profile is on: a finish pass follows a
@@ -84,6 +106,16 @@
         </label>
       </div>
 
+      <!-- A drill bank is a fixed-speed geared head with its own drive, so the
+           router spindle's rated speed floor does not apply to it, and nobody
+           publishes the bank's power. Drilling only. -->
+      <div class="lt-field" id="drillbank-field">
+        <label class="lt-check">
+          <input type="checkbox" id="drillbank">
+          <span>These holes run on a drill bank, not the router spindle</span>
+        </label>
+      </div>
+
       <details id="advanced">
         <summary>Advanced</summary>
         <div id="advanced-fields" class="lt-form-grid"></div>
@@ -93,7 +125,7 @@
     <section id="results" aria-live="polite"></section>
     <section id="diagnostics"></section>
 
-    <details class="defects">
+    <details class="defects" id="defects-rout">
       <summary>Something looks wrong on the cut?</summary>
       <dl class="lt-prose">
         <dt>Laminate edge chips.</dt><dd>Change the tool geometry. Do not change the feed.</dd>
@@ -101,6 +133,20 @@
         <dt>Glazed or polished MDF edge.</dt><dd>Increase the feed or reduce the rpm to raise the chip load above the minimum.</dd>
         <dt>Parts lift or move.</dt><dd>Use an onion skin or tabs. More vacuum does not correct a small footprint.</dd>
         <dt>Torque stall at low rpm.</dt><dd>Increase the rpm into the constant-power range, or reduce the depth and the feed.</dd>
+      </dl>
+    </details>
+
+    <!-- Each of these is a published fact from the drilling data, not shop lore.
+         The face reading is the 1.3 correction factor for raw chipboard against
+         1.0 for the coated board, which says the face sets the pace. -->
+    <details class="defects" id="defects-drill">
+      <summary>Something looks wrong on the hole?</summary>
+      <dl class="lt-prose">
+        <dt>The melamine face tears around the rim.</dt><dd>Slow the feed, not the speed. Coated board takes a lower feed than raw chipboard through the same drill.</dd>
+        <dt>Dust instead of chips, and a hot drill.</dt><dd>The feed is under the slowest published value. Raise the feed, or drop the speed so each turn takes a thicker bite.</dd>
+        <dt>The hole is burnt at the bottom of a blind cup.</dt><dd>Retract to clear the flutes. A packed flute stops cutting and starts rubbing.</dd>
+        <dt>The router spindle will not run slowly enough.</dt><dd>Move the holes to the drill bank and tick the drill bank box, or accept the speed the machine is rated for.</dd>
+        <dt>The exit side blows out on a through hole.</dt><dd>Back the panel, or use a through-hole drill rather than a dowel drill. The published feed does not fix an unsupported exit.</dd>
       </dl>
     </details>
   </main>
