@@ -1,0 +1,1522 @@
+[
+ {
+  "page_pdf": 6,
+  "problems": [],
+  "page_printed": 4,
+  "section": "6.1.1",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 8 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   6.0,
+   6.1,
+   7.0,
+   8.0,
+   10.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with shear cut. Drills can be combined with countersink WB 701 0 03. Countersink fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction. Recommended on drill spindles with limited rigidity.",
+  "part_numbers": [
+   "WB 120 0 23",
+   "WB 120 0 24",
+   "WB 701 0 03"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0469,
+  "band_span_rpm": [
+   2957,
+   9064
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7691,
+    "vf_hi_m_min": 1.8078,
+    "fn_min_mm_rev": 0.2564,
+    "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4903,
+    "vf_hi_m_min": 2.9819,
+    "fn_min_mm_rev": 0.2484,
+    "fn_max_mm_rev": 0.497
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.9656,
+    "vf_hi_m_min": 3.8387,
+    "fn_min_mm_rev": 0.2184,
+    "fn_max_mm_rev": 0.4265
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 7,
+  "problems": [],
+  "page_printed": 5,
+  "section": "6.1.1",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 10 mm",
+  "rpm_from_page": 8,
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   3.0,
+   4.0,
+   4.5,
+   5.0,
+   5.1,
+   5.2,
+   6.0,
+   6.1,
+   7.0,
+   8.0,
+   8.2,
+   9.0,
+   10.0,
+   11.0,
+   12.0,
+   13.0,
+   14.0,
+   15.0,
+   16.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with shear cut. Recessed flute for minimised friction and feed force. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank.",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction.",
+  "part_numbers": [
+   "WB 120 0 10",
+   "WB 120 0 12",
+   "WB 120 0 32",
+   "WB 701 0 02"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0469,
+  "band_span_rpm": [
+   2957,
+   9064
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7691,
+    "vf_hi_m_min": 1.8078,
+    "fn_min_mm_rev": 0.2564,
+    "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4903,
+    "vf_hi_m_min": 2.9819,
+    "fn_min_mm_rev": 0.2484,
+    "fn_max_mm_rev": 0.497
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.9656,
+    "vf_hi_m_min": 3.8387,
+    "fn_min_mm_rev": 0.2184,
+    "fn_max_mm_rev": 0.4265
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 9,
+  "problems": [],
+  "page_printed": 7,
+  "section": "6.1.1",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   6.0,
+   6.1,
+   8.0,
+   10.0,
+   12.0,
+   25.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with shear cut. Drills can be combined with countersink WB 701 0 03. Countersink fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction. Recommended on drill spindles with limited rigidity.",
+  "part_numbers": [
+   "WB 120 0 25",
+   "WB 120 0 26",
+   "WB 701 0 03"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0469,
+  "band_span_rpm": [
+   2957,
+   9064
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7691,
+    "vf_hi_m_min": 1.8078,
+    "fn_min_mm_rev": 0.2564,
+    "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4903,
+    "vf_hi_m_min": 2.9819,
+    "fn_min_mm_rev": 0.2484,
+    "fn_max_mm_rev": 0.497
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.9656,
+    "vf_hi_m_min": 3.8387,
+    "fn_min_mm_rev": 0.2184,
+    "fn_max_mm_rev": 0.4265
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 10,
+  "problems": [],
+  "page_printed": 8,
+  "section": "6.1.1",
+  "section_title": "Dowel drilling",
+  "heading": "Threaded shank",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   6.1,
+   8.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with shear cut. Recessed flute for minimised friction and feed force. Threaded shank for direct mounting in the drilling spindle. M10, threaded shank with seating 11 mm, without heel, Z 2 / V 2 WB 120 0 17 D mm",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction.",
+  "part_numbers": [
+   "WB 120 0 17",
+   "WB 120 0 18"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0469,
+  "band_span_rpm": [
+   2957,
+   9064
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7691,
+    "vf_hi_m_min": 1.8078,
+    "fn_min_mm_rev": 0.2564,
+    "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4903,
+    "vf_hi_m_min": 2.9819,
+    "fn_min_mm_rev": 0.2484,
+    "fn_max_mm_rev": 0.497
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.9656,
+    "vf_hi_m_min": 3.8387,
+    "fn_min_mm_rev": 0.2184,
+    "fn_max_mm_rev": 0.4265
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 11,
+  "problems": [],
+  "page_printed": 9,
+  "section": "6.1.2",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 10 mm, HW tipped",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   }
+  ],
+  "diameters_mm": [
+   4.0,
+   5.0,
+   5.1,
+   6.0,
+   6.1,
+   8.0,
+   8.2,
+   10.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with high shear cut. High wear resistant tungsten carbide grade for maximum life time. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction. Suitable for drilling tear-free blind holes in visible areas and for machining panel materials which are covered with laminations difficult to machine (e.g. thin decorative paper).",
+  "part_numbers": [
+   "WB 120 0 29",
+   "WB 120 0 30",
+   "WB 701 0 02"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0467,
+  "band_span_rpm": [
+   2951,
+   9067
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7639,
+    "vf_hi_m_min": 1.8053,
+    "fn_min_mm_rev": 0.2546,
+    "fn_max_mm_rev": 0.6018
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4846,
+    "vf_hi_m_min": 2.9789,
+    "fn_min_mm_rev": 0.2474,
+    "fn_max_mm_rev": 0.4965
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.9601,
+    "vf_hi_m_min": 3.8358,
+    "fn_min_mm_rev": 0.2178,
+    "fn_max_mm_rev": 0.4262
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 12,
+  "problems": [],
+  "page_printed": 10,
+  "section": "6.1.3",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 10 mm, HW solid",
+  "rpm_min": 3000,
+  "rpm_max": 12000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   3.0,
+   4.0,
+   5.0,
+   6.0,
+   6.1,
+   7.0,
+   8.0,
+   10.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spur geometry with high shear cut. Solid tungsten carbide design with high wear resistant tungsten carbide grade. High stability and long performance time. Polished gullet for minimum friction and feed forces. Very large resharpening area.",
+  "application_printed": "For drilling blind holes, particularly dowel holes in furniture construction. Suitable for drilling tear-free blind holes in visible areas and for machining panel materials which are covered with laminations difficult to machine (e.g. thin decorative paper).",
+  "part_numbers": [
+   "WB 120 0 32",
+   "WB 120 0 33"
+  ],
+  "calibration_residual_rpm": 26.6,
+  "calibration_residual_vf": 0.0469,
+  "band_span_rpm": [
+   2963,
+   12022
+  ],
+  "band_covers_rpm": [
+   3000,
+   12000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 1.003,
+    "vf_hi_m_min": 2.4199,
+    "fn_min_mm_rev": 0.3343,
+    "fn_max_mm_rev": 0.8066
+   },
+   {
+    "rpm": 7500,
+    "vf_lo_m_min": 2.5871,
+    "vf_hi_m_min": 5.4286,
+    "fn_min_mm_rev": 0.345,
+    "fn_max_mm_rev": 0.7238
+   },
+   {
+    "rpm": 12000,
+    "vf_lo_m_min": 3.4734,
+    "vf_hi_m_min": 6.4578,
+    "fn_min_mm_rev": 0.2894,
+    "fn_max_mm_rev": 0.5381
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 13,
+  "problems": [
+   "no correction factor table found"
+  ],
+  "page_printed": 11,
+  "section": "6.1.4",
+  "section_title": "Dowel drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard / MDF",
+  "factors_printed": [],
+  "diameters_mm": [
+   3.0,
+   5.0,
+   6.0,
+   6.1,
+   8.0
+  ],
+  "teeth": 1,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Solid tungsten carbide design for high performance time. Large resharpening area. Tool suitable for RH and LH rotation. Drill design D = 3 mm particularly suitable for pre-drilling screw holes in plastic coated and veneered furniture parts. Infeed depth in hardwood and glulam maximum 2 x D.",
+  "application_printed": "For drilling blind holes, particularly dowel holes on the side of panel furniture parts.",
+  "part_numbers": [
+   "WB 100 0 01"
+  ],
+  "calibration_residual_rpm": 27.2,
+  "calibration_residual_vf": 0.0054,
+  "band_span_rpm": [
+   3018,
+   11958
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 1.4651,
+    "vf_hi_m_min": 2.4695,
+    "fn_min_mm_rev": 0.4884,
+    "fn_max_mm_rev": 0.8232
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 2.7984,
+    "vf_hi_m_min": 4.2775,
+    "fn_min_mm_rev": 0.4664,
+    "fn_max_mm_rev": 0.7129
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 3.232,
+    "vf_hi_m_min": 4.7351,
+    "fn_min_mm_rev": 0.3591,
+    "fn_max_mm_rev": 0.5261
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": false
+ },
+ {
+  "page_pdf": 15,
+  "problems": [],
+  "page_printed": 13,
+  "section": "6.2.1",
+  "section_title": "Through hole drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   6.0,
+   6.2,
+   7.0,
+   8.0,
+   9.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), elastomers.",
+  "technical_printed": "Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
+  "application_printed": "For drilling through holes, particularly in furniture construction.",
+  "part_numbers": [
+   "WB 101 0 02",
+   "WB 101 0 03",
+   "WB 101 0 04",
+   "WB 101 0 07",
+   "WB 701 0 02"
+  ],
+  "calibration_residual_rpm": 54.4,
+  "calibration_residual_vf": 0.0084,
+  "band_span_rpm": [
+   2933,
+   9012
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7918,
+    "vf_hi_m_min": 1.3002,
+    "fn_min_mm_rev": 0.2639,
+    "fn_max_mm_rev": 0.4334
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.1451,
+    "vf_hi_m_min": 1.8888,
+    "fn_min_mm_rev": 0.1908,
+    "fn_max_mm_rev": 0.3148
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.4978,
+    "vf_hi_m_min": 2.4764,
+    "fn_min_mm_rev": 0.1664,
+    "fn_max_mm_rev": 0.2752
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 16,
+  "problems": [],
+  "page_printed": 14,
+  "section": "6.2.1",
+  "section_title": "Through hole drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   5.2,
+   6.0,
+   6.2,
+   8.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), elastomers.",
+  "technical_printed": "Drills can be combined with countersink WB 701 0 03. Countersinks fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
+  "application_printed": "For drilling through holes, particularly in furniture construction. Recommended on drill spindles with limited rigidity",
+  "part_numbers": [
+   "WB 101 0 04",
+   "WB 101 0 05",
+   "WB 101 0 06",
+   "WB 701 0 03"
+  ],
+  "calibration_residual_rpm": 54.4,
+  "calibration_residual_vf": 0.0084,
+  "band_span_rpm": [
+   2933,
+   9012
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7918,
+    "vf_hi_m_min": 1.3002,
+    "fn_min_mm_rev": 0.2639,
+    "fn_max_mm_rev": 0.4334
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.1451,
+    "vf_hi_m_min": 1.8888,
+    "fn_min_mm_rev": 0.1908,
+    "fn_max_mm_rev": 0.3148
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.4978,
+    "vf_hi_m_min": 2.4764,
+    "fn_min_mm_rev": 0.1664,
+    "fn_max_mm_rev": 0.2752
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 17,
+  "problems": [],
+  "page_printed": 15,
+  "section": "6.2.2",
+  "section_title": "Through hole drilling",
+  "heading": "Shank 10 mm, HW tipped",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "rpm_recommended_min": 4500,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   4.5,
+   5.0,
+   6.2,
+   8.0
+  ],
+  "teeth": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "V-point tip with 2 bevels for maximised quality on the bottom side (exit). High wear resistant tungsten carbide grade for maximum lifetime. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
+  "application_printed": "For drilling tear-free through holes, particularly in furniture construction, with maximised quality on the bottom side (exit).",
+  "part_numbers": [
+   "WB 101 0 10",
+   "WB 701 0 02"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0467,
+  "band_span_rpm": [
+   2943,
+   9054
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7481,
+    "vf_hi_m_min": 1.4755,
+    "fn_min_mm_rev": 0.2494,
+    "fn_max_mm_rev": 0.4918
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4233,
+    "vf_hi_m_min": 2.4801,
+    "fn_min_mm_rev": 0.2372,
+    "fn_max_mm_rev": 0.4133
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.775,
+    "vf_hi_m_min": 2.9361,
+    "fn_min_mm_rev": 0.1972,
+    "fn_max_mm_rev": 0.3262
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 18,
+  "problems": [],
+  "page_printed": 16,
+  "section": "6.2.3",
+  "section_title": "Through hole drilling",
+  "heading": "Shank 10 mm, HW solid",
+  "rpm_min": 3000,
+  "rpm_max": 12000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_mm": [
+   3.0,
+   5.0,
+   6.0,
+   6.2,
+   7.0,
+   8.0,
+   10.0
+  ],
+  "teeth": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "V-point tip with 2 bevels for maximised quality on the bottom side (exit). Solid tungsten carbide design with high wear resistant tungsten carbide grade. High stability and long performance time. Polished gullet for minimum friction and feed forces. Very large resharpening area.",
+  "application_printed": "For drilling tear-free through holes, particularly in furniture construction, with maximised quality on the bottom side (exit).",
+  "part_numbers": [
+   "WB 101 0 02",
+   "WB 101 0 04",
+   "WB 101 0 07"
+  ],
+  "calibration_residual_rpm": 54.7,
+  "calibration_residual_vf": 0.0467,
+  "band_span_rpm": [
+   2943,
+   9054
+  ],
+  "band_covers_rpm": [
+   3000,
+   9050
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7481,
+    "vf_hi_m_min": 1.4755,
+    "fn_min_mm_rev": 0.2494,
+    "fn_max_mm_rev": 0.4918
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4233,
+    "vf_hi_m_min": 2.4801,
+    "fn_min_mm_rev": 0.2372,
+    "fn_max_mm_rev": 0.4133
+   },
+   {
+    "rpm": 9050,
+    "vf_lo_m_min": 1.777,
+    "vf_hi_m_min": 2.9381,
+    "fn_min_mm_rev": 0.1963,
+    "fn_max_mm_rev": 0.3247
+   }
+  ],
+  "coverage_fraction": 0.672,
+  "accepted": true
+ },
+ {
+  "page_pdf": 19,
+  "problems": [],
+  "page_printed": 17,
+  "section": "6.2.4",
+  "section_title": "Through hole drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 4000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "MDF",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.2
+   }
+  ],
+  "diameters_mm": [
+   5.0,
+   6.0,
+   6.2,
+   8.0,
+   10.0
+  ],
+  "teeth": 1,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Gypsum bonded particle and fibre materials, cement bonded particle and fibre materials, flame resistant particle and fibre materials, solid resin glulam, fibre reinforced plastics.",
+  "technical_printed": "DP tipped through hole boring bit for maximum lifetime, particularly in abrasive materials. Large gullet for optimum chip removal.",
+  "application_printed": "For drilling tear-free through holes. Particularly suitable for drilling panel materials with abrasive components (fire proof material etc.).",
+  "part_numbers": [
+   "WB 100 0 50"
+  ],
+  "calibration_residual_rpm": 53.5,
+  "calibration_residual_vf": 0.0089,
+  "worked_example": {
+   "rpm": 6000,
+   "vf_m_min": 1.0,
+   "fn_mm_rev": 0.1667
+  },
+  "band_span_rpm": [
+   2932,
+   9014
+  ],
+  "band_covers_rpm": [
+   4000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 4000,
+    "vf_lo_m_min": 0.5282,
+    "vf_hi_m_min": 1.1631,
+    "fn_min_mm_rev": 0.132,
+    "fn_max_mm_rev": 0.2908
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 0.7956,
+    "vf_hi_m_min": 1.4888,
+    "fn_min_mm_rev": 0.1326,
+    "fn_max_mm_rev": 0.2481
+   },
+   {
+    "rpm": 6500,
+    "vf_lo_m_min": 0.8625,
+    "vf_hi_m_min": 1.5702,
+    "fn_min_mm_rev": 0.1327,
+    "fn_max_mm_rev": 0.2416
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.1964,
+    "vf_hi_m_min": 1.9768,
+    "fn_min_mm_rev": 0.1329,
+    "fn_max_mm_rev": 0.2196
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 22,
+  "problems": [],
+  "page_printed": 20,
+  "section": "6.3.1",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 2800,
+  "rpm_max": 7000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   15.0,
+   18.0,
+   20.0,
+   25.0,
+   35.0,
+   40.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Good centering in solid wood by protruding centre point.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction.",
+  "part_numbers": [
+   "WB 310 0 04"
+  ],
+  "calibration_residual_rpm": 11.6,
+  "calibration_residual_vf": 0.0168,
+  "worked_example": {
+   "rpm": 4000,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.375
+  },
+  "band_span_rpm": [
+   2794,
+   6914
+  ],
+  "band_covers_rpm": [
+   2800,
+   6900
+  ],
+  "points": [
+   {
+    "rpm": 2800,
+    "vf_lo_m_min": 0.5403,
+    "vf_hi_m_min": 1.5711,
+    "fn_min_mm_rev": 0.193,
+    "fn_max_mm_rev": 0.5611
+   },
+   {
+    "rpm": 4000,
+    "vf_lo_m_min": 0.8244,
+    "vf_hi_m_min": 1.8629,
+    "fn_min_mm_rev": 0.2061,
+    "fn_max_mm_rev": 0.4657
+   },
+   {
+    "rpm": 4800,
+    "vf_lo_m_min": 0.9902,
+    "vf_hi_m_min": 2.0294,
+    "fn_min_mm_rev": 0.2063,
+    "fn_max_mm_rev": 0.4228
+   },
+   {
+    "rpm": 6900,
+    "vf_lo_m_min": 1.3593,
+    "vf_hi_m_min": 2.3988,
+    "fn_min_mm_rev": 0.197,
+    "fn_max_mm_rev": 0.3477
+   }
+  ],
+  "coverage_fraction": 0.976,
+  "accepted": true
+ },
+ {
+  "page_pdf": 23,
+  "problems": [],
+  "page_printed": 21,
+  "section": "6.3.2",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Chipboard paper coated",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard veneered",
+    "factor": 0.7
+   },
+   {
+    "printed": "MDF plastic coated",
+    "factor": 1.0
+   },
+   {
+    "printed": "Glulam",
+    "factor": 0.6
+   },
+   {
+    "printed": "Solid wood",
+    "factor": 1.0
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   15.0,
+   16.0,
+   18.0,
+   20.0,
+   22.0,
+   24.0,
+   25.0,
+   26.0,
+   28.0,
+   30.0,
+   34.0,
+   35.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindle or stable drilling units.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction, with increased lifetime and high-quality edge.",
+  "part_numbers": [
+   "WB 310 0 13"
+  ],
+  "calibration_residual_rpm": 27.8,
+  "calibration_residual_vf": 0.0382,
+  "worked_example": {
+   "rpm": 6000,
+   "vf_m_min": 2.5,
+   "fn_mm_rev": 0.4167
+  },
+  "band_span_rpm": [
+   2940,
+   9054
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.4809,
+    "vf_hi_m_min": 2.0021,
+    "fn_min_mm_rev": 0.1603,
+    "fn_max_mm_rev": 0.6674
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.0697,
+    "vf_hi_m_min": 3.991,
+    "fn_min_mm_rev": 0.1783,
+    "fn_max_mm_rev": 0.6652
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.6585,
+    "vf_hi_m_min": 4.9872,
+    "fn_min_mm_rev": 0.1843,
+    "fn_max_mm_rev": 0.5541
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 24,
+  "problems": [],
+  "page_printed": 22,
+  "section": "6.3.2",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm, short centre point",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Chipboard paper coated",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard veneered",
+    "factor": 0.7
+   },
+   {
+    "printed": "MDF plastic coated",
+    "factor": 1.0
+   },
+   {
+    "printed": "Glulam",
+    "factor": 0.6
+   },
+   {
+    "printed": "Solid wood",
+    "factor": 1.0
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   15.0,
+   20.0,
+   25.0,
+   26.0,
+   30.0,
+   35.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindles or stable drilling units. Design with reduced protrusion of centre point and spurs for deep holes in thin panels.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction, with increased lifetime and high-quality edge.",
+  "part_numbers": [
+   "WB 310 0 13"
+  ],
+  "calibration_residual_rpm": 27.8,
+  "calibration_residual_vf": 0.0382,
+  "worked_example": {
+   "rpm": 6000,
+   "vf_m_min": 2.5,
+   "fn_mm_rev": 0.4167
+  },
+  "band_span_rpm": [
+   2940,
+   9054
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.4809,
+    "vf_hi_m_min": 2.0021,
+    "fn_min_mm_rev": 0.1603,
+    "fn_max_mm_rev": 0.6674
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.0697,
+    "vf_hi_m_min": 3.991,
+    "fn_min_mm_rev": 0.1783,
+    "fn_max_mm_rev": 0.6652
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 1.6585,
+    "vf_hi_m_min": 4.9872,
+    "fn_min_mm_rev": 0.1843,
+    "fn_max_mm_rev": 0.5541
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 25,
+  "problems": [],
+  "page_printed": 23,
+  "section": "6.3.2",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm, short centre point",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Chipboard paper coated",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard veneered",
+    "factor": 0.7
+   },
+   {
+    "printed": "MDF plastic coated",
+    "factor": 1.0
+   },
+   {
+    "printed": "Glulam",
+    "factor": 0.6
+   },
+   {
+    "printed": "Solid wood",
+    "factor": 1.0
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   18.0,
+   20.0,
+   22.0,
+   24.0,
+   25.0,
+   26.0,
+   28.0,
+   30.0,
+   34.0,
+   35.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindle, boring units as well as drilling machines.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction, with increased lifetime and high-quality edge. Design for higher feed speed in comparison to boring bits with Z 2 / V 2.",
+  "part_numbers": [
+   "WB 320 0 13"
+  ],
+  "calibration_residual_rpm": 27.9,
+  "calibration_residual_vf": 0.0329,
+  "worked_example": {
+   "rpm": 6000,
+   "vf_m_min": 3.5,
+   "fn_mm_rev": 0.5833
+  },
+  "band_span_rpm": [
+   2998,
+   9059
+  ],
+  "band_covers_rpm": [
+   3000,
+   9000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.7008,
+    "vf_hi_m_min": 3.4602,
+    "fn_min_mm_rev": 0.2336,
+    "fn_max_mm_rev": 1.1534
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4408,
+    "vf_hi_m_min": 5.0443,
+    "fn_min_mm_rev": 0.2401,
+    "fn_max_mm_rev": 0.8407
+   },
+   {
+    "rpm": 9000,
+    "vf_lo_m_min": 2.1837,
+    "vf_hi_m_min": 6.6345,
+    "fn_min_mm_rev": 0.2426,
+    "fn_max_mm_rev": 0.7372
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 28,
+  "problems": [],
+  "page_printed": 26,
+  "section": "6.3.3",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 2800,
+  "rpm_max": 7000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF",
+    "factor": 0.7
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   35.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Spurs and main cutting edge in turnblade design. Replaceable centre point, resharpenable and adjustable for deep holes near to the bottom surface layer without marks. Diameter constant tool.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction.",
+  "part_numbers": [
+   "WL 920 0"
+  ],
+  "calibration_residual_rpm": 11.7,
+  "calibration_residual_vf": 0.0168,
+  "worked_example": {
+   "rpm": 4000,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.375
+  },
+  "band_span_rpm": [
+   2838,
+   6959
+  ],
+  "band_covers_rpm": [
+   2850,
+   6950
+  ],
+  "points": [
+   {
+    "rpm": 2850,
+    "vf_lo_m_min": 0.5227,
+    "vf_hi_m_min": 1.5537,
+    "fn_min_mm_rev": 0.1834,
+    "fn_max_mm_rev": 0.5452
+   },
+   {
+    "rpm": 4000,
+    "vf_lo_m_min": 0.7962,
+    "vf_hi_m_min": 1.8346,
+    "fn_min_mm_rev": 0.199,
+    "fn_max_mm_rev": 0.4587
+   },
+   {
+    "rpm": 4900,
+    "vf_lo_m_min": 0.9825,
+    "vf_hi_m_min": 2.0217,
+    "fn_min_mm_rev": 0.2005,
+    "fn_max_mm_rev": 0.4126
+   },
+   {
+    "rpm": 6950,
+    "vf_lo_m_min": 1.342,
+    "vf_hi_m_min": 2.3812,
+    "fn_min_mm_rev": 0.1931,
+    "fn_max_mm_rev": 0.3426
+   }
+  ],
+  "coverage_fraction": 0.976,
+  "accepted": true
+ },
+ {
+  "page_pdf": 29,
+  "problems": [],
+  "page_printed": 27,
+  "section": "6.3.4",
+  "section_title": "Hinge drilling",
+  "heading": "Shank 10 mm",
+  "rpm_min": 2800,
+  "rpm_max": 7000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Veneered",
+    "factor": 0.8
+   },
+   {
+    "printed": "Paper coated",
+    "factor": 0.8
+   },
+   {
+    "printed": "MDF",
+    "factor": 0.7
+   }
+  ],
+  "diameters_mm": [
+   6.3,
+   15.0,
+   20.0,
+   25.0,
+   26.0,
+   35.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
+  "tool_materials_printed": "Chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., fire resistant particle and fibre materials, laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "DP tipped for increased performance time compared to tungsten carbide. Suitability for high volume production. Diamaster PRO tipping, resharpenable two/three times with normal wear. Preferred used on automatic machines. Drills can only be used in column drilling machines when workpieces are clamped tightly.",
+  "application_printed": "For drilling hinge holes, particularly in furniture construction with maximum durability. Specially for drilling materials with hard and abrasive coatings (e.g. HPL, CPL etc.).",
+  "part_numbers": [
+   "WB 310 0 50"
+  ],
+  "calibration_residual_rpm": 11.8,
+  "calibration_residual_vf": 0.0168,
+  "worked_example": {
+   "rpm": 4000,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.375
+  },
+  "band_span_rpm": [
+   2823,
+   6943
+  ],
+  "band_covers_rpm": [
+   2800,
+   6950
+  ],
+  "points": [
+   {
+    "rpm": 2800,
+    "vf_lo_m_min": 0.5628,
+    "vf_hi_m_min": 1.5937,
+    "fn_min_mm_rev": 0.201,
+    "fn_max_mm_rev": 0.5692
+   },
+   {
+    "rpm": 4000,
+    "vf_lo_m_min": 0.8404,
+    "vf_hi_m_min": 1.879,
+    "fn_min_mm_rev": 0.2101,
+    "fn_max_mm_rev": 0.4698
+   },
+   {
+    "rpm": 4900,
+    "vf_lo_m_min": 1.0265,
+    "vf_hi_m_min": 2.0659,
+    "fn_min_mm_rev": 0.2095,
+    "fn_max_mm_rev": 0.4216
+   },
+   {
+    "rpm": 6950,
+    "vf_lo_m_min": 1.3819,
+    "vf_hi_m_min": 2.4216,
+    "fn_min_mm_rev": 0.1988,
+    "fn_max_mm_rev": 0.3484
+   }
+  ],
+  "coverage_fraction": 0.988,
+  "accepted": true
+ }
+]

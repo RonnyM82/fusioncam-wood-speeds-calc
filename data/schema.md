@@ -65,5 +65,77 @@ Two findings from the review sweep that followed the Finishing build, both preda
 ## Amendment 2026-08-31: chart narration leaves the public page
 The calculator is public, and its rendered notes had grown into a log of how the data was chosen: which chart served, which chart published nothing near the diameter, what the MDF finisher borrow was, what the calculator did not compensate. Scott pulled all of it from the UI. The core now returns two streams. `notes` renders, and carries only what the user can act on or must watch: the finishing skim assumption, the first-cut states, inert controls (direction, density), the flute-count convention, the thin-chip power caveat. `meta.chartNotes` carries every chart-selection sentence (coverage, borrows, generic serves, the disagreement rule, the no-compensation record, the flat-kc record) and renders nowhere; tests read it. On the page, chart attribution lives in exactly two places: the limit line ("Onsrud 60-200 sets this feed") and the chart ladder with its table twin. Refusals still explain themselves, but in one plain sentence, without per-chart narration; a chart's own scope exclusion (Rennie: not compression) still shows, because the user can act on it by changing the tool. The lead-in output note lost its "no vendor publishes" clause the same way; the decision record stays in rules.json. Test SC35 sweeps representative picks and fails if narration reaches the rendered notes again.
 
+## drills.json, new 2026-09-02: the drilling data
+
+A fifth data file. Drilling data has a different shape from routing data, which is
+why it does not live in `chiploads.json`: routing publishes a chip load per tooth
+against material, geometry and diameter, merged across vendors, while Leitz
+publishes per tool subfamily a spindle speed range, a feed band in mm per
+revolution that varies with speed and not with diameter, a table of material
+correction factors against one baseline material, and chip-clearing rules. Drill
+rows in `chiploads.json` would also become visible to the routing selector, which
+is the most-tested path in the repo.
+
+`data/drills.json` carries `sources`, `material_factor_map`, `profiles` and
+`entries`. `js/data/load-browser.js` and `tests/load-node.js` both list it and must
+stay in lockstep. Conventions rather than data live in three new `rules.json`
+blocks: `drilling`, `drilling_attribution` and `drill_bank`, under the new
+`session-5-drilling` source key.
+
+**Twelve entries, from three of the chapter's six sections.** Dowel drills (6.1.1,
+6.1.2, 6.1.3), through-hole drills (6.2.1 to 6.2.4) and hinge drills (6.3.1 to
+6.3.4). Chapter 6.4, which holds twist, Levin and cylinder-head drills, prints one
+machine list for the whole chapter: column drilling machines, drilling machines,
+special purpose drilling machines and portable drills. That is the drill-press
+family, and decision 1 (2026-09-01) confines the served scope to CNC machining
+centres and drill banks, so none of 6.4 is ingested. Woodworker's forstner bits are
+out of scope with it. Section 6.1.4, the boring pins, is read but not ingested:
+its diagram prints no correction factor table and its baseline is the compound
+"Chipboard / MDF", so it has no factor row to serve from. Its chip-clearing rules
+are the ones the research records, so it is the obvious next entry.
+
+**The chart read is reproducible.** `tools/read-leitz-drilling.py` reads the band
+polygons off the PDF vector art and writes `research/leitz-drilling-read.json`;
+`tools/build-drill-entries.py` turns that into the entries. Re-running both
+reproduces the file. The read takes the polygon's exact vertical extent at a speed
+by crossing every edge of the outline, not by sampling nearby vertices, and
+calibrates each axis by least squares over its own tick labels. A diagram is
+accepted only when its band overlaps the tool's published speed range and covers
+at least 60% of it, its printed worked example converts and lands inside the band
+read off it, the axis calibration residual is under 2% of the range, and a baseline
+material and factor table are printed under it. Seventeen of the eighteen in-scope
+diagrams passed. Six carry a printed worked example, and all six land inside their
+own band, which is the strongest check available on a chart read.
+
+**Two read gates are data, not code**, in `rules.drilling`. `band_ratio_sanity` is
+[1.3, 5.5]: measured across all seventeen readable diagrams the bands run 1.47x to
+4.94x, widest at the slow end of each range and narrowing as speed rises. The
+research's earlier "about 2:1" came from the hinge-drill diagram alone and does not
+hold across the chapter. `band_coverage_min` is 0.6, because a diagram does not
+always draw the whole range its tool is rated for: the solid-carbide through-hole
+drill (6.2.3) is rated to 12,000 rpm and its diagram stops near 9,000. Where the
+band stops, the feed holds at that edge and the calculator says so, which is
+conservative because the upper edge falls as speed rises.
+
+**No entry publishes a chip-clearing rule**, so every `chip_clearing` is an explicit
+`null` and the peck output stays silent for every v1 tool. That is decision 5's
+case, not a gap in the ingest: the in-scope pages print no peck rule. The published
+rules the research found belong to the boring pins and to chapter 6.4, both out of
+this pass.
+
+**Printed factor rows are merged into the vocabulary, never renamed silently.** Two
+printed rows can map to one key, as "Veneered" and "Paper coated" both do at 0.8,
+and one printed row can cover two picks, as "MDF, solid wood" does. A merge is only
+allowed when the printed factors agree, and the builder stops if they do not.
+`FACTOR_MATERIALS` in the validator is its own namespace and deliberately does not
+extend `MATERIALS`, because Leitz names rows the calculator has no pick for
+(veneered chipboard, glulam). `material_factor_map` is the only join between them.
+
+Behaviour pinned by `DRILLDATA` (every band covers its range, every printed worked
+example lands inside its own band, the hinge-drill read and the position of the
+vendor's marked point on it) and `DRILLFENCE` (a sound entry validates clean, and
+ten ways of breaking one are each caught). Writing `DRILLFENCE` caught the first
+invented number: a band edge that read plausibly and was not what the diagram says.
+
 ## Update discipline
 New data lands as new entries with a new `source` key + retrieval date; superseded entries stay with a `superseded_by` field rather than being deleted. Chart-read values get `data_class: measured_chart_read`. Nothing enters without a source.

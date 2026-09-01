@@ -27,15 +27,38 @@
   "source": "session-5-drilling",
   "data_class": "project_decision",
   "map": {
-   "mdf": ["mdf", "mdf_plastic_coated"],
-   "particleboard": ["chipboard_uncoated"],
-   "laminated_pb": ["chipboard_plastic_coated"],
-   "laminated_chipboard": ["chipboard_plastic_coated"],
-   "hardwood": ["solid_wood", "hardwood"],
-   "softwood": ["solid_wood", "softwood"],
-   "plywood": ["plywood", "laminated_veneer_lumber"],
-   "softwood_ply": ["plywood", "laminated_veneer_lumber"],
-   "hpl": ["hpl"]
+   "mdf": [
+    "mdf",
+    "mdf_plastic_coated"
+   ],
+   "particleboard": [
+    "chipboard_uncoated"
+   ],
+   "laminated_pb": [
+    "chipboard_plastic_coated"
+   ],
+   "laminated_chipboard": [
+    "chipboard_plastic_coated"
+   ],
+   "hardwood": [
+    "solid_wood",
+    "hardwood"
+   ],
+   "softwood": [
+    "solid_wood",
+    "softwood"
+   ],
+   "plywood": [
+    "plywood",
+    "laminated_veneer_lumber"
+   ],
+   "softwood_ply": [
+    "plywood",
+    "laminated_veneer_lumber"
+   ],
+   "hpl": [
+    "hpl"
+   ]
   }
  },
  "profiles": {
@@ -43,5 +66,890 @@
   "source": "session-5-drilling",
   "data_class": "project_decision"
  },
- "entries": []
+ "entries": [
+  {
+   "subfamily_id": "dowel_drill_hw_tipped",
+   "section": "6.1.1",
+   "family": "dowel_drill",
+   "label": "Dowel drill",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 5,
+   "diameter_max_mm": 10,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 4,
+    "diagram_page_pdf": 6,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.256,
+      "fn_max_mm_rev": 0.603
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.248,
+      "fn_max_mm_rev": 0.497
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.218,
+      "fn_max_mm_rev": 0.426
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.1.1, blind holes for dowels in furniture construction. Spur geometry with shear cut. The cutting-material badge is printed as artwork rather than text, so the tipped grade here follows the section structure: 6.1.2 and 6.1.3 are published as the tipped and solid upgrades of this tool."
+  },
+  {
+   "subfamily_id": "dowel_drill_premium_hw_tipped",
+   "section": "6.1.2",
+   "family": "dowel_drill",
+   "label": "Dowel drill, premium",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 4,
+   "diameter_max_mm": 10,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 9,
+    "diagram_page_pdf": 11,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.255,
+      "fn_max_mm_rev": 0.602
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.247,
+      "fn_max_mm_rev": 0.496
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.218,
+      "fn_max_mm_rev": 0.426
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.1.2. Spur geometry with high shear cut, for tear-free blind holes."
+  },
+  {
+   "subfamily_id": "dowel_drill_excellent_hw_solid",
+   "section": "6.1.3",
+   "family": "dowel_drill",
+   "label": "Dowel drill, solid carbide",
+   "edge_material": "HW_solid",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 3,
+   "diameter_max_mm": 10,
+   "rpm_min": 3000,
+   "rpm_max": 12000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 10,
+    "diagram_page_pdf": 12,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.334,
+      "fn_max_mm_rev": 0.807
+     },
+     {
+      "rpm": 7500,
+      "fn_min_mm_rev": 0.345,
+      "fn_max_mm_rev": 0.724
+     },
+     {
+      "rpm": 12000,
+      "fn_min_mm_rev": 0.289,
+      "fn_max_mm_rev": 0.538
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.1.3. Solid tungsten carbide, polished gullet. The fastest speed range in the chapter and the highest feed band with it."
+  },
+  {
+   "subfamily_id": "through_hole_drill",
+   "section": "6.2.1",
+   "family": "through_hole_drill",
+   "label": "Through-hole drill",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 5,
+   "diameter_max_mm": 12,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 13,
+    "diagram_page_pdf": 15,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.264,
+      "fn_max_mm_rev": 0.433
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.191,
+      "fn_max_mm_rev": 0.315
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.166,
+      "fn_max_mm_rev": 0.275
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.2.1, through holes in furniture construction. The cutting-material badge is artwork rather than text, so the tipped grade follows the section structure, as in 6.1.1."
+  },
+  {
+   "subfamily_id": "through_hole_drill_premium_hw_tipped",
+   "section": "6.2.2",
+   "family": "through_hole_drill",
+   "label": "Through-hole drill, premium",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 4.5,
+   "diameter_max_mm": 8,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": 4500,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 15,
+    "diagram_page_pdf": 17,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.249,
+      "fn_max_mm_rev": 0.492
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.237,
+      "fn_max_mm_rev": 0.413
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.197,
+      "fn_max_mm_rev": 0.326
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.2.2. V-point tip with two bevels, for exit-side quality."
+  },
+  {
+   "subfamily_id": "through_hole_drill_excellent_hw_solid",
+   "section": "6.2.3",
+   "family": "through_hole_drill",
+   "label": "Through-hole drill, solid carbide",
+   "edge_material": "HW_solid",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 3,
+   "diameter_max_mm": 10,
+   "rpm_min": 3000,
+   "rpm_max": 12000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 16,
+    "diagram_page_pdf": 18,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.249,
+      "fn_max_mm_rev": 0.492
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.237,
+      "fn_max_mm_rev": 0.413
+     },
+     {
+      "rpm": 9050,
+      "fn_min_mm_rev": 0.196,
+      "fn_max_mm_rev": 0.325
+     }
+    ],
+    "worked_example": null,
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.2.3. V-point tip with two bevels, solid tungsten carbide. The tool is rated to 12,000 rpm but its diagram draws the band only to about 9,000, so the band covers part of the speed range and the feed holds at that edge above it."
+  },
+  {
+   "subfamily_id": "through_hole_drill_dp",
+   "section": "6.2.4",
+   "family": "through_hole_drill",
+   "label": "Through-hole drill, diamond tipped",
+   "edge_material": "DP_tipped",
+   "teeth": 1,
+   "serves": true,
+   "diameter_min_mm": 5,
+   "diameter_max_mm": 10,
+   "rpm_min": 4000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 17,
+    "diagram_page_pdf": 19,
+    "points": [
+     {
+      "rpm": 4000,
+      "fn_min_mm_rev": 0.132,
+      "fn_max_mm_rev": 0.291
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.133,
+      "fn_max_mm_rev": 0.248
+     },
+     {
+      "rpm": 6500,
+      "fn_min_mm_rev": 0.133,
+      "fn_max_mm_rev": 0.242
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.133,
+      "fn_max_mm_rev": 0.22
+     }
+    ],
+    "worked_example": {
+     "rpm": 6000,
+     "vf_m_min": 1.0,
+     "fn_mm_rev": 0.1667
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.2
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.2.4. Diamond tipped for abrasive board: gypsum-bonded, cement-bonded and flame-resistant particle and fibre materials, and solid resin glulam. One cutting edge, not two."
+  },
+  {
+   "subfamily_id": "hinge_drill",
+   "section": "6.3.1",
+   "family": "hinge_drill",
+   "label": "Hinge drill",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 15,
+   "diameter_max_mm": 40,
+   "rpm_min": 2800,
+   "rpm_max": 7000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 20,
+    "diagram_page_pdf": 22,
+    "points": [
+     {
+      "rpm": 2800,
+      "fn_min_mm_rev": 0.193,
+      "fn_max_mm_rev": 0.561
+     },
+     {
+      "rpm": 4000,
+      "fn_min_mm_rev": 0.206,
+      "fn_max_mm_rev": 0.466
+     },
+     {
+      "rpm": 4800,
+      "fn_min_mm_rev": 0.206,
+      "fn_max_mm_rev": 0.423
+     },
+     {
+      "rpm": 6900,
+      "fn_min_mm_rev": 0.197,
+      "fn_max_mm_rev": 0.348
+     }
+    ],
+    "worked_example": {
+     "rpm": 4000,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.375
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.3.1, cup boring for concealed hinges. Protruding centre point for centring in solid wood."
+  },
+  {
+   "subfamily_id": "hinge_drill_hw_solid",
+   "section": "6.3.2",
+   "family": "hinge_drill",
+   "label": "Hinge drill, solid carbide",
+   "edge_material": "HW_solid",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 15,
+   "diameter_max_mm": 35,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 21,
+    "diagram_page_pdf": 23,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.16,
+      "fn_max_mm_rev": 0.667
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.178,
+      "fn_max_mm_rev": 0.665
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.184,
+      "fn_max_mm_rev": 0.554
+     }
+    ],
+    "worked_example": {
+     "rpm": 6000,
+     "vf_m_min": 2.5,
+     "fn_mm_rev": 0.4167
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.7
+    },
+    {
+     "material": "mdf_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "glulam",
+     "factor": 0.6
+    },
+    {
+     "material": "solid_wood",
+     "factor": 1.0
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.3.2, part WB 310 0 13. Round spur geometry, solid tungsten carbide, for tear-free edges in panels with glued edgebanding."
+  },
+  {
+   "subfamily_id": "hinge_drill_hw_solid_reinforced",
+   "section": "6.3.2",
+   "family": "hinge_drill",
+   "label": "Hinge drill, solid carbide, heavy duty",
+   "edge_material": "HW_solid",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 18,
+   "diameter_max_mm": 35,
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 23,
+    "diagram_page_pdf": 25,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.234,
+      "fn_max_mm_rev": 1.153
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.24,
+      "fn_max_mm_rev": 0.841
+     },
+     {
+      "rpm": 9000,
+      "fn_min_mm_rev": 0.243,
+      "fn_max_mm_rev": 0.737
+     }
+    ],
+    "worked_example": {
+     "rpm": 6000,
+     "vf_m_min": 3.5,
+     "fn_mm_rev": 0.5833
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.7
+    },
+    {
+     "material": "mdf_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "glulam",
+     "factor": 0.6
+    },
+    {
+     "material": "solid_wood",
+     "factor": 1.0
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.3.2, part WB 320 0 13, the heavier of the two solid-carbide hinge drills. It shares its section and its factor table with WB 310 0 13 but prints its own diagram, a higher band and its own worked example, so it is a separate entry rather than a variant."
+  },
+  {
+   "subfamily_id": "hinge_drill_turnblade",
+   "section": "6.3.3",
+   "family": "turnblade_hinge_drill",
+   "label": "Hinge drill, turnblade",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 35,
+   "diameter_max_mm": 35,
+   "rpm_min": 2800,
+   "rpm_max": 7000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 26,
+    "diagram_page_pdf": 28,
+    "points": [
+     {
+      "rpm": 2850,
+      "fn_min_mm_rev": 0.183,
+      "fn_max_mm_rev": 0.545
+     },
+     {
+      "rpm": 4000,
+      "fn_min_mm_rev": 0.199,
+      "fn_max_mm_rev": 0.459
+     },
+     {
+      "rpm": 4900,
+      "fn_min_mm_rev": 0.201,
+      "fn_max_mm_rev": 0.413
+     },
+     {
+      "rpm": 6950,
+      "fn_min_mm_rev": 0.193,
+      "fn_max_mm_rev": 0.343
+     }
+    ],
+    "worked_example": {
+     "rpm": 4000,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.375
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.3.3, part WL 920 0. Spurs and main cutting edge in turnblade form, replaceable centre point. Leitz calls it a diameter-constant tool and publishes it at 35 mm only. It is the evidence that the band width is an operating range and not a diameter spread: a single-diameter tool carries the same band as the 15-40 mm hinge drill at the same speed."
+  },
+  {
+   "subfamily_id": "hinge_drill_dp",
+   "section": "6.3.4",
+   "family": "hinge_drill",
+   "label": "Hinge drill, diamond tipped",
+   "edge_material": "DP_tipped",
+   "teeth": 2,
+   "serves": true,
+   "diameter_min_mm": 15,
+   "diameter_max_mm": 35,
+   "rpm_min": 2800,
+   "rpm_max": 7000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle"
+   ],
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 27,
+    "diagram_page_pdf": 29,
+    "points": [
+     {
+      "rpm": 2800,
+      "fn_min_mm_rev": 0.201,
+      "fn_max_mm_rev": 0.569
+     },
+     {
+      "rpm": 4000,
+      "fn_min_mm_rev": 0.21,
+      "fn_max_mm_rev": 0.47
+     },
+     {
+      "rpm": 4900,
+      "fn_min_mm_rev": 0.209,
+      "fn_max_mm_rev": 0.422
+     },
+     {
+      "rpm": 6950,
+      "fn_min_mm_rev": 0.199,
+      "fn_max_mm_rev": 0.348
+     }
+    ],
+    "worked_example": {
+     "rpm": 4000,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.375
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "chipboard_veneered_or_paper_coated",
+     "factor": 0.8
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant board. Leitz recommends it on automatic machines."
+  }
+ ]
 }

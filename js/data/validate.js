@@ -103,7 +103,8 @@ function validateDrills(drills, rules, errors) {
     return;
   }
 
-  const ratioRange = rules.drilling?.band_ratio_sanity ?? [1.4, 3.2];
+  const ratioRange = rules.drilling?.band_ratio_sanity ?? [1.3, 5.5];
+  const coverageMin = rules.drilling?.band_coverage_min ?? 0.6;
   const map = drills.material_factor_map;
   if (!map || !map.map) errors.push('drills.material_factor_map: missing');
   else {
@@ -194,9 +195,20 @@ function validateDrills(drills, rules, errors) {
           }
         });
 
+        // The band must sit inside the tool's speed range and cover most of it.
+        // Not all of it: a diagram sometimes draws its band over less than the
+        // range the tool is rated for (the solid-carbide through-hole drill is
+        // rated to 12,000 but its diagram stops near 9,000), and the polygons are
+        // drawn a whisker inside the axis ends. Where the band stops, the feed
+        // holds at that edge and the calculator says so. A band covering only a
+        // little of the range is the misread this catches.
         if (shapeOk && rpmOk) {
-          if (pts[0].rpm !== e.rpm_min || pts[pts.length - 1].rpm !== e.rpm_max) {
-            errors.push(`${id}: the feed band runs ${pts[0].rpm}-${pts[pts.length - 1].rpm} rpm but the tool publishes ${e.rpm_min}-${e.rpm_max}. A band that stops short of its own speed range is a misread diagram.`);
+          const bandLo = pts[0].rpm;
+          const bandHi = pts[pts.length - 1].rpm;
+          if (bandLo < e.rpm_min || bandHi > e.rpm_max) {
+            errors.push(`${id}: the feed band runs ${bandLo}-${bandHi} rpm, outside the tool's published ${e.rpm_min}-${e.rpm_max}. A band beyond its own speed range is reading the wrong diagram.`);
+          } else if ((bandHi - bandLo) / (e.rpm_max - e.rpm_min) < coverageMin) {
+            errors.push(`${id}: the feed band covers ${bandLo}-${bandHi} rpm of the tool's published ${e.rpm_min}-${e.rpm_max}, too little of the range to trust the read.`);
           }
         }
 

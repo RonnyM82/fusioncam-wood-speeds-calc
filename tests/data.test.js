@@ -9,6 +9,7 @@ import { machinePresets } from '../js/data/presets.js';
 import { availablePowerKw, torqueNm } from '../js/core/power.js';
 import { selectEntries, resolveBand, depthDerate } from '../js/core/chipload.js';
 import { calculate } from '../js/core/calculate.js';
+import { bandAtRpm, profileFn } from '../js/core/drilling.js';
 
 const data = loadData();
 
@@ -265,6 +266,48 @@ test('FIN', 'the finishing skim is pinned, sourced, and quoted by the UI hint', 
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert(html.includes(`assumes a ${data.rules.finishing.skim_ae_mm} mm skim`),
     'the width-of-cut hint must quote the rules.json skim value');
+});
+
+test('DRILLDATA', 'the drilling entries carry a sound chart read, checked against the diagrams themselves', () => {
+  const entries = data.drills.entries;
+  assert(entries.length >= 12, `expected the twelve read subfamilies, got ${entries.length}`);
+
+  const cov = data.rules.drilling.band_coverage_min;
+  let examples = 0;
+  for (const e of entries) {
+    const pts = e.feed_band.points;
+    const span = (pts[pts.length - 1].rpm - pts[0].rpm) / (e.rpm_max - e.rpm_min);
+    assert(span >= cov, `${e.subfamily_id}: the band covers only ${(span * 100).toFixed(0)}% of its speed range`);
+
+    // Every served entry must be reachable: its factor table has to answer at
+    // least one material the calculator offers, or the tool can never serve.
+    const reachable = Object.values(data.drills.material_factor_map.map)
+      .some((cands) => cands.some((c) => e.material_factors.some((f) => f.material === c)));
+    assert(reachable, `${e.subfamily_id}: no material the calculator offers reaches this factor table`);
+
+    const ex = e.feed_band.worked_example;
+    if (!ex) continue;
+    examples += 1;
+    // The strongest check available on a chart read: the diagram's own printed
+    // operating point must convert and land inside the band read off that diagram.
+    approx((ex.vf_m_min * 1000) / ex.rpm, ex.fn_mm_rev, { abs: 0.001 });
+    const at = bandAtRpm(e.feed_band, ex.rpm);
+    assert(ex.fn_mm_rev >= at.fnMin && ex.fn_mm_rev <= at.fnMax,
+      `${e.subfamily_id}: the printed example ${ex.fn_mm_rev} mm/rev is outside the read band ${at.fnMin}-${at.fnMax}`);
+  }
+  assert(examples >= 6, `only ${examples} entries carry a printed worked example to check against`);
+
+  // The hinge drill is the pinned read: its band at 4,000 rpm and the position of
+  // Leitz's own marked point on it. Standard is the midpoint by decision 8, so the
+  // marked point sits above Standard and below Aggressive, and that stays true.
+  const hinge = entries.find((e) => e.subfamily_id === 'hinge_drill');
+  const at4000 = bandAtRpm(hinge.feed_band, 4000);
+  approx(at4000.fnMin, 0.206, { abs: 0.001 });
+  approx(at4000.fnMax, 0.466, { abs: 0.001 });
+  const marked = hinge.feed_band.worked_example.fn_mm_rev;
+  const standard = profileFn(at4000, 'standard', data.rules.drilling.standard_band_position);
+  assert(standard < marked && marked < at4000.fnMax,
+    `the vendor's marked point ${marked} must sit above Standard ${standard} and below Aggressive ${at4000.fnMax}`);
 });
 
 // A valid drilling entry, built here rather than read from the file, so the gate is
