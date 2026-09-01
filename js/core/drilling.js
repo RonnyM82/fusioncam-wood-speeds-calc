@@ -237,7 +237,29 @@ export function calculateDrilling(input, data) {
   chartNotes.push(`Factor row ${factorMaterial} at ${factor}, against the ${entry.feed_band.baseline_material} baseline.`);
 
   const fnBase = profileFn(band, input.profile ?? 'standard', cfg.standard_band_position);
-  const fnMaterial = fnBase * factor;
+  let fnMaterial = fnBase * factor;
+
+  // Where the calculator substituted a correction, it can scale the whole band
+  // under the chip thickness at which a wood cutting edge stops cutting and
+  // starts rubbing. A rubbing drill burns the hole and the edge, so the feed is
+  // lifted back to the thinnest chip that still cuts (Scott, 2026-09-02).
+  //
+  // The lift is bounded by the tool's own unfactored value at this profile and
+  // speed. That ceiling matters: the factor is a reduction from the baseline
+  // material, so undoing part of it walks back toward a number the maker does
+  // publish, and stopping there means the lift can never claim more than the
+  // maker publishes for the easiest material it lists. Where even that ceiling
+  // sits under the floor the feed cannot be rescued, and the warning stands.
+  const floor = rules.chip_floor_mm_per_tooth?.plough_below;
+  const floorFn = floor > 0 ? floor * entry.teeth : 0;
+  let liftedTo = null;
+  if (substituted && fnMaterial < floorFn) {
+    const lifted = Math.min(floorFn, fnBase);
+    if (lifted > fnMaterial) {
+      fnMaterial = lifted;
+      liftedTo = lifted;
+    }
+  }
 
   const peck = peckPlan(entry.chip_clearing, D, input.holeDepthMm);
   const fnProg = fnMaterial * (peck?.feedFactor ?? 1);
@@ -261,20 +283,20 @@ export function calculateDrilling(input, data) {
       message: 'A machine limit holds this plunge below the slowest published feed. Below that the drill rubs instead of cutting, which burns the hole and the edge.',
     });
   }
-  // An absolute floor, but only where the calculator left the published data.
-  // Where the tool publishes a factor for the picked material, the low edge of
-  // its own band is the maker's own minimum and this floor has no standing to
-  // contradict it: the figure is a panel-routing number and a drill's chisel
-  // edge is not a router flute. Where no factor is published, the fallback
-  // scales the whole band by another material's factor, and that is the
-  // calculator's choice rather than the maker's, so it has to be checked.
-  const floor = rules.chip_floor_mm_per_tooth?.plough_below;
-  if (substituted && floor > 0 && fnDeliv / entry.teeth < floor) {
+  // The floor is checked on what is actually delivered, after the lift above and
+  // after any machine cap. A cap can undo the lift, and then the cut really is
+  // rubbing and has to say so. It is checked only where the calculator
+  // substituted a correction: where the tool publishes one for the picked
+  // material, the low edge of its own band is the maker's own minimum, and this
+  // figure is a panel-routing number with no standing to contradict it.
+  if (substituted && floorFn > 0 && fnDeliv < floorFn - 1e-9) {
     warnings.push({
       code: 'drill_chip_below_floor',
       severity: 'danger',
-      message: `Each cutting edge takes ${(fnDeliv / entry.teeth).toFixed(3)} mm. That is under the ${floor} mm at which a wood cutting edge stops cutting and starts rubbing, and this feed rests on a substituted correction rather than a published one. Raise the feed, drop the speed, or pick a drill published for this material.`,
+      message: `Each cutting edge takes ${(fnDeliv / entry.teeth).toFixed(3)} mm, under the ${floor} mm at which a wood cutting edge stops cutting and starts rubbing. This drill publishes nothing for the material you picked and its own numbers cannot reach a cutting chip here. Drop the speed, or pick a drill published for this material.`,
     });
+  } else if (liftedTo != null) {
+    notes.push(`The slowest correction this drill publishes would have had each cutting edge taking less than ${floor} mm, which rubs and burns rather than cutting. The feed is raised to the thinnest chip that still cuts, and no further than this drill's own published value for the material it is charted on.`);
   }
 
   // The spindle's honest power at the served speed. It caps nothing: no source in
@@ -331,6 +353,7 @@ export function calculateDrilling(input, data) {
       standardPosition: cfg.standard_band_position,
       fnBase,
       fnMaterial,
+      liftedToFloor: liftedTo,
       fnProg,
       fnDeliv,
       dMm: D,

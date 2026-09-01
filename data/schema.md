@@ -164,15 +164,25 @@ uncoated board, unmarked, at more than twice the 0.7 every other section prints
 for MDF. A coated panel is what the melamine pick means, so that row now sits
 behind coated chipboard there instead.
 
-**A pick that falls through to the conservative fallback is checked against an
-absolute floor.** The fallback scales a tool's whole band by another material's
-factor, which is the calculator's choice and not the maker's, and it can land the
-chip under the thickness at which a wood cutting edge rubs instead of cutting. The
-figure is the existing `chip_floor_mm_per_tooth.plough_below`, borrowed from panel
-routing and named as borrowed. It deliberately does **not** run where the tool
-publishes a factor for the picked material: there the low edge of the maker's own
-band is the maker's own minimum, and a panel-routing number has no standing to
-contradict it.
+**A pick that falls through to the conservative fallback is lifted to a cutting
+chip, not served rubbing** (Scott, 2026-09-02). The fallback scales a tool's whole
+band by another material's factor, which is the calculator's choice and not the
+maker's, and it can land the chip under the thickness at which a wood cutting edge
+rubs instead of cutting. Rubbing burns the hole and the edge, so the feed is raised
+to the thinnest chip that still cuts, and the page says it was raised.
+
+The lift is bounded by the tool's own unfactored value at that profile and speed.
+That ceiling is the point: a correction factor is a reduction from the baseline
+material, so undoing part of it walks back toward a number the maker does publish,
+and stopping there means the lift can never claim more than the maker publishes for
+the easiest material it lists. Where even that ceiling sits under the floor, the
+feed cannot be rescued and a warning stands instead. The floor is checked again on
+what is finally delivered, because a machine feed cap can undo the lift.
+
+The figure is the existing `chip_floor_mm_per_tooth.plough_below`, borrowed from
+panel routing and named as borrowed. None of this runs where the tool publishes a
+factor for the picked material: there the low edge of the maker's own band is the
+maker's own minimum, and a panel-routing number has no standing to contradict it.
 
 **Every entry records the workpiece list its own page prints.** Without it the
 diamond-tipped drills, which Leitz rates for abrasive board and does not list for

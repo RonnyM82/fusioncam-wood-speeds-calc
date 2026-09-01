@@ -286,12 +286,40 @@ test('DR22', 'the borrowed chip floor checks the calculator own substitutions, n
     'the case is only meaningful when the published number is under the borrowed floor');
   assert(!published.warnings.some((w) => w.code === 'drill_chip_below_floor'),
     'a borrowed floor must not contradict the maker own published minimum');
+  assert(published.meta.liftedToFloor == null, 'a published factor is never lifted');
+});
 
-  // Where the calculator substituted a factor, it must check its own work.
-  const substituted = run({ drillType: 'hinge_drill_hw_solid', diameterMm: 35, material: 'mdf', profile: 'gentle' });
-  assert(substituted.meta.factorSubstituted, 'this pick must fall through to the fallback');
-  assert(substituted.warnings.some((w) => w.code === 'drill_chip_below_floor'),
-    'a substituted factor that lands under the floor must say so');
+test('DR23', 'a substituted factor that would rub is lifted to a cutting chip, not left rubbing', () => {
+  const floor = data.rules.chip_floor_mm_per_tooth.plough_below;
+  const r = run({ drillType: 'hinge_drill_hw_solid', diameterMm: 35, material: 'mdf', profile: 'gentle' });
+  assert(r.meta.factorSubstituted, 'this pick must fall through to the fallback');
+  assert(r.meta.liftedToFloor != null, 'the feed must be lifted rather than served rubbing');
+  approx(r.outputs.feedPerToothMm, floor, { abs: 1e-9 });
+  assert(!r.warnings.some((w) => w.code === 'drill_chip_below_floor'), 'a lifted feed is no longer rubbing');
+  assert(r.notes.some((n) => /raised to the thinnest chip/.test(n)), 'the page must say the feed was raised');
+
+  // The lift is bounded by the tool's own unfactored value: it may walk back
+  // toward a number the maker publishes, never past one.
+  assert(r.meta.fnMaterial <= r.meta.fnBase + 1e-9,
+    `the lift reached ${r.meta.fnMaterial} mm/rev, past the maker own ${r.meta.fnBase}`);
+
+  // Sweep it: no substituted pick anywhere may be served under the floor unless
+  // the tool's own numbers genuinely cannot reach it, and then it must warn.
+  let lifted = 0;
+  for (const e of data.drills.entries) {
+    for (const material of ['plywood', 'softwood_ply', 'hpl', 'mdf', 'hardwood']) {
+      for (const profile of data.rules.drilling.profiles_offered) {
+        const x = calculateDrilling({ ...BASE, drillType: e.subfamily_id, diameterMm: e.diameter_min_mm, material, profile }, data);
+        if (x.status !== 'ok' || !x.meta.factorSubstituted) continue;
+        if (x.meta.liftedToFloor != null) lifted += 1;
+        const rubbing = x.outputs.feedPerToothMm < floor - 1e-9;
+        const warned = x.warnings.some((w) => w.code === 'drill_chip_below_floor');
+        assert(!rubbing || warned, `${e.subfamily_id}/${material}/${profile} serves a rubbing chip in silence`);
+        assert(x.meta.fnMaterial <= x.meta.fnBase + 1e-9, `${e.subfamily_id}: the lift went past the maker own value`);
+      }
+    }
+  }
+  assert(lifted > 0, 'the sweep must actually exercise the lift');
 });
 
 test('DRUI1', 'every drill the picker offers serves a number at every size it offers', () => {
