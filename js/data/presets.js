@@ -11,6 +11,12 @@ export function machinePresets(machines, rules) {
       note = `${note ? `${note} ` : ''}This machine publishes no spindle power. The reference default of ${kw} kW serves.`;
     }
     const rpmMax = m.rpm_max ?? (Array.isArray(m.rpm) ? m.rpm[1] : undefined);
+    // The bottom of a published speed range, read from 2026-09-02 for drilling.
+    // It stays undefined where a machine publishes no floor, and undefined means
+    // "not published", never "no floor": absence must not manufacture a warning.
+    // Routing does not read it. Drilling does, because a drill's speed range sits
+    // below where many router spindles are rated to run.
+    const rpmMin = m.rpm_min ?? (Array.isArray(m.rpm) ? m.rpm[0] : undefined);
     let feedMMin = m.cut_feed_m_min ?? m.cut_m_min;
     if (feedMMin == null) {
       feedMMin = rules.defaults.max_feed_m_min;
@@ -23,6 +29,7 @@ export function machinePresets(machines, rules) {
         spindleKw: kw,
         breakpointRpm: m.breakpoint_rpm ?? rules.defaults.breakpoint_rpm,
         rpmMax,
+        rpmMin,
         feedMaxMmMin: feedMMin * 1000,
         accelMs2: m.accel_m_s2 ?? machines.acceleration_tiers_m_s2.heavy_nesting_default,
         vacuum: { mu: machines.vacuum.mu_default, dPkPa: machines.vacuum.default_kpa },

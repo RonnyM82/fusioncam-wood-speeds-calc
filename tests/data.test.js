@@ -200,6 +200,19 @@ test('PRESET', 'machine presets normalise, disclose assumptions, and the generic
     assert(p.machine.spindleKw > 0, `${p.id}: no usable spindle power`);
     assert(p.machine.feedMaxMmMin > 0, `${p.id}: no usable feed cap`);
   }
+  // The bottom of a published speed range, read from 2026-09-02 for drilling.
+  // Undefined must stay undefined: it means the machine publishes no floor, and
+  // a zero there would invent a floor and with it a warning nobody sourced.
+  approx(presets.find((p) => p.id.includes('Morbidelli X50')).machine.rpmMin, 1500, { abs: 0 });
+  approx(presets.find((p) => p.id.includes('M100')).machine.rpmMin, 1800, { abs: 0 });
+  approx(generic.machine.rpmMin, 12000, { abs: 0 });
+  assert(presets.find((p) => p.id.includes('Heliner')).machine.rpmMin === undefined,
+    'the Heliner publishes no speed floor, so it must report none');
+  for (const p of presets) {
+    const { rpmMin, rpmMax } = p.machine;
+    assert(rpmMin === undefined || rpmMin > 0, `${p.id}: a published floor must be positive`);
+    assert(rpmMin === undefined || rpmMax === undefined || rpmMin < rpmMax, `${p.id}: floor at or above ceiling`);
+  }
 });
 
 test('HELINER', 'the Heliner spindle stays constant-torque to 24,000 rpm', () => {

@@ -30,6 +30,10 @@ if (!which || which === 'scenario') {
   else if (which === 'scenario') { console.log('FAIL - scenario.test.js missing'); purityErrors++; }
 }
 
+if (!which || which === 'drilling') {
+  if (existsSync(join(here, 'drilling.test.js'))) await import('./drilling.test.js');
+  else if (which === 'drilling') { console.log('FAIL - drilling.test.js missing'); purityErrors++; }
+}
 const { passed, failed } = await runAll();
 console.log(`\n${passed} passed, ${failed + purityErrors} failed`);
 if (failed + purityErrors > 0) process.exitCode = 1;
