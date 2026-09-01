@@ -186,21 +186,13 @@ SUBFAMILIES = [
          note="Section 6.4.1. Tungsten carbide tipped, double heel for guidance on the way in and on the return "
               "stroke. Its page carries the first published chip-clearing rule in the served set: past four times "
               "the drill diameter, retract to clear the flutes."),
-    dict(id="levin_drill_hs_solid", section="6.4.2", band_page=43, pages=[43],
-         parts=["WB 100 0"],
-         family="levin_drill", label="Levin drill, high speed steel", edge="HS_solid", materials=WOOD,
-         clearing=[dict(kind="no_clearing_stroke_to_ratio", ratio_of_d=4)],
-         note="Section 6.4.2, deep holes in solid timber. A spiral flute with a large chip gullet, which is why it "
-              "reaches four times its diameter with no clearing stroke at all. Its printed workpiece list is "
-              "softwood and hardwood only. The one factor its page prints is a depth rule, not a material one."),
-    dict(id="levin_drill_hw", section="6.4.2", band_page=44, pages=[44],
-         parts=["WB 110 0"],
-         family="levin_drill", label="Levin drill, carbide", edge="HW_solid",
-         materials=WOOD + ["plywood", "softwood_ply"],
-         clearing=[dict(kind="no_clearing_stroke_to_depth_mm", depth_mm=75)],
-         note="Section 6.4.2, deep holes in solid timber, laminated veneer lumber and glued lumber, and joint holes "
-              "in timber frame work. Rated to 75 mm deep with no clearing stroke, which Leitz states as an absolute "
-              "depth rather than a multiple of the diameter."),
+    # Section 6.4.2, the Levin drills, is deliberately not here (Scott,
+    # 2026-09-02). They passed their read and they qualify on their machine list,
+    # because it names multi spindle units, but their stated job is joint holes
+    # in timber frame construction and their machine list carries no CNC
+    # machining centre at all. This calculator is for cabinet making, and a
+    # structural-timber drill does not belong in the picker just because a rule
+    # let it through. Their read stays in research/leitz-drilling-read.json.
 ]
 
 

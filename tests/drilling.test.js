@@ -104,6 +104,29 @@ test('DR6', 'the peck output stays silent where the source publishes no rule', (
   }
 });
 
+test('DR24', 'a drill with no published rule gets a borrowed suggestion, clearly borrowed, that moves no number', () => {
+  const ratio = data.rules.drill_peck_suggestion.suggest_beyond_ratio_of_d;
+  const e = data.drills.entries.find((x) => x.subfamily_id === 'dowel_drill_hw_tipped');
+  assert(e.chip_clearing === null, 'this drill must publish no rule of its own');
+
+  const shallow = run({ drillType: e.subfamily_id, diameterMm: 8, holeDepthMm: 8 * ratio - 1 });
+  assert(shallow.meta.suggestedPeckMm == null, 'nothing to say inside the borrowed boundary');
+
+  const deep = run({ drillType: e.subfamily_id, diameterMm: 8, holeDepthMm: 8 * ratio + 10 });
+  approx(deep.meta.suggestedPeckMm, 8 * ratio, { abs: 1e-9 });
+  assert(deep.notes.some((n) => /borrowed from another drill, not published for this one/.test(n)),
+    'a borrowed suggestion must say it is borrowed');
+  // It advises, it does not serve. The feed and the peck output are untouched.
+  approx(deep.outputs.plungeFeedMmMin, shallow.outputs.plungeFeedMmMin, { rel: 1e-12 });
+  assert(deep.outputs.peckStepMm === null, 'a borrowed suggestion must not fill the published peck row');
+
+  // And it never speaks over a drill that does publish its own rule.
+  const own = data.drills.entries.find((x) => x.chip_clearing);
+  const r = run({ drillType: own.subfamily_id, diameterMm: own.diameter_min_mm, holeDepthMm: own.diameter_min_mm * 20 });
+  assert(r.meta.suggestedPeckMm == null, 'a published rule must not be second-guessed by a borrowed one');
+  assert(r.outputs.peckStepMm != null, 'the published rule still serves its own step');
+});
+
 test('DR7', 'a published clearing rule does produce a plan, so the silence above is data and not a dead path', () => {
   const clearing = {
     rules: [
@@ -226,7 +249,7 @@ test('DR17', 'every served entry produces a number at its own published extremes
       }
     }
   }
-  assert(served === data.drills.entries.filter((e) => e.serves).length && served >= 16,
+  assert(served === data.drills.entries.filter((e) => e.serves).length && served >= 14,
     `expected every served subfamily to be swept, got ${served}`);
 });
 

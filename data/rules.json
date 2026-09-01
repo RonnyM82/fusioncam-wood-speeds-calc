@@ -121,6 +121,13 @@
   "source": "session-5-drilling",
   "data_class": "project_decision"
  },
+ "drill_peck_suggestion": {
+  "suggest_beyond_ratio_of_d": 4,
+  "changes_the_feed": false,
+  "note": "most drills publish no chip-clearing rule at all, and saying nothing about a 5xD dowel hole is unhelpful when the chapter twice says what happens in a deep one (Scott, 2026-09-02). Past this depth the calculator suggests a clearing stroke on a drill whose own page publishes no rule, and labels the suggestion as borrowed rather than published. Two rules in the chapter carry it. The double-heel twist drill states a clearing stroke past 4xD, and the small boring pins make an interim chip-removal stroke obligatory in hardwood and glulam with a maximum infeed of 2xD, so the harder of the two published rules is stricter than the figure used here. It never overrides a tool's own published rule, and it deliberately does not touch the served feed: a suggestion may change what the user does, and only a published number may change what the calculator serves.",
+  "source": "session-5-drilling",
+  "data_class": "project_decision"
+ },
  "drilling_attribution": {
   "render_vendor_name": false,
   "note": "no vendor name renders anywhere in the drilling output (Scott, 2026-09-01, decision 7), a deliberate departure from routing, where the limit line and the chart ladder both name the serving chart. Provenance stays complete in data/drills.json, and only the rendering changes. The core enforces this by what it omits: a drilling result carries no contributors and no servingBands key, so the routing chart ladder cannot be pointed at one. Decision 4 (on irreconcilable disagreement the most conservative source serves alone) is recorded and dormant, because only one source serves drilling and nothing can yet disagree with it.",

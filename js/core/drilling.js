@@ -267,6 +267,20 @@ export function calculateDrilling(input, data) {
   const peck = peckPlan(entry.chip_clearing, D, input.holeDepthMm);
   const fnProg = fnMaterial * (peck?.feedFactor ?? 1);
 
+  // Where a drill publishes no clearing rule, suggest one past the depth the
+  // rules that do publish put the boundary at. This is a suggestion and not a
+  // served number: it is labelled as borrowed and it does not move the feed.
+  // Only a published rule may do that.
+  const sug = rules.drill_peck_suggestion;
+  let suggestedPeck = null;
+  if (!entry.chip_clearing && sug && input.holeDepthMm > 0 && D > 0) {
+    const ratio = input.holeDepthMm / D;
+    if (ratio > sug.suggest_beyond_ratio_of_d) {
+      suggestedPeck = sug.suggest_beyond_ratio_of_d * D;
+      notes.push(`This hole is ${ratio.toFixed(1)} times the drill diameter deep. This drill publishes no chip-clearing rule, but the drills that do publish one put the boundary at ${sug.suggest_beyond_ratio_of_d} times the diameter, so consider retracting to clear the flutes about every ${suggestedPeck.toFixed(0)} mm. That is borrowed from another drill, not published for this one, and it does not change the feed above.`);
+    }
+  }
+
   // feed = speed x feed-per-revolution. No flute count: the published band already
   // counts every cutting edge, so multiplying by the tooth count would double it.
   const idealMmMin = fnProg * rpm;
@@ -362,6 +376,7 @@ export function calculateDrilling(input, data) {
       dMm: D,
       holeDepthMm: input.holeDepthMm ?? null,
       peck,
+      suggestedPeckMm: suggestedPeck,
       drillBank: onBank,
       availKw,
       material: input.material,

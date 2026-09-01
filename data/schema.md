@@ -82,28 +82,31 @@ stay in lockstep. Conventions rather than data live in three new `rules.json`
 blocks: `drilling`, `drilling_attribution` and `drill_bank`, under the new
 `session-5-drilling` source key.
 
-**Sixteen entries.** Dowel drills (6.1.1 to 6.1.3), through-hole drills (6.2.1 to
-6.2.4), hinge drills (6.3.1 to 6.3.4), twist drills (6.4.1) and Levin drills
-(6.4.2).
+**Fourteen entries.** Dowel drills (6.1.1 to 6.1.3), through-hole drills (6.2.1
+to 6.2.4), hinge drills (6.3.1 to 6.3.4) and twist drills (6.4.1).
 
-**The 6.4 tools were added on 2026-09-02**, after the claim that all of 6.4 was
-drill-press equipment turned out to be wrong. Every one of them lists multi
-spindle units, which are drill banks, and the twist drills also list CNC
-machining centres. They matter for two reasons. The solid-carbide twist drill is
-the only tool in the served set that goes under 3 mm, publishing 2, 2.5, 3, 3.2,
-3.5, 4 and 5 mm. And they carry the only chip-clearing rules in the served set,
-so they are what turns the peck output on: a clearing stroke past four diameters
-on the double-heel twist drill, no stroke needed to four diameters on the HSS
-Levin drill, none to 75 mm on the carbide one, and a feed cut of 20% past four
-diameters on both Levin drills.
+**The twist drills were added on 2026-09-02**, after the claim that all of
+chapter 6.4 was drill-press equipment turned out to be wrong: they list CNC
+machining centres and multi spindle units on their own pages. They matter twice
+over. The solid-carbide one is the only tool in the served set that goes under
+3 mm, publishing 2, 2.5, 3, 3.2, 3.5, 4 and 5 mm. And the double-heel one carries
+the only published chip-clearing rule in the served set, a clearing stroke past
+four times the diameter, which is what turns the peck output on at all.
 
-Two things about those pages needed handling. Their machine lists differ per
-page, unlike sections 6.1 to 6.3 which all print one list, so `machine_classes`
-is now read from each page's own printed text rather than assumed. And the Levin
-pages print a depth rule, "Drilling depth > 4 x D = 0.8", in the place a material
-factor table would sit. It is not a material correction and is routed to
-`chip_clearing` instead, where the calculator applies it to the whole cycle and
-says on the page that it did.
+Machine lists are now read from each page's own printed text rather than
+assumed, because 6.4 does not print one list for the whole section the way 6.1
+to 6.3 do. A page that prints a depth rule where a material factor table would
+sit, as the Levin pages do with "Drilling depth > 4 x D = 0.8", has it routed to
+`chip_clearing` rather than read as a material correction, and the builder stops
+on any factor row it has no vocabulary for.
+
+**Section 6.4.2, the Levin drills, is deliberately absent** (Scott, 2026-09-02).
+They pass their read and they qualify on their machine list, which names multi
+spindle units, but their stated job is joint holes in timber frame construction
+and their machine list carries no CNC machining centre at all. This calculator is
+for cabinet making, and a structural-timber drill does not belong in the picker
+because a scope rule happened to let it through. Their read stays in
+`research/leitz-drilling-read.json`.
 
 **What is not here, and why, corrected 2026-09-02.** This is a first pass, not the
 whole of the served scope. An earlier version of this section said chapter 6.4 was
@@ -162,11 +165,19 @@ falls across all of them. On a tool whose diagram does reach 12,000 rpm, holding
 feed per revolution from 7,500 would have served about 35% more feed than the
 diagram prints there.
 
-**No entry publishes a chip-clearing rule**, so every `chip_clearing` is an explicit
-`null` and the peck output stays silent for every v1 tool. That is decision 5's
-case, not a gap in the ingest: the in-scope pages print no peck rule. The published
-rules the research found belong to the boring pins and to chapter 6.4, both out of
-this pass.
+**One entry publishes a chip-clearing rule**, the double-heel twist drill, and
+every other `chip_clearing` is an explicit `null`. Where a drill publishes
+nothing, `rules.drill_peck_suggestion` offers a borrowed one past four times the
+diameter (Scott, 2026-09-02), because saying nothing about a five-diameter dowel
+hole is unhelpful when the chapter twice says what happens in a deep one. It is
+carried by two published rules: the twist drill's stroke past 4xD, and the boring
+pins' obligatory interim stroke with a maximum infeed of 2xD in hardwood and
+glulam, which is stricter than the figure used.
+
+The line between the two is deliberate and visible on the page. A published rule
+fills the peck row and may change the served feed. A borrowed one is a note that
+says it is borrowed, and it moves no number: a suggestion may change what the
+user does, and only a published number may change what the calculator serves.
 
 **Printed factor rows are merged into the vocabulary, never renamed silently.** Two
 printed rows can map to one key, as "Veneered" and "Paper coated" both do at 0.8,
