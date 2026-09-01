@@ -13,6 +13,7 @@ unit. Both sides pin these shapes with tests.
 | 2026-09-01 | 1 | Corrections from the adversarial review, before any release, so no bump: the depth rule gates on `doMultipleDepths` for every levelled 2D strategy, an ambiguous cut direction serves the climb force model, `pageError` added, `opId` may never be null, regenReport rows carry `failed` with a reason, dumps ship null memory blobs. |
 | 2026-09-01 | 1 | The Windows spike folded in, no bump: identity is `operationId`; feeds and angles are raw mm/min and degrees; the pocket reads `compensation`; the setup Z extents are `stockZHigh`, `stockZLow`, `surfaceZHigh`, `surfaceZLow`; pocket width is `maximumStepover`; the finishing names corrected; the write order is spindle then cutting feed with the feed per tooth never written; drill rows write the plunge feed; `params.useStockToLeave` and `setup.machine` added as optional fields; the panel address carries `build` and `theme`. |
 | 2026-09-02 | 1 | Heights corrected, no bump: a `from contour`, `from hole top`, `from hole bottom` or `from point` height never reaches Fusion's `_value` parameter, so the add-in resolves it from the selected geometry through the setup frame and ships `zSource` and `zSpreadMm` beside `zMm` (additive). Drilling serves: the `drill` row of the mapping table maps to the drilling core, the tool identity guesses a drill family, and a drill apply row carries `rpm` and `plungeMmMin` only. |
+| 2026-09-02 | 1 | A drill described as a brad point auto-confirms as a dowel drill (Scott's rule): `identifyTool` returns `guessCertain` and the panel skips that one confirmation. Page-side only, no wire change. |
 
 ## Versioning rules
 
@@ -360,7 +361,7 @@ export function makeApply(jobId, rows) {}
 
 ```js
 // rawTool is the job message tool shape above.
-// Returns { key, kind, guess, guessSource, seriesMatches }.
+// Returns { key, kind, guess, guessSource, guessCertain, seriesMatches }.
 //   key:    "onsrud|60-123" when a product id exists, else a stable digest of
 //           type, diameter, flutes and description.
 //   kind:   "router" | "drill" | "ball" | "chamfer", from Fusion's tool type
@@ -372,7 +373,12 @@ export function makeApply(jobId, rows) {}
 //           the family ids of js/ui/drill-tables.js. Other kinds: null.
 //   guessSource: "product_id" | "description" | null.
 //   seriesMatches: [{ vendor, series }] from chiploads.json entries.
-// The guess prefills the pick. Only the user's confirmation makes it real.
+//   guessCertain: true only for a drill whose description says "brad" and
+//           no other family word: a brad point is the dowel drill's own
+//           tip geometry, so the panel serves that pick unconfirmed
+//           (Scott's rule, 2026-09-02). The user can still change it.
+// The guess prefills the pick. Only the user's confirmation makes it real,
+// except the certain brad point above.
 export function toolKind(typeString) {}
 export function identifyTool(rawTool, chiploads) {}
 ```

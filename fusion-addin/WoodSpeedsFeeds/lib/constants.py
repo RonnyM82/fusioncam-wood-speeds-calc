@@ -21,7 +21,7 @@ PROTOCOL_VERSION = 1
 # palette's browser serves a stale copy of the page after an update
 # (spike-results-windows.md section 11, wait-code item 6). Bump the
 # date on every add-in change that ships.
-ADDIN_BUILD = ADDIN_VERSION + "-2026-09-02"
+ADDIN_BUILD = ADDIN_VERSION + "-2026-09-02b"
 
 PANEL_ID = "wsfPanel"
 PANEL_NAME = "Wood speeds and feeds"

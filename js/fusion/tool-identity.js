@@ -4,9 +4,12 @@
 // enforces this for the whole js/fusion/ directory.
 //
 // The guess only prefills the pick in the panel. The user's confirmation
-// makes it real (decision A3, 2026-09-01). Matching is conservative by
-// design: when the strings do not agree, the answer is no guess, never a
-// plausible one, because a wrong prefill invites a wrong confirmation.
+// makes it real (decision A3, 2026-09-01), with one exception: a drill
+// described as a brad point IS the dowel drill, so that pick arrives
+// confirmed (Scott's rule, 2026-09-02, guessCertain below). Matching is
+// conservative by design: when the strings do not agree, the answer is no
+// guess, never a plausible one, because a wrong prefill invites a wrong
+// confirmation.
 
 // Geometry classes from chiploads.json that map onto the four confirmable
 // tool types. Every class absent here (finisher, chipbreaker_finisher, the
@@ -42,6 +45,14 @@ const DRILL_PATTERNS = [
   { type: 'dowel', re: /\bdowel\b|\bbrad\b/ },
   { type: 'twist', re: /\btwist\b|\bjobber\b/ },
 ];
+
+// The word that makes the dowel guess certain (Scott's rule, 2026-09-02).
+// "Brad point" names the dowel drill's own tip, the centre point and two
+// spurs, so a drill described that way serves with no confirmation
+// question. The cancel rule above still stands: a description that also
+// names another family asks, because a brad-point twist drill is a real
+// tool.
+const BRAD = /\bbrad\b/;
 
 // A family prefix is everything up to and including the first digit after
 // the first dash. "60-104" gives "60-1", so it matches "60-100MW" and
@@ -181,7 +192,8 @@ export function toolKind(typeString) {
 }
 
 // rawTool is the job message tool shape in fusion-addin/protocol.md.
-// Returns { key, kind, guess, guessSource, seriesMatches }. The guess
+// Returns { key, kind, guess, guessSource, guessCertain, seriesMatches }.
+// guessCertain is true only for the certain brad point above. The guess
 // prefills the one question the tool takes: a geometry for a router bit
 // (upcut, downcut, compression, straight), a family for a drill (dowel,
 // through, hinge, twist; 2026-09-02), nothing for the other kinds.
@@ -193,6 +205,7 @@ export function identifyTool(rawTool, chiploads) {
   // the tool, not a pick.
   let guess = null;
   let guessSource = null;
+  let guessCertain = false;
   if (kind === 'router') {
     if (idGuess) {
       guess = idGuess;
@@ -211,8 +224,10 @@ export function identifyTool(rawTool, chiploads) {
     if (textGuess) {
       guess = textGuess;
       guessSource = 'description';
+      guessCertain = textGuess === 'dowel'
+        && BRAD.test(`${collapse(rawTool.description)} ${collapse(rawTool.comment)}`.toLowerCase());
     }
   }
 
-  return { key: toolKey(rawTool), kind, guess, guessSource, seriesMatches: matches };
+  return { key: toolKey(rawTool), kind, guess, guessSource, guessCertain, seriesMatches: matches };
 }

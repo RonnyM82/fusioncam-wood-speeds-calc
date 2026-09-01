@@ -179,6 +179,7 @@ test('FI18', 'a drill is kind drill, guesses a drill family from its description
   const r = identifyTool(tool({ typeString: 'drill', description: '3dia Brad Point compression', vendor: 'Heliner', productId: '' }), chiploads);
   assert(r.kind === 'drill', `expected kind drill, got ${r.kind}`);
   assert(r.guess === 'dowel' && r.guessSource === 'description', `expected dowel from the description, got ${r.guess} from ${r.guessSource}`);
+  assert(r.guessCertain === true, 'a brad point arrives certain and serves with no question (Scott, 2026-09-02)');
   const spot = identifyTool(tool({ typeString: 'spot drill', productId: '' }), chiploads);
   assert(spot.kind === 'drill', 'a spot drill is a drill');
   assert(spot.guess === null && spot.guessSource === null, 'a drill with no family word guesses nothing');
@@ -222,4 +223,17 @@ test('FI21', 'drill family words: hinge, through, dowel, twist; two families can
   assert(router.kind === 'router' && router.guess === 'compression', 'a router bit reads its geometry, never a drill family');
   const ball = identifyTool(tool({ typeString: 'ball end mill', description: 'hinge', productId: '' }), chiploads);
   assert(ball.guess === null, 'a ball-nose takes no guess of either kind');
+});
+
+test('FI22', 'only the brad point auto-confirms: dowel by word still asks, and a family clash still cancels', () => {
+  const brad = identifyTool(tool({ typeString: 'drill', description: '3 mm brad point', productId: '' }), chiploads);
+  assert(brad.guess === 'dowel' && brad.guessCertain === true, `expected a certain dowel, got ${brad.guess}, certain ${brad.guessCertain}`);
+  const dowel = identifyTool(tool({ typeString: 'drill', description: 'dowel drill 8mm', productId: '' }), chiploads);
+  assert(dowel.guess === 'dowel' && dowel.guessCertain === false, 'the word dowel still takes a confirmation');
+  const clash = identifyTool(tool({ typeString: 'drill', description: 'brad point twist drill', productId: '' }), chiploads);
+  assert(clash.guess === null && clash.guessCertain === false, 'a brad-point twist drill is a real tool, so the clash still asks');
+  const hinge = identifyTool(tool({ typeString: 'drill', description: '35 mm hinge drill', productId: '' }), chiploads);
+  assert(hinge.guessCertain === false, 'every other family guess waits for the user');
+  const router = identifyTool(tool({ description: 'brad point cutter', productId: '' }), chiploads);
+  assert(router.kind === 'router' && router.guessCertain === false, 'a router bit never auto-confirms');
 });

@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-02b';
+const PAGE_BUILD = '2026-09-02c';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -457,7 +457,12 @@ function buildTools(job) {
           kind: id.kind,
           geometry: id.kind === 'router' ? id.guess : null,
           drillFamily: id.kind === 'drill' ? id.guess : null,
-          confirmed: false,
+          // A certain guess needs no question: today that is only the brad
+          // point, which is the dowel drill (Scott's rule, 2026-09-02).
+          // The pick still shows in the tools section and the user can
+          // change it, and a record from memory wins over this whole
+          // branch.
+          confirmed: id.guessCertain === true,
           upcutLengthMm: null,
         });
       } else {

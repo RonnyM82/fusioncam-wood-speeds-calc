@@ -125,6 +125,13 @@ const TOOL_HINGE = makeTool({
   description: 'Harness tool: 35 mm hinge drill',
 });
 
+// A brad point serves as a dowel drill with no question (Scott's rule,
+// 2026-09-02): this row must arrive already confirmed.
+const TOOL_BRAD = makeTool({
+  typeString: 'drill', diameterMm: 3, flutes: 2, fluteLengthMm: 35, shoulderLengthMm: 40,
+  description: 'Harness tool: 3 mm brad point',
+});
+
 const TOOL_BALL = makeTool({
   typeString: 'ball end mill', diameterMm: 8, cornerRadiusMm: 4, flutes: 2,
   fluteLengthMm: 24, shoulderLengthMm: 30,
@@ -226,6 +233,14 @@ function makeJob() {
             // The unresolved case: a geometry-mode bottom the add-in could
             // not read. The card must refuse and name the mode.
             heights: { top: makeHeights(18, 0).top, bottom: geometryHeight('from contour', null) },
+            currentFeeds: makeFeeds(),
+          },
+          {
+            opId: 'harness-op-11', name: 'Pilot holes',
+            strategy: 'drill', suppressed: false, isValid: true, hasToolpath: true,
+            tool: TOOL_BRAD,
+            params: makeParams({}),
+            heights: { top: geometryHeight('from hole top', 18), bottom: geometryHeight('from hole bottom', 10) },
             currentFeeds: makeFeeds(),
           },
           {
