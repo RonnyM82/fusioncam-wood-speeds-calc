@@ -146,8 +146,6 @@ function guessFromText(rawTool) {
   return hits.size === 1 ? [...hits][0] : null;
 }
 
-// rawTool is the job message tool shape in fusion-addin/protocol.md.
-// Returns { key, guess, guessSource, seriesMatches }.
 // The tool kind, from Fusion's own tool type string (spike-results-windows.md
 // section 4: "flat end mill", "ball end mill", "drill" were read on the test
 // file inside Fusion; the tool library schema names the rest). The geometry question,
@@ -170,6 +168,8 @@ export function toolKind(typeString) {
   return 'router';
 }
 
+// rawTool is the job message tool shape in fusion-addin/protocol.md.
+// Returns { key, kind, guess, guessSource, seriesMatches }.
 export function identifyTool(rawTool, chiploads) {
   const kind = toolKind(rawTool?.typeString);
   const { matches, idGuess } = matchSeries(rawTool, chiploads);

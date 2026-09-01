@@ -337,13 +337,17 @@ export function makeApply(jobId, rows) {}
 
 ```js
 // rawTool is the job message tool shape above.
-// Returns { key, guess, guessSource, seriesMatches }.
+// Returns { key, kind, guess, guessSource, seriesMatches }.
 //   key:    "onsrud|60-123" when a product id exists, else a stable digest of
 //           type, diameter, flutes and description.
+//   kind:   "router" | "drill" | "ball" | "chamfer", from Fusion's tool type
+//           string (added 2026-09-01). Only a router bit takes the geometry
+//           question; the other kinds carry no guess.
 //   guess:  "upcut" | "downcut" | "compression" | "straight" | null.
 //   guessSource: "product_id" | "description" | null.
 //   seriesMatches: [{ vendor, series }] from chiploads.json entries.
 // The guess prefills the pick. Only the user's confirmation makes it real.
+export function toolKind(typeString) {}
 export function identifyTool(rawTool, chiploads) {}
 ```
 
