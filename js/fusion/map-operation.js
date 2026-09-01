@@ -6,7 +6,9 @@
 //
 // Three rules govern every branch (protocol.md, 2026-09-01):
 // 1. Never invent a value. A null raw fact the policy needs makes the
-//    operation unreadable, with a sentence that names the missing fact.
+//    operation unreadable, with a sentence that names the missing fact and
+//    the values that were read, in millimetres to one decimal, so a
+//    screenshot of the reason alone shows what Fusion sent (2026-09-01).
 // 2. Never touch material, machine, rpm or profile. Those are panel state.
 //    profileOverride is the one exception: "finishing" on a marked finish
 //    row, null otherwise.
@@ -58,10 +60,10 @@ export function mapOperation(op, choices = {}) {
 
   const tool = op.tool ?? {};
   if (tool.diameterMm == null) {
-    return { status: 'unreadable', reason: 'The add-in could not read the tool diameter.' };
+    return { status: 'unreadable', reason: `The add-in could not read the tool diameter (flute count ${countRead(tool.flutes)}).` };
   }
   if (tool.flutes == null) {
-    return { status: 'unreadable', reason: 'The add-in could not read the flute count.' };
+    return { status: 'unreadable', reason: `The add-in could not read the flute count (tool diameter ${mm(tool.diameterMm)} mm).` };
   }
 
   const depth = readDepth(op);
@@ -79,7 +81,8 @@ export function mapOperation(op, choices = {}) {
     aeMm = null;
   } else if (ADAPTIVE_STRATEGIES.has(strategy)) {
     if (op.params?.optimalLoadMm == null) {
-      return { status: 'unreadable', reason: 'The add-in could not read the optimal load for this adaptive operation.' };
+      const depthRead = depth.perPass ? `${mm(depth.apMm)} mm per pass` : `${mm(depth.apMm)} mm in one pass`;
+      return { status: 'unreadable', reason: `The add-in could not read the optimal load for this adaptive operation (tool diameter ${mm(tool.diameterMm)} mm, depth ${depthRead}).` };
     }
     aeMm = op.params.optimalLoadMm;
   } else {
@@ -118,35 +121,41 @@ export function mapOperation(op, choices = {}) {
 // stale stepdown served as a pass depth understates the cut. The 3D
 // adaptive has no such box: its stepdown is always active, and a null
 // stepdownMm is unreadable.
+//
+// Every refusal below names the heights and the stepdown as the add-in sent
+// them, so a screenshot of the reason shows what was read. The live-run
+// audit (2026-09-01) found rows refused with no numbers, and nobody could
+// tell whether the add-in or the job was at fault. A null reads "not read".
 function readDepth(op) {
   const p = op.params ?? {};
   const totalMm = totalDepthMm(op);
+  const top = op.heights?.top?.zMm ?? null;
+  const bottom = op.heights?.bottom?.zMm ?? null;
+  const heightsRead = `top ${mmRead(top)}, bottom ${mmRead(bottom)}`;
   if (op.strategy === 'adaptive') {
     if (p.stepdownMm == null) {
-      return { ok: false, reason: 'The add-in could not read the stepdown for this 3D adaptive operation.' };
+      return { ok: false, reason: `The add-in could not read the stepdown for this 3D adaptive operation (${heightsRead}).` };
     }
     return { ok: true, apMm: p.stepdownMm, totalMm, perPass: true };
   }
   if (p.doMultipleDepths === true) {
     if (p.stepdownMm == null) {
-      return { ok: false, reason: 'The add-in could not read the stepdown for this multiple-depth operation.' };
+      return { ok: false, reason: `The add-in could not read the stepdown for this multiple-depth operation (${heightsRead}).` };
     }
     return { ok: true, apMm: p.stepdownMm, totalMm, perPass: true };
   }
   if (p.doMultipleDepths !== false) {
-    return { ok: false, reason: 'The add-in could not read doMultipleDepths. The stepdown in the dialog can be stale, so the mapping does not guess the pass depth.' };
+    return { ok: false, reason: `The add-in could not read doMultipleDepths (stepdown ${mmRead(p.stepdownMm)}, ${heightsRead}). The stepdown in the dialog can be stale, so the mapping does not guess the pass depth.` };
   }
-  const top = op.heights?.top?.zMm ?? null;
-  const bottom = op.heights?.bottom?.zMm ?? null;
   if (top == null) {
-    return { ok: false, reason: 'The add-in could not read the top height.' };
+    return { ok: false, reason: `The add-in could not read the top height (bottom ${mmRead(bottom)}). The multiple-depths box is off.` };
   }
   if (bottom == null) {
-    return { ok: false, reason: 'The add-in could not read the bottom height.' };
+    return { ok: false, reason: `The add-in could not read the bottom height (top ${mmRead(top)}). The multiple-depths box is off.` };
   }
   const d = top - bottom;
   if (!(d > 0)) {
-    return { ok: false, reason: 'The top height is not above the bottom height. The cut has no positive depth.' };
+    return { ok: false, reason: `The add-in read a top height of ${mm(top)} mm and a bottom height of ${mm(bottom)} mm, so the cut has no positive depth. The multiple-depths box is off.` };
   }
   return { ok: true, apMm: d, totalMm: d, perPass: false };
 }
@@ -248,6 +257,17 @@ function buildReading(strategy, depth, aeMm, finishing, note) {
 // One decimal, trailing zero trimmed: 18 renders as "18", 18.5 as "18.5".
 function mm(x) {
   return String(Math.round(x * 10) / 10);
+}
+
+// A read value with its unit, or "not read" for the null the add-in sends
+// when it could not read a fact. The refusal sentences use these so the
+// value the policy leaned on is always on screen.
+function mmRead(x) {
+  return x == null ? 'not read' : `${mm(x)} mm`;
+}
+
+function countRead(n) {
+  return n == null ? 'not read' : String(n);
 }
 
 const COUNT_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];

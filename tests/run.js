@@ -40,7 +40,7 @@ if (!which || which === 'drilling') {
   else if (which === 'drilling') { console.log('FAIL - drilling.test.js missing'); purityErrors++; }
 }
 if (!which || which === 'fusion') {
-  for (const f of ['fusion-protocol.test.js', 'fusion-identity.test.js', 'fusion-map.test.js']) {
+  for (const f of ['fusion-protocol.test.js', 'fusion-identity.test.js', 'fusion-map.test.js', 'fusion-present.test.js']) {
     if (existsSync(join(here, f))) await import(`./${f}`);
     else if (which === 'fusion') { console.log(`FAIL - ${f} missing`); purityErrors++; }
   }

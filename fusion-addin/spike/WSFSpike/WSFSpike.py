@@ -465,7 +465,7 @@ def _open_palette():
     # promise-based adsk.fusionSendData needs (section 11, wait-code
     # item 2).
     _palette = _ui.palettes.add(
-        PANEL_ID, "WSF spike", PANEL_URL, True, True, True, 420, 640, True
+        PANEL_ID, "WSF spike", PANEL_URL, True, True, True, 840, 640, True
     )
     _palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight
     handler = _HtmlHandler()

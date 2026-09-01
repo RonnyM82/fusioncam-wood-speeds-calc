@@ -2,7 +2,9 @@
 // operations in the job message shape, one per row of the mapping table,
 // plus the direction readings, the refusal wording and the null-fact
 // refusals. FM21 feeds a mapped result into the real core with the real
-// data files, to prove the field names line up.
+// data files, to prove the field names line up. FM29 pins that every
+// unreadable reason names the values the add-in read, in millimetres to one
+// decimal, so a screenshot of a refused row diagnoses itself (2026-09-01).
 
 import { test, assert, approx } from './helpers.js';
 import { loadData } from './load-node.js';
@@ -198,7 +200,7 @@ test('FM18', 'missing heights with no stepdown are unreadable and named', () => 
   assert(noBottom.reason.includes('bottom height'), noBottom.reason);
 });
 
-test('FM19', 'a depth that is not positive is unreadable', () => {
+test('FM19', 'a depth that is not positive is unreadable and names both heights', () => {
   const m = mapOperation(op('contour2d', {
     heights: {
       top: { mode: 'from stock bottom', offsetMm: 0, zMm: 0 },
@@ -206,7 +208,7 @@ test('FM19', 'a depth that is not positive is unreadable', () => {
     },
   }), CHOICES);
   assert(m.status === 'unreadable', `expected unreadable, got ${m.status}`);
-  assert(m.reason.includes('positive depth'), m.reason);
+  assert(m.reason === 'The add-in read a top height of 0 mm and a bottom height of 18 mm, so the cut has no positive depth. The multiple-depths box is off.', m.reason);
 });
 
 test('FM20', 'multiple depths with a null stepdown is unreadable and named', () => {
@@ -303,4 +305,60 @@ test('FM28', 'pocket2d with an unrecognised direction string is unreadable and n
   const c = mapOperation(op('pocket2d', { params: { compensation: 'wear' } }), CHOICES);
   assert(c.status === 'unreadable', `compensation: expected unreadable, got ${c.status}`);
   assert(c.reason.includes('wear'), `the reason must name the value: ${c.reason}`);
+});
+
+test('FM29', 'every unreadable reason names the values it read, in millimetres to one decimal', () => {
+  // The live-run audit (2026-09-01) found rows refused with a sentence and
+  // no numbers, so nobody could tell what the add-in had read. The case it
+  // reproduced: the multiple-depths box off and both resolved heights at
+  // the same level, on a 2D adaptive and on a slot. The policy is right to
+  // refuse (protocol.md depth rule); the sentence must show the heights.
+  for (const strategy of ['adaptive2d', 'slot']) {
+    const m = mapOperation(op(strategy, {
+      params: { doMultipleDepths: false, optimalLoadMm: 2.5 },
+      heights: {
+        top: { mode: 'from stock top', offsetMm: 0, zMm: 0 },
+        bottom: { mode: 'from stock top', offsetMm: 0, zMm: 0 },
+      },
+    }), CHOICES);
+    assert(m.status === 'unreadable', `${strategy}: expected unreadable, got ${m.status}`);
+    assert(m.reason === 'The add-in read a top height of 0 mm and a bottom height of 0 mm, so the cut has no positive depth. The multiple-depths box is off.', `${strategy}: ${m.reason}`);
+  }
+  // A stepdown the add-in could not read on a multiple-depth operation, with
+  // the WCS at the stock top: the two heights it did read are named.
+  const stepdown = mapOperation(op('contour2d', {
+    params: { doMultipleDepths: true, stepdownMm: null },
+    heights: {
+      top: { mode: 'from stock top', offsetMm: 0, zMm: 0 },
+      bottom: { mode: 'from stock bottom', offsetMm: -0.5, zMm: -20.5 },
+    },
+  }), CHOICES);
+  assert(stepdown.reason === 'The add-in could not read the stepdown for this multiple-depth operation (top 0 mm, bottom -20.5 mm).', stepdown.reason);
+  // One decimal, and a null height reads as "not read", never as a number.
+  const rounded = mapOperation(op('contour2d', {
+    params: { doMultipleDepths: true, stepdownMm: null },
+    heights: {
+      top: { mode: 'from stock top', offsetMm: 0, zMm: 18.26 },
+      bottom: { mode: 'from stock bottom', offsetMm: 0, zMm: null },
+    },
+  }), CHOICES);
+  assert(rounded.reason.includes('(top 18.3 mm, bottom not read)'), rounded.reason);
+  const adaptive3d = mapOperation(op('adaptive', { params: { optimalLoadMm: 3, stepdownMm: null } }), CHOICES);
+  assert(adaptive3d.reason.includes('(top 18 mm, bottom 0 mm)'), adaptive3d.reason);
+  const box = mapOperation(op('pocket2d', { params: { doMultipleDepths: null, stepdownMm: 9 } }), CHOICES);
+  assert(box.reason.includes('(stepdown 9 mm, top 18 mm, bottom 0 mm)'), box.reason);
+  const noTop = mapOperation(op('contour2d', {
+    heights: { top: { mode: 'from stock top', offsetMm: 0, zMm: null } },
+  }), CHOICES);
+  assert(noTop.reason.includes('(bottom 0 mm)') && noTop.reason.includes('multiple-depths box is off'), noTop.reason);
+  const noBottom = mapOperation(op('contour2d', {
+    heights: { bottom: { mode: 'from stock bottom', offsetMm: 0, zMm: null } },
+  }), CHOICES);
+  assert(noBottom.reason.includes('(top 18 mm)'), noBottom.reason);
+  const load = mapOperation(op('adaptive', { params: { optimalLoadMm: null, stepdownMm: 10 } }), CHOICES);
+  assert(load.reason.includes('tool diameter 12.7 mm') && load.reason.includes('depth 10 mm per pass'), load.reason);
+  const flutes = mapOperation(op('contour2d', { tool: { flutes: null } }), CHOICES);
+  assert(flutes.reason.includes('(tool diameter 12.7 mm)'), flutes.reason);
+  const diameter = mapOperation(op('contour2d', { tool: { diameterMm: null } }), CHOICES);
+  assert(diameter.reason.includes('(flute count 2)'), diameter.reason);
 });

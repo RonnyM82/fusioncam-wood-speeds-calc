@@ -104,15 +104,15 @@
        an update, and a full Fusion restart is the only other clear
        (spike-results-windows.md section 11, item 6). Bump PAGE_BUILD on every
        change to this page or its files, then the query strings here. -->
-  <link rel="stylesheet" href="tokens/lt-tokens.css?v=2026-09-01c">
-  <link rel="stylesheet" href="app-tokens.css?v=2026-09-01c">
-  <link rel="stylesheet" href="components/lt-components.css?v=2026-09-01c">
-  <link rel="stylesheet" href="fusion.css?v=2026-09-01c">
+  <link rel="stylesheet" href="tokens/lt-tokens.css?v=2026-09-01f">
+  <link rel="stylesheet" href="app-tokens.css?v=2026-09-01f">
+  <link rel="stylesheet" href="components/lt-components.css?v=2026-09-01f">
+  <link rel="stylesheet" href="fusion.css?v=2026-09-01f">
 </head>
 <body>
   <header>
     <h1>Wood speeds &amp; feeds</h1>
-    <p class="tagline">The calculator inside Fusion. Pick a material for each setup, confirm each tool once, then apply the numbers to the operations you tick. Every number traces to a published source.</p>
+    <p class="tagline">Pick a material for each setup, confirm each tool once, then tick the operations to apply. Every number traces to a published source.</p>
   </header>
 
   <!-- Controls belong on a panel, and the panel stays light in both colour
@@ -124,14 +124,32 @@
     <section id="settings"></section>
     <section id="tools"></section>
     <section id="setups"></section>
-    <div id="actions"></div>
     <!-- The write report arrives from the add-in after the user has acted,
-         so the region is live. Banners rendered inside it carry no role of
-         their own: a role inside a live region would announce twice. -->
-    <section id="report" aria-live="polite"></section>
+         so its banner and rows sit in a live region. The region is the inner
+         wrapper, not the section: js/ui/fusion-panel.js moves focus to the
+         report heading when a report lands, and a heading inside the region
+         was announced twice, once by the region and once by the focus move
+         (verifier finding, 2026-09-01). The wrapper is in the markup from the
+         first paint, because a live region created together with its content
+         is not announced. Banners rendered inside it carry no role of their
+         own: a role inside a live region would announce twice. The section
+         sits above the action bar, so a fresh report is the last thing
+         before the bar. -->
+    <section id="report">
+      <div id="report-head"></div>
+      <div id="report-live" aria-live="polite"></div>
+    </section>
+    <!-- The action bar is sticky at the bottom of the panel and the LAST
+         child of main, so at the end of the scroll it rests in flow with
+         nothing beneath it. js/ui/fusion-panel.js fills the inside. -->
+    <div id="actions" class="action-bar"></div>
   </main>
   <!-- The machine note's tip. A floating light card takes a surface context
-       (.lt-panel) and js/ui/fusion-panel.js fills and positions it. -->
+       (.lt-panel) and js/ui/fusion-panel.js fills and positions it. The
+       machine select and its info button describe themselves by this element
+       (aria-describedby reads a hidden element), so the note reaches
+       assistive technology whether or not the tip is showing, and the tooltip
+       role has a referrer (verifier finding, 2026-09-01). -->
   <div id="machine-tip" class="machine-tip lt-panel" role="tooltip" hidden></div>
 
   <!-- The lt glyph set, inlined once per page and display-less via .lt-sprite.
@@ -241,7 +259,7 @@
        fusion-panel.js writes to a .value property. A property set on an
        element that has not upgraded yet shadows the class accessor and is
        never read again. -->
-  <script type="module" src="components/lt-elements.js?v=2026-09-01c"></script>
-  <script type="module" src="js/ui/fusion-panel.js?v=2026-09-01c"></script>
+  <script type="module" src="components/lt-elements.js?v=2026-09-01f"></script>
+  <script type="module" src="js/ui/fusion-panel.js?v=2026-09-01f"></script>
 </body>
 </html>

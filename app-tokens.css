@@ -22,3 +22,26 @@
    the design-system repo. Do not substitute a token that belongs to another
    job. That rule now sits in SKILL.md because this app once broke it.
    --------------------------------------------------------------------------- */
+
+/* Three gaps the Fusion panel opened on 2026-09-01, each reported in
+   DESIGN-SYSTEM-FEEDBACK.md. The system defines no page measure, no
+   floating-tip width and no selected-record border, so fusion.css carried
+   three literals and one borrowed token until these landed. */
+:root {
+  /* The panel page's reading measure. 48rem holds a full operation card with
+     its three stat cells at the palette's opening width (840 px) without the
+     line length running past what a machinist reads at a glance. The site's
+     styles.css caps its own page the same way. */
+  --lt-page-measure-panel: 48rem;
+
+  /* The widest a floating tip may grow. 22rem is the site's chart-tip
+     measure, and the machine note reads as four to six lines at that width. */
+  --lt-tip-max-inline-size: 22rem;
+
+  /* The border of a record the user has selected for an action (a ticked
+     operation card). It aliases the action colour on purpose: blue acts in
+     this system, and a ticked card is a record queued for the blue Apply
+     button. It is its own name so a retheme of the button fill can move or
+     keep it deliberately, never by accident (the chart-mark lesson above). */
+  --lt-card-selected-border: var(--lt-action-bg);
+}

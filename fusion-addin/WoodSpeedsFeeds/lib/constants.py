@@ -25,6 +25,13 @@ ADDIN_BUILD = ADDIN_VERSION + "-2026-09-01"
 
 PANEL_ID = "wsfPanel"
 PANEL_NAME = "Wood speeds and feeds"
+# The palette's opening size in pixels. 420 wide was too narrow for the
+# operation cards, so the default doubled (Scott, 2026-09-01, first live
+# run). The API sets an opening size only: no documented property fixes
+# a minimum, so the page must still read well when the user drags the
+# palette narrower.
+PANEL_WIDTH = 840
+PANEL_HEIGHT = 640
 # The add-in version rides the address, so the "too old" screen works
 # even when messaging itself is broken (protocol.md, versioning rule 5).
 # WoodSpeedsFeeds._panel_url appends "&build=" and "&theme=" at open

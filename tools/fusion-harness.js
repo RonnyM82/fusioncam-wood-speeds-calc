@@ -1,8 +1,12 @@
 // Dev-only fake add-in bridge for fusion.html?harness=1. It stands in for
 // Fusion's palette messaging, so the whole panel runs under tools/serve.js in
 // an ordinary browser (build phase 2 of the add-in plan). Every shape below
-// follows fusion-addin/protocol.md exactly. Every free-text field says
-// "harness" in it, so a screenshot can never pass for a real job.
+// follows fusion-addin/protocol.md exactly. The setup and operation names
+// read like a real cabinet job on purpose, in the case a user types them,
+// and one name is a deliberate 60 characters long, so the panel is judged on
+// the names it will meet (the live-run audit, 2026-09-01). The document
+// name, the tool descriptions and the write reasons still say "harness", so
+// a screenshot can never pass for a real job.
 //
 // It answers:
 //   hello   -> a job message after a short delay
@@ -120,11 +124,11 @@ function makeJob() {
     setups: [
       {
         setupId: 'harness-s1',
-        name: 'Harness setup 1',
+        name: 'Sheet 1 - 18 mm MDF',
         stock: makeStock(),
         operations: [
           {
-            opId: 'harness-op-1', name: 'Harness contour, multiple depths',
+            opId: 'harness-op-1', name: 'Outside profile',
             strategy: 'contour2d', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_COMPRESSION,
             params: makeParams({ stepdownMm: 9, doMultipleDepths: true, compensation: 'left', rampAngleDeg: 4 }),
@@ -132,7 +136,9 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-2', name: 'Harness contour, single depth',
+            // The deliberate 60-character name: the panel must wrap it
+            // without truncation and without a horizontal scroll.
+            opId: 'harness-op-2', name: 'Drawer fronts outside profile, one pass, 12 mm down-cut tool',
             strategy: 'contour2d', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DOWNCUT,
             params: makeParams({ doMultipleDepths: false, compensation: 'left', rampAngleDeg: 4 }),
@@ -140,7 +146,7 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-3', name: 'Harness pocket',
+            opId: 'harness-op-3', name: 'Shelf pockets',
             strategy: 'pocket2d', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DOWNCUT,
             params: makeParams({ stepdownMm: 6, doMultipleDepths: true, stepoverMm: 6, rampAngleDeg: 2 }),
@@ -148,7 +154,7 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-4', name: 'Harness adaptive clear',
+            opId: 'harness-op-4', name: 'Adaptive clear',
             strategy: 'adaptive2d', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_PLAIN,
             params: makeParams({ stepdownMm: 12, doMultipleDepths: true, optimalLoadMm: 2.4, direction: 'climb', rampAngleDeg: 2 }),
@@ -159,11 +165,11 @@ function makeJob() {
       },
       {
         setupId: 'harness-s2',
-        name: 'Harness setup 2',
+        name: 'Sheet 2 - 18 mm MDF',
         stock: makeStock(),
         operations: [
           {
-            opId: 'harness-op-5', name: 'Harness slot',
+            opId: 'harness-op-5', name: 'Door slot',
             strategy: 'slot', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DOWNCUT,
             params: makeParams({ stepdownMm: 6, doMultipleDepths: true, direction: 'both' }),
@@ -171,7 +177,7 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-6', name: 'Harness drill',
+            opId: 'harness-op-6', name: 'Hinge holes',
             strategy: 'drill', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DRILL,
             params: makeParams({}),
@@ -179,7 +185,7 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-7', name: 'Harness parallel finish',
+            opId: 'harness-op-7', name: 'Parallel finish',
             strategy: 'parallel', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_BALL,
             params: makeParams({ stepoverMm: 1.2 }),
@@ -187,7 +193,7 @@ function makeJob() {
             currentFeeds: makeFeeds(),
           },
           {
-            opId: 'harness-op-8', name: 'Harness suppressed contour',
+            opId: 'harness-op-8', name: 'Outside profile, old version',
             strategy: 'contour2d', suppressed: true, isValid: true, hasToolpath: false,
             tool: TOOL_COMPRESSION,
             params: makeParams({ stepdownMm: 9, doMultipleDepths: true, compensation: 'left', rampAngleDeg: 4 }),

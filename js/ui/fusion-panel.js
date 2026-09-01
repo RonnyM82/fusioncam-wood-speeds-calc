@@ -23,13 +23,14 @@ import {
 } from '../fusion/protocol.js';
 import { identifyTool } from '../fusion/tool-identity.js';
 import { mapOperation } from '../fusion/map-operation.js';
+import { strategyLabel, pickChips, readFacts } from '../fusion/present.js';
 
 // Rides the hello message, so the add-in can log which page answered it. It
 // is also the cache-bust key: every stylesheet and script address in
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-01c';
+const PAGE_BUILD = '2026-09-01f';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -139,7 +140,8 @@ const state = {
   job: null,
   machineId: null,         // the preset name string, never a list position
   profile: 'standard',
-  rpm: null,
+  rpm: null,               // the last spindle speed the field accepted
+  rpmError: false,         // the field holds a value it has refused
   firstCut: true,
   materialBySetup: {},     // setupId -> material id
   finishRows: new Set(),   // opIds marked as a finish pass
@@ -148,6 +150,7 @@ const state = {
   toolKeyByOp: new Map(),  // opId -> toolKey
   served: new Map(),       // opId -> { result, rounded }, current render only
   ticked: new Set(),       // opIds ticked for Apply
+  openDetails: new Set(),  // opIds whose "Show all checks" list is open
   applying: false,
   report: null,
   regen: new Map(),        // opId -> { status, reason } per regenerated op
@@ -215,13 +218,18 @@ async function init() {
         onMessage(type, JSON.parse(json));
       } catch (err) {
         $('notice').innerHTML = alertHtml('danger',
-          'A message from the add-in could not be read.', err.message, 'alert');
+          'The page could not read a message from the add-in.', err.message, 'alert');
       }
       return '';
     },
   };
   state.waiting = true;
   renderNotices();
+  // The action bar renders as soon as there is a bridge, before the first
+  // snapshot: Refresh is the way to ask again while the panel waits, and
+  // through the no-answer state, and the disabled Apply carries its
+  // no-snapshot sentence (verifier finding, 2026-09-01).
+  renderActions();
   // The hello reply is the one return value the page reads, as a liveness
   // check only. The add-in sets returnData on every message it handles, so
   // an empty reply means no handler is attached: a palette that survived a
@@ -295,6 +303,7 @@ function onMessage(type, msg) {
 function clearSnapshot() {
   state.ticked.clear();
   state.served = new Map();
+  state.openDetails.clear();
   state.applying = false;
   state.regen.clear();
 }
@@ -309,9 +318,13 @@ function renderRefusalScreen(title, body) {
   state.waiting = false;
   state.report = null;
   $('notice').innerHTML = alertHtml('danger', title, body, 'alert');
-  for (const id of ['context', 'settings', 'tools', 'setups', 'report']) {
+  for (const id of ['context', 'settings', 'tools', 'setups']) {
     $(id).innerHTML = '';
   }
+  // The report section keeps its live-region wrapper (fusion.html):
+  // renderReport() empties it rather than replacing it, so the region is
+  // still there for the next report.
+  renderReport();
   renderActions();
 }
 
@@ -323,7 +336,7 @@ function onJob(msg) {
   // all, because then not even the document's identity can be trusted.
   if (job === null) {
     renderRefusalScreen(
-      'The snapshot from the add-in could not be read, so the panel shows no numbers.',
+      'The page could not read the snapshot from the add-in, so the panel shows no numbers.',
       (errors ?? []).slice(0, 5));
     return;
   }
@@ -506,14 +519,26 @@ function applyRows() {
 function onWriteReport(msg) {
   state.applying = false;
   if (msg.stale || msg.jobId !== state.job?.jobId) {
-    // Nothing was written. A fresh job message follows and re-renders the
-    // rows. The stale flag keeps this banner alive through that render.
+    // The add-in wrote nothing. A fresh job message follows and re-renders
+    // the rows. The stale flag keeps this banner alive through that render.
     state.report = { stale: true };
+    renderActions();
   } else {
     state.report = { stale: false, undoHint: msg.undoHint, rows: msg.rows ?? [] };
+    // The ticks are spent: every row they named is in the report, written
+    // or with its reason. Clearing them re-renders the cards unticked and
+    // disables Apply with its tick-an-operation sentence, so a live
+    // "Apply 1 row" for a row already written never sits beside the report
+    // (verifier finding, 2026-09-01). renderSetups() renders the bar.
+    state.ticked.clear();
+    renderSetups();
   }
-  renderActions();
   renderReport();
+  // Apply is disabled again, so the keyboard would land nowhere. Focus moves
+  // to the report heading: that scrolls the report into view above the
+  // sticky bar. The heading sits outside the live region, so the region
+  // announces the banner once and the focus move reads the heading once.
+  $('report-head').querySelector('h2')?.focus();
 }
 
 function onRegenReport(msg) {
@@ -527,8 +552,8 @@ function onRegenReport(msg) {
 }
 
 // ---------------------------------------------------------------------------
-// Rendering. The settings and the tools render on demand. The setup tables
-// re-render on every state change that moves a number, because every row's
+// Rendering. The settings and the tools render on demand. The operation cards
+// re-render on every state change that moves a number, because every card's
 // numbers come from one calculate() pass over the current state.
 // ---------------------------------------------------------------------------
 
@@ -571,10 +596,81 @@ function renderNotices() {
   $('notice').innerHTML = html;
 }
 
+// The context row is one line. Only the document name truncates (the full
+// name rides its title); the snapshot id, the unit note and the Copy
+// snapshot button never shrink. The clipboard fallback field sits under it,
+// hidden until the clipboard refuses.
 function renderContext() {
   const j = state.job;
-  const units = j.documentUnits === 'in' ? 'inches' : 'millimetres';
-  $('context').innerHTML = `<p class="doc-line">Document ${escapeHtml(j.documentName)} · snapshot ${escapeHtml(j.jobId)} · shown in ${units} first</p>`;
+  const name = j.documentName ?? 'Unnamed document';
+  const units = j.documentUnits === 'in' ? 'inches first' : 'mm first';
+  $('context').innerHTML = `<div class="doc-line">
+    <p class="doc-line__text">
+      <span class="doc-line__name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+      <span class="doc-line__meta">· snapshot ${escapeHtml(j.jobId)} · ${units}</span>
+    </p>
+    <button type="button" class="lt-btn lt-btn--ghost" id="copy-snapshot">Copy snapshot</button>
+  </div>
+  <div class="lt-field snapshot-fallback" id="snapshot-fallback" hidden>
+    <label class="lt-field__label" for="snapshot-json">Snapshot JSON</label>
+    <textarea class="lt-textarea" id="snapshot-json" readonly aria-describedby="snapshot-hint"></textarea>
+    <span class="lt-field__hint" id="snapshot-hint">The browser refused the clipboard. Select all the text and copy it.</span>
+    <div class="lt-form-actions"><button type="button" class="lt-btn lt-btn--ghost" id="snapshot-hide">Hide</button></div>
+  </div>`;
+  $('copy-snapshot').addEventListener('click', copySnapshot);
+  $('snapshot-hide').addEventListener('click', () => {
+    $('snapshot-fallback').hidden = true;
+    $('copy-snapshot').focus();
+  });
+}
+
+// The snapshot for a bug report: the protocol.md dump format with the memory
+// blobs stripped, so a report can become a test fixture after scrubbing.
+function snapshotJson() {
+  return JSON.stringify({
+    dump: true,
+    capturedAt: new Date().toISOString(),
+    scrubbed: false,
+    pageBuild: PAGE_BUILD,
+    ...state.job,
+    memory: { docBlob: null, userBlob: null },
+  }, null, 2);
+}
+
+// One event, one visual. A successful copy gets a toast, the receipt of an
+// action with nothing on screen to show it. A refused clipboard (no
+// permission, no user activation, or no API at all in the palette browser)
+// gets the fallback field instead, with the JSON selected and focused, and
+// no toast. The two never appear together.
+async function copySnapshot() {
+  const json = snapshotJson();
+  let copied = false;
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(json);
+      copied = true;
+    }
+  } catch {
+    copied = false;
+  }
+  if (!copied) {
+    showSnapshotFallback(json);
+    return;
+  }
+  $('snapshot-fallback').hidden = true;
+  // The same address the page's script tag loads, query and all, so this is
+  // the module instance already on the page: its toast stack and its live
+  // region, not a second copy of each.
+  const { toast } = await import(`../../components/lt-elements.js?v=${PAGE_BUILD}`);
+  toast('Snapshot copied. Paste it into the bug report.', { variant: 'success' });
+}
+
+function showSnapshotFallback(json) {
+  const area = $('snapshot-json');
+  area.value = json;
+  $('snapshot-fallback').hidden = false;
+  area.focus();
+  area.select();
 }
 
 function renderSettings() {
@@ -588,52 +684,57 @@ function renderSettings() {
     ? `First cut: run ${Math.round(fc.factor * 100)}% of the chart feed until the cut proves good`
     : 'First cut: run a reduced feed until the cut proves good';
 
+  // One column below 480 px, two above: machine beside spindle speed, the
+  // profile and the first-cut tick spanning both (fusion.css .settings-grid).
   $('settings').innerHTML = `
     <h2>Machine and cut</h2>
-    <div class="lt-form-grid">
+    <div class="settings-grid">
       <div class="lt-field">
         <label class="lt-field__label" for="machine">Machine</label>
         <div class="machine-row">
-          <select class="lt-select" id="machine" aria-describedby="machine-note">${machineOptions}</select>
+          <select class="lt-select" id="machine" aria-describedby="machine-tip">${machineOptions}</select>
           <button type="button" class="lt-btn lt-btn--ghost lt-btn--icon" id="machine-info"
-                  aria-label="About this machine" aria-describedby="machine-note">
+                  aria-label="About this machine" aria-describedby="machine-tip">
             <svg class="lt-icon" aria-hidden="true" focusable="false"><use href="#lt-ic-info"/></svg>
           </button>
         </div>
-        <span class="lt-sr-only" id="machine-note"></span>
       </div>
       <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
                        measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
-    </div>
-    <div class="lt-field">
-      <span class="lt-field__label" id="profile-label">How hard to run it</span>
-      <div id="profile" class="lt-btn-group profile-group" role="radiogroup"
-           aria-labelledby="profile-label" aria-describedby="profile-hint"></div>
-      <span class="lt-field__hint" id="profile-hint">A finish pass is per operation. Use the finish-pass tick on a contour row.</span>
-    </div>
-    <div class="lt-field">
-      <label class="lt-check">
-        <input type="checkbox" id="firstcut">
-        <span>${escapeHtml(fcLabel)}</span>
-      </label>
+      <div class="lt-field span-all">
+        <span class="lt-field__label" id="profile-label">How hard to run it</span>
+        <div id="profile" class="lt-btn-group profile-group" role="radiogroup"
+             aria-labelledby="profile-label" aria-describedby="profile-hint"></div>
+        <span class="lt-field__hint" id="profile-hint">A finish pass is per operation. Use the Finish pass tick on a contour card.</span>
+      </div>
+      <div class="lt-field span-all">
+        <label class="lt-check">
+          <input type="checkbox" id="firstcut">
+          <span>${escapeHtml(fcLabel)}</span>
+        </label>
+      </div>
     </div>`;
 
   // The preset note left the page flow on 2026-09-01 (Scott, first run inside
-  // Fusion). It lives in a visually hidden span the select and the button
-  // describe themselves by, and shows as a tip on the info button. The tip
-  // enhances and never gates: the same text is announced without it.
+  // Fusion). It lives in the tip element (fusion.html #machine-tip), which
+  // the select and the button describe themselves by: aria-describedby reads
+  // a hidden element, so the note is announced whether or not the tip is
+  // showing, and one element carries the text (verifier finding,
+  // 2026-09-01). The tip enhances and never gates.
   const tip = $('machine-tip');
   const info = $('machine-info');
   const machineNote = () => {
-    const note = presetById().notes ?? 'This machine preset carries no note.';
-    $('machine-note').textContent = note;
-    tip.textContent = note;
+    tip.textContent = presetById().notes ?? 'This machine preset carries no note.';
   };
   const showTip = () => {
     tip.hidden = false;
     const r = info.getBoundingClientRect();
     const t = tip.getBoundingClientRect();
-    const gap = 8;
+    // The gap between the button and the tip is the system's --lt-space-3,
+    // read from the tip's computed style so the offset follows the token
+    // instead of repeating its pixel value here (verifier finding,
+    // 2026-09-01).
+    const gap = tokenPx(tip, '--lt-space-3');
     tip.style.left = `${Math.min(Math.max(gap, r.right - t.width), window.innerWidth - t.width - gap)}px`;
     tip.style.top = `${r.bottom + t.height + gap < window.innerHeight ? r.bottom + gap : r.top - t.height - gap}px`;
   };
@@ -655,13 +756,32 @@ function renderSettings() {
   });
 
   // <lt-number-field> carries the metric base value on .value and reports it
-  // on lt-change, the js/ui/app.js pattern.
+  // on lt-change, the js/ui/app.js pattern. The field renders with the last
+  // accepted speed, so it starts with no error.
   const rpmEl = $('f-rpm');
+  state.rpmError = false;
   rpmEl.value = state.rpm;
   rpmEl.addEventListener('lt-change', (e) => {
-    const v = e.detail.value;
-    state.rpm = Number.isFinite(v) && v > 0 ? v : state.data.rules.defaults.rpm;
-    persistDoc();
+    // The chip and the field state are one thing, and the panel reads the
+    // state (livetools-design-system, lt-number-field). A value the field
+    // has refused, 50 rpm say, must never reach calculate(): the core only
+    // rejects a speed at or below zero, so it would serve 50 rpm and a
+    // 10 mm/min feed, and Apply would write them (verifier finding,
+    // 2026-09-01). While the state is error the cards hold in a blocked
+    // state with the reason and Apply stays off; state.rpm keeps the last
+    // accepted speed, so the persisted record never carries a refused one.
+    const { value: v, state: fieldState } = e.detail;
+    const error = fieldState === 'error';
+    const rpm = error ? state.rpm
+      : Number.isFinite(v) && v > 0 ? v : state.data.rules.defaults.rpm;
+    // The field emits again on blur with the same value. A re-render then
+    // replaces the card the user is clicking towards, and the click lands on
+    // nothing (headless drive, 2026-09-01), so an unchanged value renders
+    // nothing.
+    if (error === state.rpmError && rpm === state.rpm) return;
+    state.rpmError = error;
+    state.rpm = rpm;
+    if (!error) persistDoc();
     renderSetups();
   });
 
@@ -730,11 +850,11 @@ const KIND_NOTE = {
   },
   ball: {
     label: 'Ball-nose or form tool',
-    note: 'No published chart covers 3D surfacing yet, so this tool\'s rows are not served.',
+    note: 'No published chart covers 3D surfacing yet, so the panel does not serve this tool\'s rows.',
   },
   chamfer: {
     label: 'Chamfer or engraving tool',
-    note: 'No published chart covers this tool, so its rows are not served.',
+    note: 'No published chart covers this tool, so the panel does not serve its rows.',
   },
 };
 
@@ -761,7 +881,7 @@ function renderTools() {
         `<option value="${g.id}" ${g.id === st.geometry ? 'selected' : ''}>${g.label}</option>`),
     ].join('');
     const hint = !st.confirmed && st.geometry
-      ? `Guessed from the ${t.guessSource === 'product_id' ? 'product number' : 'description'}. Confirm it before the rows serve.`
+      ? `The panel guessed this from the ${t.guessSource === 'product_id' ? 'product number' : 'description'}. Confirm it before the rows serve.`
       : 'Fusion does not record the spiral direction, so the panel asks once per tool.';
     const confirmBtn = !st.confirmed && st.geometry
       ? `<button type="button" class="lt-btn lt-btn--secondary" data-confirm="${escapeHtml(t.key)}">Confirm</button>`
@@ -789,7 +909,7 @@ function renderTools() {
 
   $('tools').innerHTML = `
     <h2>Tools</h2>
-    <p class="section-note">Confirm each router bit's geometry once. The answer is remembered for every document. Drills and 3D tools need no answer.</p>
+    <p class="section-note">Confirm each router bit once. The panel remembers the answer for every document.</p>
     <div class="tool-rows">${rows.join('') || '<p class="section-note">The document has no tools to confirm.</p>'}</div>`;
 
   for (const sel of $('tools').querySelectorAll('select[data-key]')) {
@@ -813,7 +933,11 @@ function renderTools() {
     if (st?.upcutLengthMm > 0) nf.value = st.upcutLengthMm;
     nf.addEventListener('lt-change', (e) => {
       const v = e.detail.value;
-      st.upcutLengthMm = Number.isFinite(v) && v > 0 ? v : null;
+      const next = Number.isFinite(v) && v > 0 ? v : null;
+      // Same guard as the spindle field: the blur re-emit must not replace
+      // the cards under a click.
+      if (next === st.upcutLengthMm) return;
+      st.upcutLengthMm = next;
       persistUser();
       renderSetups();
     });
@@ -857,7 +981,12 @@ function upcutHint(tool) {
 }
 
 // ---------------------------------------------------------------------------
-// The setups: one section per setup, a material pick and the operation table.
+// The setups: one section per setup, a material pick and one card per
+// operation. There is no table: the palette is 400 px wide and a seven-column
+// table put the Apply tick off screen (Scott, 2026-09-01, first run inside
+// Fusion). Every card id is index based ({si}-{oi}), so keepFocus() finds
+// the same control after a re-render and an operation id can never break an
+// attribute; data-op carries the real opId.
 // ---------------------------------------------------------------------------
 
 function materialFor(setupId) {
@@ -875,15 +1004,16 @@ function renderSetups() {
     const mat = MATERIALS.find((m) => m.id === matId);
     const options = MATERIALS.map((m) =>
       `<option value="${m.id}" ${m.id === matId ? 'selected' : ''}>${escapeHtml(m.label)}</option>`).join('');
+    const cards = setup.operations.map((op, oi) => opCard(op, setup, si, oi)).join('');
     return `<section class="setup">
-      <h2>${escapeHtml(setup.name)}</h2>
+      <h2 class="setup__name">${escapeHtml(setup.name ?? 'Unnamed setup')}</h2>
       <div class="lt-field">
         <label class="lt-field__label" for="mat-${si}">Material</label>
         <select class="lt-select" id="mat-${si}" data-setup="${escapeHtml(setup.setupId)}"
                 aria-describedby="mat-${si}-hint">${options}</select>
         <span class="lt-field__hint" id="mat-${si}-hint">${escapeHtml(mat.hint)}</span>
       </div>
-      ${opsTable(setup)}
+      ${cards ? `<div class="op-list">${cards}</div>` : '<p class="section-note">This setup has no operations.</p>'}
     </section>`;
   });
   $('setups').innerHTML = sections.join('') ||
@@ -914,6 +1044,16 @@ function renderSetups() {
       renderActions();
     });
   }
+  // The open state of each card's check list survives a re-render: the
+  // toggle event writes it, and the card renders the open attribute from it.
+  for (const details of $('setups').querySelectorAll('details.op-card__details')) {
+    details.addEventListener('toggle', (e) => {
+      const opId = e.target.closest('.op-card')?.dataset.op;
+      if (!opId) return;
+      if (e.target.open) state.openDetails.add(opId);
+      else state.openDetails.delete(opId);
+    });
+  }
   // A settings change can stop a ticked row from serving: the row loses its
   // tick box, but its id would stay in the set, and Apply would then send a
   // number this render never computed. A tick only survives while its row
@@ -924,44 +1064,46 @@ function renderSetups() {
   renderActions();
 }
 
-function opsTable(setup) {
-  const rows = setup.operations.map((op) => opRow(op, setup)).join('');
-  return `<div class="lt-table-wrap">
-    <table class="lt-table">
-      <caption class="lt-sr-only">Operations in ${escapeHtml(setup.name)}</caption>
-      <thead><tr>
-        <th scope="col">Operation</th>
-        <th scope="col">How the cut reads</th>
-        <th scope="col">Spindle</th>
-        <th scope="col">Cutting feed</th>
-        <th scope="col">Chip</th>
-        <th scope="col">What sets the feed</th>
-        <th scope="col">Apply</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  </div>`;
+// The ids one card uses. Index based, never the operation id: an id from
+// Fusion can carry any character, and the same index finds the same control
+// after a re-render.
+function cardIds(si, oi) {
+  const key = `${si}-${oi}`;
+  return {
+    card: `card-${key}`, tick: `tick-${key}`, finish: `finish-${key}`,
+    name: `name-${key}`, details: `details-${key}`, summary: `summary-${key}`,
+  };
 }
 
-// One operation row. Suppressed rows are panel state and never reach
+// The name block at the head of every card: the operation name exactly as
+// Fusion sent it, in its own case, in a span (never a th or a field label,
+// both of which the vendored CSS uppercases), and the strategy under it.
+function cardIdHtml(op, ids) {
+  return `<span class="op-card__name" id="${ids.name}">${escapeHtml(op.name ?? 'Unnamed operation')}</span>
+      <span class="op-card__strategy">${escapeHtml(strategyLabel(op.strategy))}</span>`;
+}
+
+// One operation card. Suppressed operations are panel state and never reach
 // mapOperation. An unconfirmed tool serves nothing: a number computed from a
 // guess could reach a spindle. Refused, blocked, unsupported and unreadable
-// rows show the reason and cannot be ticked (decision A5).
-function opRow(op, setup) {
+// cards show one badge and one reason and cannot be ticked (decision A5).
+function opCard(op, setup, si, oi) {
+  const ids = cardIds(si, oi);
   if (op.suppressed) {
-    return reasonRow(op, 'suppressed', 'Suppressed in Fusion. The panel leaves it untouched.', '');
+    return stateCard(op, ids, 'suppressed', 'Suppressed in Fusion. The panel leaves it untouched.', '');
   }
-  // A row without an identity serves nothing and cannot be ticked: Apply
-  // could not address it (protocol.md, 2026-09-01).
+  // An operation without an identity serves nothing and cannot be ticked:
+  // Apply could not address it (protocol.md, 2026-09-01).
   if (op.opId === null) {
-    return reasonRow(op, 'refused',
+    return stateCard(op, ids, 'refused',
       'The snapshot did not carry an identity for this operation, so Apply cannot address it.', '');
   }
 
-  const finishable = op.strategy === 'contour2d';
-  const finishToggle = finishable
-    ? `<label class="lt-check finish-check">
-        <input type="checkbox" id="finish-${escapeHtml(op.opId)}" data-finish="${escapeHtml(op.opId)}"
+  // The finish mark is per contour: toggling it changes the reading and the
+  // numbers of this one card, so the tick sits in the card.
+  const finishToggle = op.strategy === 'contour2d'
+    ? `<label class="lt-check op-card__finish">
+        <input type="checkbox" id="${ids.finish}" data-finish="${escapeHtml(op.opId)}"
                ${state.finishRows.has(op.opId) ? 'checked' : ''}>
         <span>Finish pass</span>
       </label>`
@@ -969,20 +1111,22 @@ function opRow(op, setup) {
 
   const tool = state.tools.get(state.toolKeyByOp.get(op.opId));
   // A drill, a ball-nose or a chamfer tool takes no geometry question
-  // (2026-09-01). Its row refuses with the strategy's own reason through
+  // (2026-09-01). Its card refuses with the strategy's own reason through
   // mapOperation, and a routing strategy run with such a tool refuses here,
   // because the charts cover router bits only and calculate() has no tool
   // type to serve.
   const routerBit = !tool || tool.kind == null || tool.kind === 'router';
   if (routerBit && (!tool || !tool.confirmed || !tool.geometry)) {
-    return reasonRow(op, 'confirm', 'Confirm the tool geometry first, in the tools section above.', finishToggle);
+    return stateCard(op, ids, 'confirm', 'Confirm the tool geometry first, in the tools section above.', finishToggle);
   }
   if (!routerBit) {
     const probe = mapOperation(op, { toolType: null, finishing: false });
     const reason = probe.status === 'mapped'
       ? `This operation runs a ${(KIND_NOTE[tool.kind]?.label ?? 'non-router').toLowerCase()} on a routing strategy. The charts cover router bits only.`
       : probe.reason;
-    return reasonRow(op, probe.status === 'mapped' ? 'refused' : probe.status, reason, finishToggle);
+    const stateKey = probe.status === 'mapped' ? 'refused' : probe.status;
+    return stateCard(op, ids, stateKey, reason, finishToggle,
+      { facts: stateKey === 'unreadable' ? readFacts(op) : null });
   }
 
   const mapped = mapOperation(op, {
@@ -991,55 +1135,109 @@ function opRow(op, setup) {
     finishing: state.finishRows.has(op.opId),
   });
   if (mapped.status !== 'mapped') {
-    return reasonRow(op, mapped.status, mapped.reason, finishToggle);
+    // An unreadable card names what the add-in sent under the reason, so a
+    // screenshot is enough to diagnose it.
+    return stateCard(op, ids, mapped.status, mapped.reason, finishToggle,
+      { facts: mapped.status === 'unreadable' ? readFacts(op) : null });
+  }
+
+  // A spindle speed the field has refused serves nothing: the card blocks
+  // with the reason and no number, the same shape as a core block.
+  if (state.rpmError) {
+    return stateCard(op, ids, 'blocked', RPM_ERROR_REASON, finishToggle, { reading: mapped.reading });
   }
 
   const result = calculate(rowInput(setup, mapped.calc), state.data);
   if (result.status === 'refused') {
-    return reasonRow(op, 'refused', result.refusal.reason, finishToggle, mapped.reading);
+    return stateCard(op, ids, 'refused', result.refusal.reason, finishToggle, { reading: mapped.reading });
   }
   if (result.status === 'blocked') {
-    return reasonRow(op, 'blocked', result.block.reason, finishToggle, mapped.reading);
+    return stateCard(op, ids, 'blocked', result.block.reason, finishToggle, { reading: mapped.reading });
   }
 
-  // The row renders from the rounded values Apply will send, never from the
+  // The card renders from the rounded values Apply will send, never from the
   // raw outputs: what the user reads is what Fusion receives (2026-09-01).
   const rounded = roundedOutputs(result.outputs, mapped.calc.flutesTotal);
   state.served.set(op.opId, { result, rounded });
-  const chips = buildChips(result).map((c) =>
+
+  // At most three chips on the card, hot first, then warm, then cool; the
+  // rest live in the check list under the toggle, and the summary says how
+  // many hot ones are out of sight so nothing that needs action is hidden.
+  const chips = buildChips(result);
+  const { shown, hiddenHot } = pickChips(chips, 3);
+  const top = shown.map((c) =>
     badgeHtml(CHIP_VARIANT[c.level], STATUS_GLYPH[CHIP_VARIANT[c.level]], c.text)).join('');
-  return `<tr class="has-chips">
-    <th scope="row">${escapeHtml(op.name)}</th>
-    <td><span class="op-reading">${escapeHtml(mapped.reading)}</span>${finishToggle}</td>
-    <td class="val">${pairCell(rpmPair(rounded.rpm))}</td>
-    <td class="val">${pairCell(feedPair(rounded.cuttingMmMin))}</td>
-    <td class="val">${pairCell(fzPair(rounded.feedPerToothMm))}</td>
-    <td>${escapeHtml(CAP_LABELS[result.limit.binding] ?? result.limit.binding)}</td>
-    <td>
-      <label class="lt-check">
-        <input type="checkbox" id="tick-${escapeHtml(op.opId)}" data-op="${escapeHtml(op.opId)}"
-               aria-label="Apply to ${escapeHtml(op.name)}"
+  // The toggle's wording carries its state: "Show all" while the list is
+  // closed, "Hide" while it is open. Both spans render and fusion.css shows
+  // one per state, so the control's accessible name follows it.
+  const showAll = `Show all ${chips.length} ${chips.length === 1 ? 'check' : 'checks'}`
+    + (hiddenHot > 0 ? `. ${hiddenHot} more ${hiddenHot === 1 ? 'needs' : 'need'} action.` : '');
+  const checklist = chips.map((c) => {
+    const variant = CHIP_VARIANT[c.level];
+    return `<li class="op-check op-check--${escapeHtml(c.level)}">
+        <svg class="op-check__icon" aria-hidden="true" focusable="false"><use href="#${STATUS_GLYPH[variant]}"/></svg>
+        <span>${escapeHtml(c.text)}</span>
+      </li>`;
+  }).join('');
+
+  return `<article class="op-card lt-card" id="${ids.card}" data-op="${escapeHtml(op.opId)}" data-state="served"
+           aria-labelledby="${ids.name}">
+    <div class="op-card__head">
+      <label class="lt-check op-card__tick">
+        <input type="checkbox" id="${ids.tick}" data-op="${escapeHtml(op.opId)}"
                ${state.ticked.has(op.opId) ? 'checked' : ''}>
+        <span class="op-card__id">
+          <span class="lt-sr-only">Apply </span>
+          ${cardIdHtml(op, ids)}
+        </span>
       </label>
-    </td>
-  </tr>
-  <tr class="op-chips"><td colspan="7"><div class="lt-row">${chips}</div></td></tr>`;
+    </div>
+    <p class="op-card__reading">${escapeHtml(mapped.reading)}</p>
+    ${finishToggle}
+    <dl class="op-stats">
+      ${statCell('Spindle', rpmPair(rounded.rpm))}
+      ${statCell('Cutting feed', feedPair(rounded.cuttingMmMin))}
+      ${statCell('Chip', fzPair(rounded.feedPerToothMm))}
+    </dl>
+    <p class="op-card__cap"><span class="op-card__cap-label">What sets the feed:</span> <span class="op-card__cap-value">${escapeHtml(CAP_LABELS[result.limit.binding] ?? result.limit.binding)}</span></p>
+    <div class="op-card__chips lt-row">${top}</div>
+    <details class="op-card__details" id="${ids.details}" ${state.openDetails.has(op.opId) ? 'open' : ''}>
+      <summary id="${ids.summary}">
+        <svg class="op-card__chevron" aria-hidden="true" focusable="false"><use href="#lt-ic-chevron-down"/></svg>
+        <span class="op-card__summary-closed">${escapeHtml(showAll)}</span>
+        <span class="op-card__summary-open">Hide the checks</span>
+      </summary>
+      <ul class="op-card__checklist">${checklist}</ul>
+    </details>
+  </article>`;
 }
 
-function reasonRow(op, stateKey, reason, finishToggle, reading = null) {
+// The reason every card carries while the spindle speed field holds a value
+// it has refused. The field's own chip names the range; this names the cure.
+const RPM_ERROR_REASON = 'The spindle speed is out of range. Fix the spindle speed first.';
+
+// A card that serves no number: one badge, one reason, no tick, no stats, no
+// chips. The gap span keeps its name on the same left edge as the served
+// cards. The reading line stays on refused and blocked cards because the
+// refusal is about that cut; it is a description, not a served number.
+function stateCard(op, ids, stateKey, reason, finishToggle, { reading = null, facts = null } = {}) {
   const b = ROW_BADGE[stateKey];
-  return `<tr>
-    <th scope="row">${escapeHtml(op.name)}</th>
-    <td colspan="5">
-      <div class="op-state">
-        ${badgeHtml(b.variant, b.glyph, b.word)}
-        ${reading ? `<span class="op-reading">${escapeHtml(reading)}</span>` : ''}
-        <span class="op-reason">${escapeHtml(reason)}</span>
-        ${finishToggle}
-      </div>
-    </td>
-    <td></td>
-  </tr>`;
+  return `<article class="op-card lt-card" id="${ids.card}"${op.opId != null ? ` data-op="${escapeHtml(op.opId)}"` : ''}
+           data-state="${escapeHtml(stateKey)}" aria-labelledby="${ids.name}">
+    <div class="op-card__head">
+      <span class="op-card__tick-gap" aria-hidden="true"></span>
+      <span class="op-card__id">
+        ${cardIdHtml(op, ids)}
+      </span>
+    </div>
+    <div class="op-card__state">
+      ${badgeHtml(b.variant, b.glyph, b.word)}
+      ${reading ? `<p class="op-card__reading">${escapeHtml(reading)}</p>` : ''}
+      <p class="op-card__reason">${escapeHtml(reason)}</p>
+      ${facts ? `<p class="op-card__facts">${escapeHtml(facts)}</p>` : ''}
+    </div>
+    ${finishToggle}
+  </article>`;
 }
 
 // The calculate() input: the mapped calc fields plus panel state. The mapping
@@ -1066,15 +1264,27 @@ function rowInput(setup, calc) {
   };
 }
 
-// The display pairs already carry both unit systems. The document's unit
-// leads: a user working in inches reads the inch value first, with the
-// metric value under it, and the reverse for a metric document.
-function pairCell(pair) {
+// One stat cell. The display pairs already carry both unit systems. The
+// document's unit leads: a user working in inches reads the inch value
+// first, with the metric value under it, and the reverse for a metric
+// document. The spindle has no inch value, so its cell has no second line.
+// The primary string splits at its last space into the number and the unit,
+// so the unit can wrap under the number in a 106 px cell instead of pushing
+// the card wide; the two spans share one size and weight.
+function statCell(label, pair) {
   const inchFirst = state.job?.documentUnits === 'in' && pair.imperial;
   const first = inchFirst ? pair.imperial : pair.metric;
   const second = inchFirst ? pair.metric : pair.imperial;
-  return `<span class="val-primary">${escapeHtml(first)}</span>` +
-    (second ? `<span class="val-secondary">${escapeHtml(second)}</span>` : '');
+  const cut = first.lastIndexOf(' ');
+  const num = cut > 0 ? first.slice(0, cut) : first;
+  const unit = cut > 0 ? first.slice(cut + 1) : '';
+  return `<div class="op-stat">
+      <dt class="lt-readout__label op-stat__label">${escapeHtml(label)}</dt>
+      <dd class="op-stat__vals">
+        <span class="op-stat__primary"><span class="op-stat__num">${escapeHtml(num)}</span>${unit ? ` <span class="op-stat__unit">${escapeHtml(unit)}</span>` : ''}</span>
+        ${second ? `<span class="op-stat__secondary">${escapeHtml(second)}</span>` : ''}
+      </dd>
+    </div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1087,14 +1297,19 @@ function renderActions() {
   // failure may dead-end the panel (2026-09-01).
   if (!state.bridge) { $('actions').innerHTML = ''; return; }
   const n = state.ticked.size;
-  const disabled = !state.job || state.tooOld || state.applying || n === 0;
+  const disabled = !state.job || Boolean(state.tooOld) || state.applying || n === 0;
   const label = state.applying ? 'Applying…'
-    : n === 0 ? 'Apply the ticked rows'
-      : `Apply ${n} ticked ${n === 1 ? 'row' : 'rows'}`;
-  $('actions').innerHTML = `<div class="lt-form-actions">
+    : n === 0 ? 'Apply'
+      : `Apply ${n} ${n === 1 ? 'row' : 'rows'}`;
+  // The sentence renders only when Apply is disabled and not applying: while
+  // applying the report region already says so, and one event gets one
+  // visual. It is not a live region, and the button describes itself by it
+  // only while it is there.
+  const why = disabled && !state.applying ? applyWhy() : null;
+  $('actions').innerHTML = `<div class="action-bar__row">
+    <button type="button" class="lt-btn lt-btn--primary" id="apply"${disabled ? ' disabled' : ''}${why ? ' aria-describedby="apply-why"' : ''}>${escapeHtml(label)}</button>
     <button type="button" class="lt-btn lt-btn--secondary" id="refresh">Refresh from Fusion</button>
-    <button type="button" class="lt-btn lt-btn--primary" id="apply" ${disabled ? 'disabled' : ''}>${escapeHtml(label)}</button>
-  </div>`;
+  </div>${why ? `<p class="action-bar__why" id="apply-why">${escapeHtml(why)}</p>` : ''}`;
   $('refresh').addEventListener('click', () => send(makeRefresh()));
   $('apply').addEventListener('click', () => {
     state.applying = true;
@@ -1106,16 +1321,46 @@ function renderActions() {
   });
 }
 
+// Why Apply is disabled, in this order. Reachable through aria-describedby
+// on the button and visible under it.
+function applyWhy() {
+  if (!state.job) return 'There is no snapshot to apply. Refresh from Fusion.';
+  if (state.tooOld) return 'Apply is off for this add-in build. Update the add-in.';
+  if (state.rpmError) return 'Fix the spindle speed first.';
+  if (state.served.size === 0) {
+    const unconfirmed = state.toolRows.some((t) => {
+      const st = state.tools.get(t.key);
+      return (t.kind == null || t.kind === 'router') && !(st?.confirmed && st.geometry);
+    });
+    return unconfirmed
+      ? 'Confirm each tool in the tools section, then tick the operations to apply.'
+      : 'The panel can apply no operation. Each card says why.';
+  }
+  return 'Tick an operation to apply its numbers.';
+}
+
+// The heading takes tabindex="-1" so onWriteReport can move focus to it
+// after Apply disables itself; that also scrolls the report into view above
+// the sticky bar.
+const REPORT_HEADING = '<h2 tabindex="-1">Write report</h2>';
+
+// The heading goes in #report-head and everything that should be announced
+// goes in #report-live, the live region (fusion.html). Both wrappers stay in
+// the markup; only their contents change.
 function renderReport() {
+  const head = $('report-head');
+  const live = $('report-live');
   if (!state.report) {
-    $('report').innerHTML = state.applying
+    head.innerHTML = '';
+    live.innerHTML = state.applying
       ? alertHtml('info', 'Writing the ticked rows in Fusion.')
       : '';
     return;
   }
   if (state.report.stale) {
-    $('report').innerHTML = `<h2>Write report</h2>` + alertHtml('warning',
-      'The document changed before the write, so nothing was written.',
+    head.innerHTML = REPORT_HEADING;
+    live.innerHTML = alertHtml('warning',
+      'The document changed before the write, so the add-in wrote nothing.',
       'The rows now on screen come from the fresh snapshot. Tick and apply again.');
     return;
   }
@@ -1133,7 +1378,7 @@ function renderReport() {
       `${inconsistent.length} ${inconsistent.length === 1 ? 'operation is' : 'operations are'} inconsistent. Undo now.`,
       `A write failed after another write in the same operation succeeded, so the spindle speed and the feed can disagree on the machine. ${undo}`)
     : alertHtml(written === rows.length ? 'success' : 'warning',
-      `${written} of ${rows.length} ${rows.length === 1 ? 'row' : 'rows'} written.`, undo || null);
+      `The add-in wrote ${written} of ${rows.length} ${rows.length === 1 ? 'row' : 'rows'}.`, undo || null);
 
   const lines = rows.map((r) => {
     const b = REPORT_BADGE[r.status] ?? { variant: 'info', glyph: 'lt-ic-info', word: r.status };
@@ -1151,7 +1396,8 @@ function renderReport() {
     </div>`;
   }).join('');
 
-  $('report').innerHTML = `<h2>Write report</h2>${banner}<div class="report-rows">${lines}</div>`;
+  head.innerHTML = REPORT_HEADING;
+  live.innerHTML = `${banner}<div class="report-rows">${lines}</div>`;
 }
 
 function opName(opId) {
@@ -1189,6 +1435,19 @@ function badgeHtml(variant, glyph, text) {
   return `<span class="lt-badge lt-badge--${variant}">` +
     `<svg aria-hidden="true" focusable="false"><use href="#${glyph}"/></svg>` +
     `${escapeHtml(text)}</span>`;
+}
+
+// A length token in pixels, for the one place this page positions an element
+// from script. The spacing tokens are rem values and getPropertyValue()
+// returns them as written, so a rem converts through the root font size; a
+// px token passes through; anything else reads as zero, which costs only
+// the gap.
+function tokenPx(el, token) {
+  const raw = getComputedStyle(el).getPropertyValue(token).trim();
+  const n = parseFloat(raw);
+  if (!Number.isFinite(n)) return 0;
+  if (raw.endsWith('rem')) return n * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  return raw.endsWith('px') ? n : 0;
 }
 
 // A re-render replaces the control the user is holding. Re-focusing the same

@@ -130,8 +130,8 @@ def _open_palette():
         True,  # visible
         True,  # close button
         True,  # resizable
-        420,
-        640,
+        constants.PANEL_WIDTH,
+        constants.PANEL_HEIGHT,
         True,  # useNewWebBrowser
     )
     _palette.dockingState = adsk.core.PaletteDockingStates.PaletteDockStateRight

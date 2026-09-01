@@ -489,3 +489,27 @@ while it is active.
 - **Until then:** this app carries `.lt-field[hidden] { display: none; }` in
   `styles.css` with the measurement written above the rule, per the correction
   policy.
+
+# Addendum, 1 September 2026: three tokens a narrow docked panel needed
+
+Found while laying out the calculator as a panel inside a Fusion palette
+(fusion.html), 400 to 840 px wide, driven headless at 400, 460 and 520 px.
+
+- **Finding:** the system defines no page reading measure, no maximum width
+  for a floating tip, and no border for a record the user has selected for
+  an action. The panel needed all three: a `max-width` on the page, a cap on
+  the machine-note tip so it cannot overflow a 400 px palette, and an outline
+  on an operation card whose Apply tick is set. The first build wrote `48rem`
+  and `22rem` as literals and borrowed `--lt-action-bg` for the outline, which
+  is the button fill doing a second job.
+- **Measured:** conformance passes a literal length, so nothing caught the
+  two rem values, and the borrowed token passes every check while coupling a
+  selection outline to a retheme of the button (the same shape as the chart
+  emphasis mark this app once pointed at the action colour).
+- **Suggested landing:** `--lt-measure-panel` (or a general reading-measure
+  family), `--lt-tip-max-inline-size`, and a selected-record border beside the
+  existing `--lt-table-row-bg-selected` fill, so a selected card and a
+  selected row read as one state.
+- **Until then:** this app defines `--lt-page-measure-panel`,
+  `--lt-tip-max-inline-size` and `--lt-card-selected-border` in
+  `app-tokens.css`, each with its reasoning, and `fusion.css` reads them.
