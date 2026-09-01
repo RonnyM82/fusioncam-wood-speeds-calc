@@ -84,15 +84,26 @@ blocks: `drilling`, `drilling_attribution` and `drill_bank`, under the new
 
 **Twelve entries, from three of the chapter's six sections.** Dowel drills (6.1.1,
 6.1.2, 6.1.3), through-hole drills (6.2.1 to 6.2.4) and hinge drills (6.3.1 to
-6.3.4). Chapter 6.4, which holds twist, Levin and cylinder-head drills, prints one
-machine list for the whole chapter: column drilling machines, drilling machines,
-special purpose drilling machines and portable drills. That is the drill-press
-family, and decision 1 (2026-09-01) confines the served scope to CNC machining
-centres and drill banks, so none of 6.4 is ingested. Woodworker's forstner bits are
-out of scope with it. Section 6.1.4, the boring pins, is read but not ingested:
-its diagram prints no correction factor table and its baseline is the compound
-"Chipboard / MDF", so it has no factor row to serve from. Its chip-clearing rules
-are the ones the research records, so it is the obvious next entry.
+6.3.4).
+
+**What is not here, and why, corrected 2026-09-02.** This is a first pass, not the
+whole of the served scope. An earlier version of this section said chapter 6.4 was
+the drill-press chapter and printed one machine list for all of it. That is wrong,
+and it was wrong in a direction that quietly narrowed the calculator. The chapter's
+opening page does list column, special purpose and portable machines, but its tool
+pages do not agree: the twist drills on printed pages 29 and 30 list "point-to-point
+drilling machines, through feed drilling machines, CNC machining centres, hinge
+boring machines, multi spindle units" before naming a column drill, and the Levin
+drills on page 32 open with "CNC machining centres". So parts of 6.4 sit inside
+decision 1's scope and are simply not read yet. They are the next entries in.
+
+Two things do rule themselves out on their own machine lists: the cylinder-head
+drills on printed pages 43 and 44, which name column and portable machines alone,
+and with them the woodworker's forstner bits. Section 6.1.4, the boring pins, is
+read but not ingested: its diagram prints no correction factor table and its
+baseline is the compound "Chipboard / MDF", so it has no factor row to serve from.
+Its chip-clearing rules are the only published peck rules in the served sections'
+neighbourhood, so it is the obvious next entry after the 6.4 twist drills.
 
 **The chart read is reproducible.** `tools/read-leitz-drilling.py` reads the band
 polygons off the PDF vector art and writes `research/leitz-drilling-read.json`;
@@ -104,18 +115,33 @@ accepted only when its band overlaps the tool's published speed range and covers
 at least 60% of it, its printed worked example converts and lands inside the band
 read off it, the axis calibration residual is under 2% of the range, and a baseline
 material and factor table are printed under it. Seventeen of the eighteen in-scope
-diagrams passed. Six carry a printed worked example, and all six land inside their
-own band, which is the strongest check available on a chart read.
+diagrams pass, and the eighteenth is the boring pins, which print no factor table.
+**All seventeen carry a printed worked operating point and all seventeen land
+inside their own band**, which is the strongest check available on a chart read,
+and the validator now requires one on every served entry.
+
+That last sentence used to read "six carry a printed worked example". Seventeen
+do. The reader's number pattern only matched round thousands, and six diagrams
+mark their operating point at 4,500 rpm, so half the tools silently lost the one
+point their maker prints. Nothing downstream noticed, because the check that reads
+the marker is also the check the marker feeds. Requiring one is what closes that.
 
 **Two read gates are data, not code**, in `rules.drilling`. `band_ratio_sanity` is
-[1.3, 5.5]: measured across all seventeen readable diagrams the bands run 1.47x to
+[1.3, 5.5]: measured across the seventeen accepted diagrams the bands run 1.64x to
 4.94x, widest at the slow end of each range and narrowing as speed rises. The
 research's earlier "about 2:1" came from the hinge-drill diagram alone and does not
 hold across the chapter. `band_coverage_min` is 0.6, because a diagram does not
 always draw the whole range its tool is rated for: the solid-carbide through-hole
-drill (6.2.3) is rated to 12,000 rpm and its diagram stops near 9,000. Where the
-band stops, the feed holds at that edge and the calculator says so, which is
-conservative because the upper edge falls as speed rises.
+drill (6.2.3) is rated to 12,000 rpm and its diagram stops near 9,000.
+
+**Where the band stops, the FEED RATE holds flat, not the feed per revolution.**
+That was the other way round at first, and the first way is not the conservative
+side. Feed rate is speed times feed per revolution, so a flat feed per revolution
+keeps the feed climbing with speed, while every diagram in the chapter shows the
+feed rate flattening as speed rises, which is exactly why feed per revolution
+falls across all of them. On a tool whose diagram does reach 12,000 rpm, holding
+feed per revolution from 7,500 would have served about 35% more feed than the
+diagram prints there.
 
 **No entry publishes a chip-clearing rule**, so every `chip_clearing` is an explicit
 `null` and the peck output stays silent for every v1 tool. That is decision 5's
@@ -130,6 +156,28 @@ allowed when the printed factors agree, and the builder stops if they do not.
 `FACTOR_MATERIALS` in the validator is its own namespace and deliberately does not
 extend `MATERIALS`, because Leitz names rows the calculator has no pick for
 (veneered chipboard, glulam). `material_factor_map` is the only join between them.
+
+**The plain MDF pick reads only the plain MDF row.** It once also accepted the
+"MDF plastic coated" row, which the two solid-carbide hinge drills publish at 1.0
+while publishing no plain row. The result served a coated-panel feed for an
+uncoated board, unmarked, at more than twice the 0.7 every other section prints
+for MDF. A coated panel is what the melamine pick means, so that row now sits
+behind coated chipboard there instead.
+
+**A pick that falls through to the conservative fallback is checked against an
+absolute floor.** The fallback scales a tool's whole band by another material's
+factor, which is the calculator's choice and not the maker's, and it can land the
+chip under the thickness at which a wood cutting edge rubs instead of cutting. The
+figure is the existing `chip_floor_mm_per_tooth.plough_below`, borrowed from panel
+routing and named as borrowed. It deliberately does **not** run where the tool
+publishes a factor for the picked material: there the low edge of the maker's own
+band is the maker's own minimum, and a panel-routing number has no standing to
+contradict it.
+
+**Every entry records the workpiece list its own page prints.** Without it the
+diamond-tipped drills, which Leitz rates for abrasive board and does not list for
+solid timber, served a timber feed silently. A pick outside a tool's own list now
+warns and still serves, because decision 9's whole point is not to refuse.
 
 Behaviour pinned by `DRILLDATA` (every band covers its range, every printed worked
 example lands inside its own band, the hinge-drill read and the position of the

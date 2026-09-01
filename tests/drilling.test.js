@@ -193,15 +193,23 @@ test('DR15', 'the machine feed cap binds and says so, without naming a vendor', 
     'a feed held under the published floor must be a danger, not a whisper');
 });
 
-test('DR16', 'the band holds flat outside its own reach and the speed range is never exceeded silently', () => {
+test('DR16', 'past where the diagram draws, the feed rate holds flat, not the feed per rev', () => {
   const e = data.drills.entries.find((x) => x.subfamily_id === 'through_hole_drill_excellent_hw_solid');
   const pts = e.feed_band.points;
   const top = pts[pts.length - 1];
   const beyond = bandAtRpm(e.feed_band, e.rpm_max);
-  approx(beyond.fnMin, top.fn_min_mm_rev, { abs: 1e-9 });
   assert(beyond.held === true, 'past where the diagram draws, the band must report that it is holding');
+  // The whole point of the fix: feed rate is what stays put. Holding mm/rev
+  // instead lets the feed keep climbing with speed, which is the wrong side.
+  approx(beyond.fnMin * e.rpm_max, top.fn_min_mm_rev * top.rpm, { rel: 1e-9 });
+  approx(beyond.fnMax * e.rpm_max, top.fn_max_mm_rev * top.rpm, { rel: 1e-9 });
+  assert(beyond.fnMin < top.fn_min_mm_rev, 'feed per rev must fall past the edge, not stay flat');
   const r = run({ drillType: e.subfamily_id, diameterMm: 8, rpm: e.rpm_max });
   assert(r.warnings.some((w) => w.code === 'drill_rpm_outside_band'), 'holding the feed must be said out loud');
+  // And the same below the bottom edge, where holding the rate means a slow
+  // spindle gets a proportionally larger bite rather than the same one.
+  const under = bandAtRpm(e.feed_band, pts[0].rpm - 500);
+  approx(under.fnMin * (pts[0].rpm - 500), pts[0].fn_min_mm_rev * pts[0].rpm, { rel: 1e-9 });
 });
 
 test('DR17', 'every served entry produces a number at its own published extremes', () => {
@@ -222,14 +230,68 @@ test('DR17', 'every served entry produces a number at its own published extremes
 });
 
 test('DR19', 'with no speed entered, the tool runs at the speed its own diagram marks', () => {
-  const r = calculateDrilling({ ...BASE, rpm: undefined }, data);
-  const marked = data.drills.entries.find((e) => e.subfamily_id === 'hinge_drill').feed_band.worked_example.rpm;
-  assert(r.outputs.spindleRpm === marked, `expected the marked ${marked} rpm, got ${r.outputs.spindleRpm}`);
-  assert(r.meta.rpmSource === 'marked', `expected the speed to come from the diagram, got ${r.meta.rpmSource}`);
-  // A tool whose diagram marks nothing falls back to the middle of its range.
-  const plain = calculateDrilling({ ...BASE, drillType: 'dowel_drill_hw_tipped', diameterMm: 8, rpm: undefined }, data);
-  assert(plain.meta.rpmSource === 'published', `expected the published fallback, got ${plain.meta.rpmSource}`);
-  assert(plain.outputs.spindleRpm === 6000, `expected the range midpoint 6000, got ${plain.outputs.spindleRpm}`);
+  // Every served tool carries the point its own diagram marks, and the validator
+  // now requires one, so the default speed is always a published choice.
+  for (const e of data.drills.entries) {
+    if (e.serves !== true) continue;
+    const r = calculateDrilling({ ...BASE, drillType: e.subfamily_id, diameterMm: e.diameter_min_mm, rpm: undefined }, data);
+    const marked = e.feed_band.worked_example.rpm;
+    assert(r.outputs.spindleRpm === marked, `${e.subfamily_id}: expected the marked ${marked} rpm, got ${r.outputs.spindleRpm}`);
+    assert(r.meta.rpmSource === 'marked', `${e.subfamily_id}: expected the speed to come from the diagram, got ${r.meta.rpmSource}`);
+    // And the served feed at that speed is the one the diagram prints, to within
+    // the profile's own position on the band.
+    const printed = e.feed_band.worked_example.vf_m_min * 1000;
+    const band = bandAtRpm(e.feed_band, marked);
+    assert(printed >= band.fnMin * marked - 1 && printed <= band.fnMax * marked + 1,
+      `${e.subfamily_id}: the printed operating point is outside its own band`);
+  }
+});
+
+test('DR20', 'a material outside the tool own published list warns, and still serves', () => {
+  // The diamond-tipped drills are rated for abrasive board and their printed
+  // workpiece list carries no solid timber.
+  const dp = data.drills.entries.find((e) => e.subfamily_id === 'hinge_drill_dp');
+  assert(!dp.materials.includes('hardwood'), 'the diamond hinge drill must not claim solid timber');
+  const r = run({ drillType: 'hinge_drill_dp', diameterMm: 35, material: 'hardwood' });
+  assert(r.status === 'ok', 'decision 9 serves rather than refuses');
+  const w = r.warnings.find((x) => x.code === 'drill_material_out_of_scope');
+  assert(w && w.severity === 'warning', 'a pick outside the tool own list must say so');
+  // And a material it is published for says nothing.
+  const ok = run({ drillType: 'hinge_drill_dp', diameterMm: 35, material: 'laminated_pb' });
+  assert(!ok.warnings.some((x) => x.code === 'drill_material_out_of_scope'), 'no scope warning inside the list');
+});
+
+test('DR21', 'the plain MDF pick never reads a coated-panel row', () => {
+  const map = data.drills.material_factor_map.map;
+  assert(!map.mdf.includes('mdf_plastic_coated'),
+    'plain MDF must not take the plastic-coated row: it served a coated feed for an uncoated board');
+  assert(map.laminated_pb.includes('mdf_plastic_coated'),
+    'the coated row belongs to the melamine pick, which is what a plastic-coated panel is');
+  // Every factor the chapter prints for plain MDF is 0.7, so a served MDF factor
+  // is either that or an openly substituted one, never 1.0 taken quietly.
+  for (const e of data.drills.entries) {
+    const r = calculateDrilling({ ...BASE, drillType: e.subfamily_id, diameterMm: e.diameter_min_mm, material: 'mdf' }, data);
+    if (r.status !== 'ok') continue;
+    assert(r.meta.materialFactor <= 0.7 || r.meta.factorSubstituted,
+      `${e.subfamily_id}: MDF served factor ${r.meta.materialFactor} without saying it was substituted`);
+  }
+});
+
+test('DR22', 'the borrowed chip floor checks the calculator own substitutions, not the maker numbers', () => {
+  // Where the tool publishes a factor for the pick, the maker's own low edge is
+  // the authority and the borrowed panel-routing floor must stay quiet.
+  const published = run({ material: 'mdf', profile: 'gentle' });
+  assert(!published.meta.factorSubstituted, 'this pick must be on a published factor');
+  assert(published.outputs.feedPerToothMm < data.rules.chip_floor_mm_per_tooth.plough_below,
+    'the case is only meaningful when the published number is under the borrowed floor');
+  assert(!published.warnings.some((w) => w.code === 'drill_chip_below_floor'),
+    'a borrowed floor must not contradict the maker own published minimum');
+
+  // Where the calculator substituted a factor, it must check its own work.
+  const substituted = run({ drillType: 'hinge_drill_hw_solid', diameterMm: 35, material: 'mdf', profile: 'gentle' });
+  assert(substituted.meta.factorSubstituted, 'this pick must fall through to the fallback');
+  assert(substituted.warnings.some((w) => w.code === 'drill_chip_below_floor'),
+    'a substituted factor that lands under the floor must say so');
 });
 
 test('DRUI1', 'every drill the picker offers serves a number at every size it offers', () => {

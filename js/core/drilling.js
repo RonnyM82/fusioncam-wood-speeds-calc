@@ -17,15 +17,30 @@
 // the feed identity is feed = rpm * mm-per-rev, with no flute count in it: the
 // published band already counts both cutting edges.
 
-// Linear interpolation of the published feed band at one spindle speed. Outside
-// the band's own range the nearest edge holds flat (rules.drilling.out_of_range_feed),
-// which is the conservative continuation because the upper edge falls as speed rises.
+// Linear interpolation of the published feed band at one spindle speed.
+//
+// Outside the range the diagram draws, the FEED RATE holds flat at the edge, not
+// the feed per revolution. Holding mm/rev flat was the first attempt and it is
+// the wrong side: feed rate is speed times mm/rev, so a flat mm/rev keeps the
+// feed climbing with speed, while every diagram in the chapter shows feed rate
+// flattening as speed rises, which is why mm/rev falls across all of them. On a
+// tool whose diagram does reach 12,000 rpm the difference is measurable: holding
+// mm/rev flat from 7,500 would have served about 35% more feed than the diagram
+// prints there. Holding the feed rate is the side that cannot overshoot.
 export function bandAtRpm(feedBand, rpm) {
   const pts = feedBand.points;
   if (!pts || pts.length === 0) return null;
-  if (rpm <= pts[0].rpm) return { fnMin: pts[0].fn_min_mm_rev, fnMax: pts[0].fn_max_mm_rev, held: rpm < pts[0].rpm };
+  const holdAt = (p) => ({
+    fnMin: (p.fn_min_mm_rev * p.rpm) / rpm,
+    fnMax: (p.fn_max_mm_rev * p.rpm) / rpm,
+    held: true,
+    heldAtRpm: p.rpm,
+  });
+  if (rpm < pts[0].rpm) return holdAt(pts[0]);
+  if (rpm === pts[0].rpm) return { fnMin: pts[0].fn_min_mm_rev, fnMax: pts[0].fn_max_mm_rev, held: false };
   const last = pts[pts.length - 1];
-  if (rpm >= last.rpm) return { fnMin: last.fn_min_mm_rev, fnMax: last.fn_max_mm_rev, held: rpm > last.rpm };
+  if (rpm > last.rpm) return holdAt(last);
+  if (rpm === last.rpm) return { fnMin: last.fn_min_mm_rev, fnMax: last.fn_max_mm_rev, held: false };
   for (let i = 1; i < pts.length; i += 1) {
     const a = pts[i - 1];
     const b = pts[i];
@@ -65,6 +80,14 @@ export function materialFactorFor(entry, material, map) {
   }
   const lowest = rows.reduce((a, b) => (b.factor < a.factor ? b : a));
   return { factor: lowest.factor, factorMaterial: lowest.material, substituted: true };
+}
+
+// Is the tool rated for the material at all? Leitz prints a workpiece list on
+// every tool page, and the diamond-tipped drills list abrasive board and no
+// solid timber. Serving a timber feed off an abrasive-board tool would be a
+// number the source never offers, so the pick warns rather than serving quietly.
+export function materialInScope(entry, material) {
+  return !Array.isArray(entry.materials) || entry.materials.includes(material);
 }
 
 // The peck plan, or null. Decision 5: the output stays silent where the source
@@ -199,9 +222,17 @@ export function calculateDrilling(input, data) {
   const band = bandAtRpm(entry.feed_band, rpm);
   if (!band) return REFUSE('The published feed for this drill could not be read at this speed.');
 
+  if (!materialInScope(entry, input.material)) {
+    warnings.push({
+      code: 'drill_material_out_of_scope',
+      severity: 'warning',
+      message: `${entry.label} is not published for this material. The numbers below come from the materials it is published for, so prove them with a test hole before you trust them.`,
+    });
+  }
+
   const { factor, factorMaterial, substituted } = materialFactorFor(entry, input.material, drills.material_factor_map.map);
   if (substituted) {
-    notes.push(`This drill publishes no feed correction for the material you picked, so the slowest one it does publish serves. Treat the feed as a starting point and prove it with a test hole.`);
+    notes.push('This drill publishes no feed correction for the material you picked, so the slowest one it does publish serves. Treat the feed as a starting point and prove it with a test hole.');
   }
   chartNotes.push(`Factor row ${factorMaterial} at ${factor}, against the ${entry.feed_band.baseline_material} baseline.`);
 
@@ -228,6 +259,21 @@ export function calculateDrilling(input, data) {
       code: 'drill_feed_below_band',
       severity: 'danger',
       message: 'A machine limit holds this plunge below the slowest published feed. Below that the drill rubs instead of cutting, which burns the hole and the edge.',
+    });
+  }
+  // An absolute floor, but only where the calculator left the published data.
+  // Where the tool publishes a factor for the picked material, the low edge of
+  // its own band is the maker's own minimum and this floor has no standing to
+  // contradict it: the figure is a panel-routing number and a drill's chisel
+  // edge is not a router flute. Where no factor is published, the fallback
+  // scales the whole band by another material's factor, and that is the
+  // calculator's choice rather than the maker's, so it has to be checked.
+  const floor = rules.chip_floor_mm_per_tooth?.plough_below;
+  if (substituted && floor > 0 && fnDeliv / entry.teeth < floor) {
+    warnings.push({
+      code: 'drill_chip_below_floor',
+      severity: 'danger',
+      message: `Each cutting edge takes ${(fnDeliv / entry.teeth).toFixed(3)} mm. That is under the ${floor} mm at which a wood cutting edge stops cutting and starts rubbing, and this feed rests on a substituted correction rather than a published one. Raise the feed, drop the speed, or pick a drill published for this material.`,
     });
   }
 

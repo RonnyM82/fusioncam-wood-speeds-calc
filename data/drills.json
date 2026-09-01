@@ -14,7 +14,7 @@
   "leitz-lexicon-7-drilling-chart-read": {
    "document": "vector-path read of the feed-speed diagrams printed beside the tool tables in Leitz Lexicon Edition 7 chapter 6",
    "retrieved": "2026-09-02",
-   "method": "polygon vertex coordinates taken from the PDF vector art. Each diagram is accepted only when its band spans the tool table's own printed speed range at both ends and, where the diagram prints a worked example, that example converts (fn = vf * 1000 / n) and lands inside the read band at its own speed. A diagram that fails either check goes back to the read rather than into this file.",
+   "method": "polygon vertex coordinates taken from the PDF vector art, sliced by crossing every edge of the outline at the sampled speed rather than by sampling nearby vertices. A diagram is accepted only when its band overlaps the tool's published speed range and covers at least the fraction named in rules.drilling.band_coverage_min, its own printed worked operating point converts (fn = vf * 1000 / n) and lands inside the band read off it, the axis calibration residual is under 2% of the range, and a baseline material and factor table are printed under it. Seventeen of the eighteen in-scope diagrams pass; the eighteenth, the boring pins, prints no factor table. All seventeen print a worked operating point and all seventeen land inside their own band.",
    "notes": "the diagrams plot feed speed against spindle speed for one baseline material. The band is an operating range, not a diameter spread: the single-diameter 35 mm turnblade tool carries the same 2:1 ratio as the 15-40 mm hinge drill at the same speed."
   },
   "session-5-drilling": {
@@ -23,22 +23,23 @@
   }
  },
  "material_factor_map": {
-  "note": "which calculator material reads as which printed factor row. The printed factor vocabulary is its own namespace and deliberately does not extend the routing material list, because Leitz names rows the calculator has no pick for (veneered chipboard, glulam). Candidates are ordered: the first one an entry's own factor table publishes wins. When an entry publishes none of them, the most conservative published factor serves with a note (Scott, 2026-09-02, decision 9), because refusing a pick the tool's own material list covers would be a refusal the source does not make.",
+  "note": "which calculator material reads as which printed factor row. The printed factor vocabulary is its own namespace and deliberately does not extend the routing material list, because Leitz names rows the calculator has no pick for (veneered chipboard, glulam). Candidates are ordered: the first one an entry's own factor table publishes wins. When an entry publishes none of them, the most conservative published factor serves with a note (Scott, 2026-09-02, decision 9), because refusing a pick the tool's own material list covers would be a refusal the source does not make. Two orderings are deliberate. The plain MDF pick reads only the plain MDF row: the solid-carbide hinge drills publish a 'MDF plastic coated' row at 1.0 and no plain row, and letting plain MDF take it served a coated-panel feed for an uncoated board, unmarked, at more than twice the factor every other section prints for MDF. That coated row belongs to the melamine pick instead, which is what a plastic-coated panel is, so it sits second behind coated chipboard there. A pick that falls through to the conservative fallback can end up under the chip floor, which is why the calculator also checks the delivered chip against an absolute floor and says so.",
   "source": "session-5-drilling",
   "data_class": "project_decision",
   "map": {
    "mdf": [
-    "mdf",
-    "mdf_plastic_coated"
+    "mdf"
    ],
    "particleboard": [
     "chipboard_uncoated"
    ],
    "laminated_pb": [
-    "chipboard_plastic_coated"
+    "chipboard_plastic_coated",
+    "mdf_plastic_coated"
    ],
    "laminated_chipboard": [
-    "chipboard_plastic_coated"
+    "chipboard_plastic_coated",
+    "mdf_plastic_coated"
    ],
    "hardwood": [
     "solid_wood",
@@ -62,7 +63,7 @@
   }
  },
  "profiles": {
-  "note": "gentle = the low edge of the published feed band at the served speed, standard = its midpoint, aggressive = its high edge. The midpoint is Scott's call (2026-09-02, decision 8), taken so that the three words mean the same thing in drilling as in routing. The cost is recorded: on the hinge-drill diagram the vendor's own marked operating point sits about two thirds up the band, so Standard runs about 11% under it and Aggressive reaches past it. The marked point renders as a marker on the feed chart so the user can see where the source itself sits. Finishing is not offered, because a hole has no finish pass and no source publishes a finishing drill feed.",
+  "note": "gentle = the low edge of the published feed band at the served speed, standard = its midpoint, aggressive = its high edge. The midpoint is Scott's call (2026-09-02, decision 8), taken so that the three words mean the same thing in drilling as in routing. The cost is recorded, and it is not a constant: across the twelve tools the vendor's own marked operating point sits anywhere from 22% to 93% up its band, so Standard runs from 20% under that point to 26% over it, below on nine tools and above on three. An earlier version of this note generalised 'about 11% under' from the hinge drill alone, which was the same mistake the band-ratio figure had already made. Every tool's marked point renders as a marker on the feed chart, at the speed it was printed for, so the user can see where the source itself sits. Finishing is not offered, because a hole has no finish pass and no source publishes a finishing drill feed.",
   "source": "session-5-drilling",
   "data_class": "project_decision"
  },
@@ -74,9 +75,35 @@
    "label": "Dowel drill",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 55.5 mm, with heel, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 5,
-   "diameter_max_mm": 10,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 4.0,
+   "diameter_max_mm": 16.0,
+   "diameters_published_mm": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0,
+    16.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -99,6 +126,11 @@
       "fn_max_mm_rev": 0.603
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.259,
+      "fn_max_mm_rev": 0.543
+     },
+     {
       "rpm": 6000,
       "fn_min_mm_rev": 0.248,
       "fn_max_mm_rev": 0.497
@@ -109,7 +141,11 @@
       "fn_max_mm_rev": 0.426
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4444
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -138,7 +174,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.1.1, blind holes for dowels in furniture construction. Spur geometry with shear cut. The cutting-material badge is printed as artwork rather than text, so the tipped grade here follows the section structure: 6.1.2 and 6.1.3 are published as the tipped and solid upgrades of this tool."
+   "notes": "Section 6.1.1, blind holes for dowels in furniture construction. Spur geometry with shear cut. The four shank variants of this tool (8 mm, 10 mm, threaded, and the version without a heel) print one shared feed diagram, one speed range and one factor table, so they are one entry. The diameter range is the union of their own tables. Leitz does not state the cutting material for this tool in text; the grade recorded here follows the section structure, where 6.1.2 and 6.1.3 are published as the tipped and solid upgrades of it."
   },
   {
    "subfamily_id": "dowel_drill_premium_hw_tipped",
@@ -147,9 +183,30 @@
    "label": "Dowel drill, premium",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57.5 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 4,
-   "diameter_max_mm": 10,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 4.0,
+   "diameter_max_mm": 10.0,
+   "diameters_published_mm": [
+    4.0,
+    5.0,
+    5.1,
+    6.0,
+    8.0,
+    8.2,
+    10.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -172,6 +229,11 @@
       "fn_max_mm_rev": 0.602
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.257,
+      "fn_max_mm_rev": 0.542
+     },
+     {
       "rpm": 6000,
       "fn_min_mm_rev": 0.247,
       "fn_max_mm_rev": 0.496
@@ -182,7 +244,11 @@
       "fn_max_mm_rev": 0.426
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4444
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -216,9 +282,30 @@
    "label": "Dowel drill, solid carbide",
    "edge_material": "HW_solid",
    "teeth": 2,
+   "teeth_source": "GL 57.5 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 3,
-   "diameter_max_mm": 10,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 3.0,
+   "diameter_max_mm": 10.0,
+   "diameters_published_mm": [
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 12000,
    "rpm_recommended_min": null,
@@ -241,6 +328,11 @@
       "fn_max_mm_rev": 0.807
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.352,
+      "fn_max_mm_rev": 0.77
+     },
+     {
       "rpm": 7500,
       "fn_min_mm_rev": 0.345,
       "fn_max_mm_rev": 0.724
@@ -251,7 +343,11 @@
       "fn_max_mm_rev": 0.538
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4444
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -289,9 +385,31 @@
    "label": "Through-hole drill",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57.5 mm, without heel, Z 2",
    "serves": true,
-   "diameter_min_mm": 5,
-   "diameter_max_mm": 12,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), elastomers.",
+   "diameter_min_mm": 5.0,
+   "diameter_max_mm": 12.0,
+   "diameters_published_mm": [
+    5.0,
+    5.2,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    12.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -314,6 +432,11 @@
       "fn_max_mm_rev": 0.433
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.215,
+      "fn_max_mm_rev": 0.354
+     },
+     {
       "rpm": 6000,
       "fn_min_mm_rev": 0.191,
       "fn_max_mm_rev": 0.315
@@ -324,7 +447,11 @@
       "fn_max_mm_rev": 0.275
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 1.3,
+     "fn_mm_rev": 0.2889
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -349,7 +476,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.2.1, through holes in furniture construction. The cutting-material badge is artwork rather than text, so the tipped grade follows the section structure, as in 6.1.1."
+   "notes": "Section 6.2.1, through holes in furniture construction. Two shank variants, one shared diagram. Leitz does not state the cutting material in text; the grade follows the section structure, as in 6.1.1."
   },
   {
    "subfamily_id": "through_hole_drill_premium_hw_tipped",
@@ -358,9 +485,26 @@
    "label": "Through-hole drill, premium",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57.5 mm, Z 2",
    "serves": true,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
    "diameter_min_mm": 4.5,
-   "diameter_max_mm": 8,
+   "diameter_max_mm": 8.0,
+   "diameters_published_mm": [
+    4.5,
+    5.0,
+    8.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": 4500,
@@ -383,6 +527,11 @@
       "fn_max_mm_rev": 0.492
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.251,
+      "fn_max_mm_rev": 0.458
+     },
+     {
       "rpm": 6000,
       "fn_min_mm_rev": 0.237,
       "fn_max_mm_rev": 0.413
@@ -393,7 +542,11 @@
       "fn_max_mm_rev": 0.326
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4444
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -431,9 +584,29 @@
    "label": "Through-hole drill, solid carbide",
    "edge_material": "HW_solid",
    "teeth": 2,
+   "teeth_source": "GL 57.5 mm, without heel, Z 2",
    "serves": true,
-   "diameter_min_mm": 3,
-   "diameter_max_mm": 10,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 3.0,
+   "diameter_max_mm": 10.0,
+   "diameters_published_mm": [
+    3.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 12000,
    "rpm_recommended_min": null,
@@ -456,6 +629,11 @@
       "fn_max_mm_rev": 0.492
      },
      {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.251,
+      "fn_max_mm_rev": 0.458
+     },
+     {
       "rpm": 6000,
       "fn_min_mm_rev": 0.237,
       "fn_max_mm_rev": 0.413
@@ -466,7 +644,11 @@
       "fn_max_mm_rev": 0.325
      }
     ],
-    "worked_example": null,
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4444
+    },
     "source": "leitz-lexicon-7-drilling-chart-read",
     "data_class": "measured_chart_read"
    },
@@ -495,7 +677,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.2.3. V-point tip with two bevels, solid tungsten carbide. The tool is rated to 12,000 rpm but its diagram draws the band only to about 9,000, so the band covers part of the speed range and the feed holds at that edge above it."
+   "notes": "Section 6.2.3. V-point tip with two bevels, solid tungsten carbide. The tool is rated to 12,000 rpm but its diagram draws the band only to about 9,000, so the band covers part of the speed range and the feed holds at that edge above it. Its diagram is the same artwork Leitz prints for 6.2.2, which is why the two bands match."
   },
   {
    "subfamily_id": "through_hole_drill_dp",
@@ -504,9 +686,26 @@
    "label": "Through-hole drill, diamond tipped",
    "edge_material": "DP_tipped",
    "teeth": 1,
+   "teeth_source": "GL 70 mm, Z 1",
    "serves": true,
-   "diameter_min_mm": 5,
-   "diameter_max_mm": 10,
+   "materials": [
+    "mdf",
+    "particleboard",
+    "laminated_pb",
+    "laminated_chipboard",
+    "plywood",
+    "softwood_ply",
+    "hpl"
+   ],
+   "materials_printed": "Gypsum bonded particle and fibre materials, cement bonded particle and fibre materials, flame resistant particle and fibre materials, solid resin glulam, fibre reinforced plastics.",
+   "diameter_min_mm": 5.0,
+   "diameter_max_mm": 10.0,
+   "diameters_published_mm": [
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ],
    "rpm_min": 4000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -569,7 +768,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.2.4. Diamond tipped for abrasive board: gypsum-bonded, cement-bonded and flame-resistant particle and fibre materials, and solid resin glulam. One cutting edge, not two."
+   "notes": "Section 6.2.4. Diamond tipped, and rated by Leitz for abrasive board: gypsum-bonded, cement-bonded and flame-resistant particle and fibre materials, solid resin glulam and fibre-reinforced plastics. Its printed workpiece list carries no solid timber, so solid timber is outside its scope. One cutting edge, not two."
   },
   {
    "subfamily_id": "hinge_drill",
@@ -578,9 +777,29 @@
    "label": "Hinge drill",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 15,
-   "diameter_max_mm": 40,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 15.0,
+   "diameter_max_mm": 40.0,
+   "diameters_published_mm": [
+    15.0,
+    18.0,
+    20.0,
+    25.0,
+    35.0,
+    40.0
+   ],
    "rpm_min": 2800,
    "rpm_max": 7000,
    "rpm_recommended_min": null,
@@ -656,9 +875,35 @@
    "label": "Hinge drill, solid carbide",
    "edge_material": "HW_solid",
    "teeth": 2,
+   "teeth_source": "GL 59.5 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 15,
-   "diameter_max_mm": 35,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 15.0,
+   "diameter_max_mm": 35.0,
+   "diameters_published_mm": [
+    15.0,
+    16.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    30.0,
+    34.0,
+    35.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -724,18 +969,42 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.3.2, part WB 310 0 13. Round spur geometry, solid tungsten carbide, for tear-free edges in panels with glued edgebanding."
+   "notes": "Section 6.3.2, part WB 310 0 13. Round spur geometry, solid tungsten carbide, for tear-free edges in panels with glued edgebanding. Section 6.3.2 prints further tables for this part on pages that carry no diagram, so the diameter range here is the union of the two pages that do."
   },
   {
-   "subfamily_id": "hinge_drill_hw_solid_reinforced",
+   "subfamily_id": "hinge_drill_hw_solid_three_edge",
    "section": "6.3.2",
    "family": "hinge_drill",
-   "label": "Hinge drill, solid carbide, heavy duty",
+   "label": "Hinge drill, solid carbide, three edge",
    "edge_material": "HW_solid",
-   "teeth": 2,
+   "teeth": 3,
+   "teeth_source": "GL 57 mm, Z 3 / V 3",
    "serves": true,
-   "diameter_min_mm": 18,
-   "diameter_max_mm": 35,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 18.0,
+   "diameter_max_mm": 35.0,
+   "diameters_published_mm": [
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    30.0,
+    34.0,
+    35.0
+   ],
    "rpm_min": 3000,
    "rpm_max": 9000,
    "rpm_recommended_min": null,
@@ -801,7 +1070,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.3.2, part WB 320 0 13, the heavier of the two solid-carbide hinge drills. It shares its section and its factor table with WB 310 0 13 but prints its own diagram, a higher band and its own worked example, so it is a separate entry rather than a variant."
+   "notes": "Section 6.3.2, part WB 320 0 13. Three cutting edges and three spurs where the other solid-carbide hinge drill has two, which is Leitz's own stated reason for its higher feed band: the page says it is designed for higher feed speed in comparison to boring bits with Z 2 / V 2. It shares its factor table with WB 310 0 13 but prints its own diagram and its own worked example, so it is a separate entry."
   },
   {
    "subfamily_id": "hinge_drill_turnblade",
@@ -810,9 +1079,24 @@
    "label": "Hinge drill, turnblade",
    "edge_material": "HW_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 35,
-   "diameter_max_mm": 35,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 35.0,
+   "diameter_max_mm": 35.0,
+   "diameters_published_mm": [
+    35.0
+   ],
    "rpm_min": 2800,
    "rpm_max": 7000,
    "rpm_recommended_min": null,
@@ -884,9 +1168,27 @@
    "label": "Hinge drill, diamond tipped",
    "edge_material": "DP_tipped",
    "teeth": 2,
+   "teeth_source": "GL 57 / GL 70 mm, Z 2 / V 2",
    "serves": true,
-   "diameter_min_mm": 15,
-   "diameter_max_mm": 35,
+   "materials": [
+    "mdf",
+    "particleboard",
+    "laminated_pb",
+    "laminated_chipboard",
+    "plywood",
+    "softwood_ply",
+    "hpl"
+   ],
+   "materials_printed": "Chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., fire resistant particle and fibre materials, laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 15.0,
+   "diameter_max_mm": 35.0,
+   "diameters_published_mm": [
+    15.0,
+    20.0,
+    25.0,
+    26.0,
+    35.0
+   ],
    "rpm_min": 2800,
    "rpm_max": 7000,
    "rpm_recommended_min": null,
@@ -949,7 +1251,7 @@
    "chip_clearing": null,
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
-   "notes": "Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant board. Leitz recommends it on automatic machines."
+   "notes": "Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant board. Its printed workpiece list carries no solid timber, so solid timber is outside its scope. Leitz recommends it on automatic machines."
   }
  ]
 }

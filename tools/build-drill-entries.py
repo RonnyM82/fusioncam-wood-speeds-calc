@@ -41,57 +41,91 @@ BASELINE_MAP = {"Chipboard plastic coated": "chipboard_plastic_coated"}
 # One entry per subfamily. Diameters are the tool table's own D column, checked
 # against the ranges recorded in research-session-5-drilling.md. band_page names
 # the diagram the band was read from; several pages of one subfamily share it.
+#
+# `pages` lists every diagram page of the subfamily, because a section's tables
+# run over several pages and the diameter range is their union. `parts` names the
+# tool's own part numbers, so a countersink's table on the same page cannot widen
+# the drill's range. `materials` is the tool's printed workpiece list, mapped to
+# the calculator's own material ids: a diamond-tipped drill for abrasive board is
+# not rated for solid timber, and without this the calculator would serve one.
+PANELS = ["mdf", "laminated_pb", "laminated_chipboard", "particleboard", "plywood", "softwood_ply"]
+WOOD = ["hardwood", "softwood"]
+
 SUBFAMILIES = [
-    dict(id="dowel_drill_hw_tipped", section="6.1.1", band_page=6, family="dowel_drill",
-         label="Dowel drill", edge="HW_tipped", dia=(5, 10),
-         note="Section 6.1.1, blind holes for dowels in furniture construction. Spur geometry with shear cut. "
-              "The cutting-material badge is printed as artwork rather than text, so the tipped grade here follows "
-              "the section structure: 6.1.2 and 6.1.3 are published as the tipped and solid upgrades of this tool."),
-    dict(id="dowel_drill_premium_hw_tipped", section="6.1.2", band_page=11, family="dowel_drill",
-         label="Dowel drill, premium", edge="HW_tipped", dia=(4, 10),
+    dict(id="dowel_drill_hw_tipped", section="6.1.1", band_page=6, pages=[6, 7, 9, 10],
+         parts=["WB 120 0 23", "WB 120 0 24", "WB 120 0 10", "WB 120 0 25", "WB 120 0 26", "WB 120 0 17", "WB 120 0 18"],
+         family="dowel_drill", label="Dowel drill", edge="HW_tipped", materials=PANELS + WOOD,
+         note="Section 6.1.1, blind holes for dowels in furniture construction. Spur geometry with shear cut. The "
+              "four shank variants of this tool (8 mm, 10 mm, threaded, and the version without a heel) print one "
+              "shared feed diagram, one speed range and one factor table, so they are one entry. The diameter range "
+              "is the union of their own tables. Leitz does not state the cutting material for this tool in text; "
+              "the grade recorded here follows the section structure, where 6.1.2 and 6.1.3 are published as the "
+              "tipped and solid upgrades of it."),
+    dict(id="dowel_drill_premium_hw_tipped", section="6.1.2", band_page=11, pages=[11],
+         parts=["WB 120 0 29", "WB 120 0 30"],
+         family="dowel_drill", label="Dowel drill, premium", edge="HW_tipped", materials=PANELS + WOOD,
          note="Section 6.1.2. Spur geometry with high shear cut, for tear-free blind holes."),
-    dict(id="dowel_drill_excellent_hw_solid", section="6.1.3", band_page=12, family="dowel_drill",
-         label="Dowel drill, solid carbide", edge="HW_solid", dia=(3, 10),
+    dict(id="dowel_drill_excellent_hw_solid", section="6.1.3", band_page=12, pages=[12],
+         parts=["WB 120 0 32", "WB 120 0 33"],
+         family="dowel_drill", label="Dowel drill, solid carbide", edge="HW_solid", materials=PANELS + WOOD,
          note="Section 6.1.3. Solid tungsten carbide, polished gullet. The fastest speed range in the chapter "
               "and the highest feed band with it."),
-    dict(id="through_hole_drill", section="6.2.1", band_page=15, family="through_hole_drill",
-         label="Through-hole drill", edge="HW_tipped", dia=(5, 12),
-         note="Section 6.2.1, through holes in furniture construction. The cutting-material badge is artwork "
-              "rather than text, so the tipped grade follows the section structure, as in 6.1.1."),
-    dict(id="through_hole_drill_premium_hw_tipped", section="6.2.2", band_page=17, family="through_hole_drill",
-         label="Through-hole drill, premium", edge="HW_tipped", dia=(4.5, 8),
+    dict(id="through_hole_drill", section="6.2.1", band_page=15, pages=[15, 16],
+         parts=["WB 101 0 02", "WB 101 0 03", "WB 101 0 04", "WB 101 0 05", "WB 101 0 06", "WB 101 0 07"],
+         family="through_hole_drill", label="Through-hole drill", edge="HW_tipped", materials=PANELS + WOOD,
+         note="Section 6.2.1, through holes in furniture construction. Two shank variants, one shared diagram. "
+              "Leitz does not state the cutting material in text; the grade follows the section structure, as in 6.1.1."),
+    dict(id="through_hole_drill_premium_hw_tipped", section="6.2.2", band_page=17, pages=[17],
+         parts=["WB 101 0 10"],
+         family="through_hole_drill", label="Through-hole drill, premium", edge="HW_tipped", materials=PANELS + WOOD,
          note="Section 6.2.2. V-point tip with two bevels, for exit-side quality."),
-    dict(id="through_hole_drill_excellent_hw_solid", section="6.2.3", band_page=18, family="through_hole_drill",
-         label="Through-hole drill, solid carbide", edge="HW_solid", dia=(3, 10),
+    dict(id="through_hole_drill_excellent_hw_solid", section="6.2.3", band_page=18, pages=[18],
+         parts=["WB 101 0 02", "WB 101 0 04", "WB 101 0 07"],
+         family="through_hole_drill", label="Through-hole drill, solid carbide", edge="HW_solid", materials=PANELS + WOOD,
          note="Section 6.2.3. V-point tip with two bevels, solid tungsten carbide. The tool is rated to 12,000 rpm "
               "but its diagram draws the band only to about 9,000, so the band covers part of the speed range and "
-              "the feed holds at that edge above it."),
-    dict(id="through_hole_drill_dp", section="6.2.4", band_page=19, family="through_hole_drill",
-         label="Through-hole drill, diamond tipped", edge="DP_tipped", dia=(5, 10),
-         note="Section 6.2.4. Diamond tipped for abrasive board: gypsum-bonded, cement-bonded and flame-resistant "
-              "particle and fibre materials, and solid resin glulam. One cutting edge, not two."),
-    dict(id="hinge_drill", section="6.3.1", band_page=22, family="hinge_drill",
-         label="Hinge drill", edge="HW_tipped", dia=(15, 40),
+              "the feed holds at that edge above it. Its diagram is the same artwork Leitz prints for 6.2.2, which "
+              "is why the two bands match."),
+    dict(id="through_hole_drill_dp", section="6.2.4", band_page=19, pages=[19],
+         parts=["WB 100 0 50"],
+         family="through_hole_drill", label="Through-hole drill, diamond tipped", edge="DP_tipped",
+         materials=["mdf", "particleboard", "laminated_pb", "laminated_chipboard", "plywood", "softwood_ply", "hpl"],
+         note="Section 6.2.4. Diamond tipped, and rated by Leitz for abrasive board: gypsum-bonded, cement-bonded "
+              "and flame-resistant particle and fibre materials, solid resin glulam and fibre-reinforced plastics. "
+              "Its printed workpiece list carries no solid timber, so solid timber is outside its scope. One "
+              "cutting edge, not two."),
+    dict(id="hinge_drill", section="6.3.1", band_page=22, pages=[22],
+         parts=["WB 310 0 04"],
+         family="hinge_drill", label="Hinge drill", edge="HW_tipped", materials=PANELS + WOOD,
          note="Section 6.3.1, cup boring for concealed hinges. Protruding centre point for centring in solid wood."),
-    dict(id="hinge_drill_hw_solid", section="6.3.2", band_page=23, family="hinge_drill",
-         label="Hinge drill, solid carbide", edge="HW_solid", dia=(15, 35),
+    dict(id="hinge_drill_hw_solid", section="6.3.2", band_page=23, pages=[23, 24],
+         parts=["WB 310 0 13"],
+         family="hinge_drill", label="Hinge drill, solid carbide", edge="HW_solid", materials=PANELS + WOOD,
          note="Section 6.3.2, part WB 310 0 13. Round spur geometry, solid tungsten carbide, for tear-free edges "
-              "in panels with glued edgebanding."),
-    dict(id="hinge_drill_hw_solid_reinforced", section="6.3.2", band_page=25, family="hinge_drill",
-         label="Hinge drill, solid carbide, heavy duty", edge="HW_solid", dia=(18, 35),
-         note="Section 6.3.2, part WB 320 0 13, the heavier of the two solid-carbide hinge drills. It shares its "
-              "section and its factor table with WB 310 0 13 but prints its own diagram, a higher band and its own "
-              "worked example, so it is a separate entry rather than a variant."),
-    dict(id="hinge_drill_turnblade", section="6.3.3", band_page=28, family="turnblade_hinge_drill",
-         label="Hinge drill, turnblade", edge="HW_tipped", dia=(35, 35),
+              "in panels with glued edgebanding. Section 6.3.2 prints further tables for this part on pages that "
+              "carry no diagram, so the diameter range here is the union of the two pages that do."),
+    dict(id="hinge_drill_hw_solid_three_edge", section="6.3.2", band_page=25, pages=[25],
+         parts=["WB 320 0 13"],
+         family="hinge_drill", label="Hinge drill, solid carbide, three edge", edge="HW_solid", materials=PANELS + WOOD,
+         note="Section 6.3.2, part WB 320 0 13. Three cutting edges and three spurs where the other solid-carbide "
+              "hinge drill has two, which is Leitz's own stated reason for its higher feed band: the page says it "
+              "is designed for higher feed speed in comparison to boring bits with Z 2 / V 2. It shares its factor "
+              "table with WB 310 0 13 but prints its own diagram and its own worked example, so it is a separate "
+              "entry."),
+    dict(id="hinge_drill_turnblade", section="6.3.3", band_page=28, pages=[28],
+         parts=["WL 920 0"],
+         family="turnblade_hinge_drill", label="Hinge drill, turnblade", edge="HW_tipped", materials=PANELS + WOOD,
          note="Section 6.3.3, part WL 920 0. Spurs and main cutting edge in turnblade form, replaceable centre "
               "point. Leitz calls it a diameter-constant tool and publishes it at 35 mm only. It is the evidence "
               "that the band width is an operating range and not a diameter spread: a single-diameter tool carries "
               "the same band as the 15-40 mm hinge drill at the same speed."),
-    dict(id="hinge_drill_dp", section="6.3.4", band_page=29, family="hinge_drill",
-         label="Hinge drill, diamond tipped", edge="DP_tipped", dia=(15, 35),
+    dict(id="hinge_drill_dp", section="6.3.4", band_page=29, pages=[29],
+         parts=["WB 310 0 50"],
+         family="hinge_drill", label="Hinge drill, diamond tipped", edge="DP_tipped",
+         materials=["mdf", "particleboard", "laminated_pb", "laminated_chipboard", "plywood", "softwood_ply", "hpl"],
          note="Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant "
-              "board. Leitz recommends it on automatic machines."),
+              "board. Its printed workpiece list carries no solid timber, so solid timber is outside its scope. "
+              "Leitz recommends it on automatic machines."),
 ]
 
 
@@ -138,16 +172,36 @@ def main():
         if ex:
             band["worked_example"] = {"rpm": ex["rpm"], "vf_m_min": ex["vf_m_min"], "fn_mm_rev": round(ex["fn_mm_rev"], 4)}
 
+        # The diameter range is the union of the tool's own tables across every
+        # page of its section. Set by hand it was wrong once, understating the
+        # standard dowel drill at 5-10 mm when its own tables publish 4-16, which
+        # refused a size the source publishes.
+        dia = set()
+        for pno in sf["pages"]:
+            for part, vals in reads[pno].get("diameters_by_part", {}).items():
+                if part in sf["parts"]:
+                    dia.update(vals)
+        if not dia:
+            raise SystemExit(f"{sf['id']}: no diameters found for parts {sf['parts']}")
+
+        teeth = r.get("teeth")
+        if not teeth:
+            raise SystemExit(f"{sf['id']}: no cutting-edge count read from a table heading")
+
         entry = {
             "subfamily_id": sf["id"],
             "section": sf["section"],
             "family": sf["family"],
             "label": sf["label"],
             "edge_material": sf["edge"],
-            "teeth": r.get("teeth", 2),
+            "teeth": teeth,
+            "teeth_source": r.get("teeth_from"),
             "serves": True,
-            "diameter_min_mm": sf["dia"][0],
-            "diameter_max_mm": sf["dia"][1],
+            "materials": sf["materials"],
+            "materials_printed": r.get("tool_materials_printed"),
+            "diameter_min_mm": min(dia),
+            "diameter_max_mm": max(dia),
+            "diameters_published_mm": sorted(dia),
             "rpm_min": r["rpm_min"],
             "rpm_max": r["rpm_max"],
             "rpm_recommended_min": r.get("rpm_recommended_min"),

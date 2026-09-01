@@ -192,10 +192,19 @@ def read_page(doc, pno):
     # The D column is the first column of every tool table on the page, and every
     # table on one page belongs to the same tool, so the union of the column is
     # the subfamily's diameter coverage.
+    # Diameters, per table rather than per page. A page carries the drill's own
+    # tables and often a countersink's as well, and lumping their D columns
+    # together stretched the drill's range over sizes it is not made in. Each
+    # table is the block of D values between one part number and the next.
     d_header = [s for s in sp if s["text"].strip() == "D" and s["bbox"][0] > LEFT_COL_MAX]
-    diameters = set()
-    if d_header:
+    parts = sorted(
+        [(s["bbox"][1], s["text"].strip()) for s in sp
+         if re.fullmatch(r"(WB|WL) \d{3} \d( \d{2})?", s["text"].strip())],
+        key=lambda p: p[0])
+    tables = {}
+    if d_header and parts:
         col_x = d_header[0]["bbox"][0]
+        vals = []
         for s in sp:
             if abs(s["bbox"][0] - col_x) > 1.5:
                 continue
@@ -203,17 +212,36 @@ def read_page(doc, pno):
             if re.fullmatch(r"\d{1,2}(\.\d)?", t):
                 v = float(t)
                 if 1 <= v <= 80:
-                    diameters.add(v)
-    rec["diameters_mm"] = sorted(diameters)
+                    vals.append((s["bbox"][1], v))
+        for y, v in vals:
+            owner = None
+            for py, pn in parts:
+                if py <= y:
+                    owner = pn
+                else:
+                    break
+            if owner:
+                tables.setdefault(owner, set()).add(v)
+    rec["diameters_by_part"] = {k: sorted(v) for k, v in tables.items()}
+    rec["diameters_mm"] = sorted({v for s in tables.values() for v in s})
 
-    zm = re.search(r"\bZ\s*(\d)\s*/\s*V\s*(\d)\b", text)
+    # The cutting-edge count comes from a tool-table heading, never from prose.
+    # Page 25 opens with "…in comparison to boring bits with Z 2 / V 2" and its
+    # own tables say Z 3 / V 3, so taking the first match on the page reported a
+    # three-edged drill as two-edged and halved its chip per edge.
+    # A tool-table heading ends with its edge count: "GL 57 mm, Z 3 / V 3" on a
+    # spurred drill, "GL 57.5 mm, without heel, Z 2" on a V-point through-hole
+    # drill that has no spurs, "GL 70 mm, Z 1" on a single-edge diamond drill.
+    # Matching on the ending is what tells a heading from the prose that also
+    # mentions a Z number.
+    heads = [s["text"].strip() for s in sp
+             if re.search(r"\bZ\s*\d(\s*/\s*V\s*\d)?\s*$", s["text"].strip()) and len(s["text"].strip()) > 8]
+    zm = re.search(r"\bZ\s*(\d)(?:\s*/\s*V\s*(\d))?\s*$", heads[0]) if heads else None
     if zm:
         rec["teeth"] = int(zm.group(1))
-        rec["spurs"] = int(zm.group(2))
-    else:
-        zm2 = re.search(r"\bZ\s*(\d)\b", text)
-        if zm2:
-            rec["teeth"] = int(zm2.group(1))
+        if zm.group(2):
+            rec["spurs"] = int(zm.group(2))
+        rec["teeth_from"] = heads[0]
 
     mm2 = re.search(r"Machine:\s*\n(.*?)(?:\n\s*\n|Workpiece material)", text, re.S)
     if mm2:
@@ -273,18 +301,41 @@ def read_page(doc, pno):
     my, cy, ry = fit([(c[2], c[0]) for c in vf_black])
     rec["calibration_residual_rpm"] = round(rx, 1)
     rec["calibration_residual_vf"] = round(ry, 4)
-    x_to_n = lambda x: mx * x + cx
-    n_to_x = lambda n: (n - cx) / mx
-    y_to_vf = lambda y: my * y + cy
+    # The fit constants are bound as defaults rather than closed over. Closing
+    # over them means any later code that happens to reuse the names cx or cy
+    # silently rewrites the calibration, and every position computed after it is
+    # wrong with no error anywhere. That happened once.
+    def x_to_n(x, m=mx, c=cx):
+        return m * x + c
+
+    def n_to_x(n, m=mx, c=cx):
+        return (n - c) / m
+
+    def y_to_vf(y, m=my, c=cy):
+        return m * y + c
 
     # --- the worked example, marked in red on both axes --------------------
-    # The red speed label sits on the axis row on some pages and a line below it
-    # on others, so it is found by colour and column rather than by row position.
-    x_span = (min(c[1] for c in n_row) - 12, max(c[1] for c in n_row) + 12)
-    red_n = [c for c in n_cands if c[3] == RED and x_span[0] <= c[1] <= x_span[1]]
-    red_vf = [c for c in vf_col if c[3] == RED]
-    if red_n and red_vf:
-        rec["worked_example"] = {"rpm": red_n[0][0], "vf_m_min": red_vf[0][0]}
+    # Found by colour, and by nothing else. An earlier version reused the axis
+    # regex, which only matches round thousands, and silently dropped every
+    # marker printed at 4,500 rpm. Six of the twelve diagrams mark exactly that,
+    # so half the tools lost the one operating point their maker prints.
+    x_span = (min(c[1] for c in n_row) - 14, max(c[1] for c in n_row) + 14)
+    y_axis = max(c[2] for c in n_row)
+    red_rpm, red_vf = None, None
+    for s in sp:
+        if s["color"] != RED or s["size"] >= 8:
+            continue
+        t = s["text"].strip().replace(",", ".")
+        if not re.fullmatch(r"\d+(\.\d+)?", t):
+            continue
+        sx = (s["bbox"][0] + s["bbox"][2]) / 2
+        sy = (s["bbox"][1] + s["bbox"][3]) / 2
+        if x_span[0] <= sx <= x_span[1] and sy > y_axis - 6:
+            red_rpm = float(t) if red_rpm is None else red_rpm
+        elif sx < min(c[1] for c in n_row):
+            red_vf = float(t) if red_vf is None else red_vf
+    if red_rpm and red_vf:
+        rec["worked_example"] = {"rpm": int(red_rpm), "vf_m_min": red_vf}
 
     # --- the band polygon --------------------------------------------------
     x_lo, x_hi = n_to_x(n_row[0][0]), n_to_x(n_row[-1][0])
@@ -427,12 +478,23 @@ def judge(rec):
     return rec
 
 
-# Decision 1 confines the served scope to CNC machining centres and drill banks.
-# Chapter 6.4 (twist, Levin and cylinder-head drills) prints one machine list for
-# the whole chapter: column drilling machines, drilling machines, special purpose
-# drilling machines and portable drills. That is the drill-press family, so none
-# of 6.4 is read here. 6.5 countersinks and 6.6 step drills are not drilling a
-# through or blind hole to size and are out of scope too.
+# What this pass reads: dowel drilling, through-hole drilling and hinge drilling.
+#
+# This is a first pass, not the whole of the chapter's scope. An earlier version
+# of this comment said chapter 6.4 was the drill-press chapter and printed one
+# machine list for all of it, and that is wrong. The chapter's own opening page
+# lists column, special purpose and portable drilling machines, but its tool
+# pages do not agree with it: the twist drills on printed pages 29 and 30 list
+# "point-to-point drilling machines, through feed drilling machines, CNC
+# machining centres, hinge boring machines, multi spindle units" before naming a
+# column drill, and the Levin drills on page 32 open with "CNC machining
+# centres". Only the cylinder-head drills on pages 43 and 44 are column and
+# portable machines alone.
+#
+# So parts of 6.4 sit inside the served scope and are simply not read yet. They
+# are the next entries in, not a deliberate exclusion. Two things do rule
+# themselves out: the cylinder-head drills on their own machine list, and 6.5
+# countersinks and 6.6 step drills, which are not boring a hole to size.
 IN_SCOPE = ("6.1", "6.2", "6.3")
 
 

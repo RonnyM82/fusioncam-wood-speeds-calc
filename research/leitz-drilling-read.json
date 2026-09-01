@@ -27,16 +27,31 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 120 0 23": [
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ],
+   "WB 120 0 24": [
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0
+   ]
+  },
   "diameters_mm": [
    5.0,
    6.0,
-   6.1,
    7.0,
    8.0,
    10.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 55.5 mm, with heel, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with shear cut. Drills can be combined with countersink WB 701 0 03. Countersink fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
@@ -48,6 +63,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0469,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2957,
    9064
@@ -63,6 +83,13 @@
     "vf_hi_m_min": 1.8078,
     "fn_min_mm_rev": 0.2564,
     "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1634,
+    "vf_hi_m_min": 2.4433,
+    "fn_min_mm_rev": 0.2585,
+    "fn_max_mm_rev": 0.5429
    },
    {
     "rpm": 6000,
@@ -111,29 +138,39 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 120 0 10": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0,
+    16.0
+   ]
+  },
   "diameters_mm": [
-   3.0,
    4.0,
-   4.5,
    5.0,
-   5.1,
-   5.2,
    6.0,
-   6.1,
    7.0,
    8.0,
-   8.2,
    9.0,
    10.0,
    11.0,
    12.0,
    13.0,
    14.0,
-   15.0,
    16.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57.5 mm, without heel, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with shear cut. Recessed flute for minimised friction and feed force. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank.",
@@ -146,6 +183,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0469,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2957,
    9064
@@ -161,6 +203,13 @@
     "vf_hi_m_min": 1.8078,
     "fn_min_mm_rev": 0.2564,
     "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1634,
+    "vf_hi_m_min": 2.4433,
+    "fn_min_mm_rev": 0.2585,
+    "fn_max_mm_rev": 0.5429
    },
    {
     "rpm": 6000,
@@ -208,17 +257,11 @@
     "factor": 1.3
    }
   ],
-  "diameters_mm": [
-   5.0,
-   6.0,
-   6.1,
-   8.0,
-   10.0,
-   12.0,
-   25.0
-  ],
+  "diameters_by_part": {},
+  "diameters_mm": [],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 70 mm, with heel, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with shear cut. Drills can be combined with countersink WB 701 0 03. Countersink fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
@@ -230,6 +273,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0469,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2957,
    9064
@@ -245,6 +293,13 @@
     "vf_hi_m_min": 1.8078,
     "fn_min_mm_rev": 0.2564,
     "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1634,
+    "vf_hi_m_min": 2.4433,
+    "fn_min_mm_rev": 0.2585,
+    "fn_max_mm_rev": 0.5429
    },
    {
     "rpm": 6000,
@@ -292,13 +347,23 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 120 0 17": [
+    5.0,
+    8.0
+   ],
+   "WB 120 0 18": [
+    5.0,
+    8.0
+   ]
+  },
   "diameters_mm": [
    5.0,
-   6.1,
    8.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "M10, threaded shank with seating 11 mm, without heel, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with shear cut. Recessed flute for minimised friction and feed force. Threaded shank for direct mounting in the drilling spindle. M10, threaded shank with seating 11 mm, without heel, Z 2 / V 2 WB 120 0 17 D mm",
@@ -309,6 +374,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0469,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2957,
    9064
@@ -324,6 +394,13 @@
     "vf_hi_m_min": 1.8078,
     "fn_min_mm_rev": 0.2564,
     "fn_max_mm_rev": 0.6026
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1634,
+    "vf_hi_m_min": 2.4433,
+    "fn_min_mm_rev": 0.2585,
+    "fn_max_mm_rev": 0.5429
    },
    {
     "rpm": 6000,
@@ -367,18 +444,36 @@
     "factor": 0.7
    }
   ],
+  "diameters_by_part": {
+   "WB 120 0 29": [
+    4.0,
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ],
+   "WB 120 0 30": [
+    4.0,
+    5.0,
+    5.1,
+    6.0,
+    8.0,
+    8.2,
+    10.0
+   ]
+  },
   "diameters_mm": [
    4.0,
    5.0,
    5.1,
    6.0,
-   6.1,
    8.0,
    8.2,
    10.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57.5 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with high shear cut. High wear resistant tungsten carbide grade for maximum life time. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
@@ -390,6 +485,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0467,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2951,
    9067
@@ -405,6 +505,13 @@
     "vf_hi_m_min": 1.8053,
     "fn_min_mm_rev": 0.2546,
     "fn_max_mm_rev": 0.6018
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.158,
+    "vf_hi_m_min": 2.4404,
+    "fn_min_mm_rev": 0.2573,
+    "fn_max_mm_rev": 0.5423
    },
    {
     "rpm": 6000,
@@ -452,18 +559,37 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 120 0 32": [
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ],
+   "WB 120 0 33": [
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0
+   ]
+  },
   "diameters_mm": [
    3.0,
    4.0,
    5.0,
    6.0,
-   6.1,
    7.0,
    8.0,
    10.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57.5 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with high shear cut. Solid tungsten carbide design with high wear resistant tungsten carbide grade. High stability and long performance time. Polished gullet for minimum friction and feed forces. Very large resharpening area.",
@@ -474,6 +600,11 @@
   ],
   "calibration_residual_rpm": 26.6,
   "calibration_residual_vf": 0.0469,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2963,
    12022
@@ -489,6 +620,13 @@
     "vf_hi_m_min": 2.4199,
     "fn_min_mm_rev": 0.3343,
     "fn_max_mm_rev": 0.8066
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.5829,
+    "vf_hi_m_min": 3.4673,
+    "fn_min_mm_rev": 0.3517,
+    "fn_max_mm_rev": 0.7705
    },
    {
     "rpm": 7500,
@@ -521,14 +659,20 @@
   "rpm_max": 9000,
   "baseline_printed": "Chipboard / MDF",
   "factors_printed": [],
+  "diameters_by_part": {
+   "WB 100 0 01": [
+    3.0,
+    5.0,
+    6.0,
+    8.0
+   ]
+  },
   "diameters_mm": [
    3.0,
    5.0,
    6.0,
-   6.1,
    8.0
   ],
-  "teeth": 1,
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Solid tungsten carbide design for high performance time. Large resharpening area. Tool suitable for RH and LH rotation. Drill design D = 3 mm particularly suitable for pre-drilling screw holes in plastic coated and veneered furniture parts. Infeed depth in hardwood and glulam maximum 2 x D.",
@@ -596,10 +740,30 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 101 0 02": [
+    5.0,
+    6.0,
+    8.0
+   ],
+   "WB 101 0 07": [
+    5.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0
+   ],
+   "WB 101 0 03": [
+    5.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0
+   ]
+  },
   "diameters_mm": [
    5.0,
    6.0,
-   6.2,
    7.0,
    8.0,
    9.0,
@@ -607,6 +771,7 @@
    12.0
   ],
   "teeth": 2,
+  "teeth_from": "GL 57.5 mm, without heel, Z 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), elastomers.",
   "technical_printed": "Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
@@ -620,6 +785,11 @@
   ],
   "calibration_residual_rpm": 54.4,
   "calibration_residual_vf": 0.0084,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 1.3,
+   "fn_mm_rev": 0.2889
+  },
   "band_span_rpm": [
    2933,
    9012
@@ -635,6 +805,13 @@
     "vf_hi_m_min": 1.3002,
     "fn_min_mm_rev": 0.2639,
     "fn_max_mm_rev": 0.4334
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 0.9684,
+    "vf_hi_m_min": 1.5945,
+    "fn_min_mm_rev": 0.2152,
+    "fn_max_mm_rev": 0.3543
    },
    {
     "rpm": 6000,
@@ -678,16 +855,29 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 101 0 05": [
+    5.0
+   ],
+   "WB 101 0 06": [
+    5.0,
+    5.2,
+    6.0,
+    8.0,
+    10.0,
+    12.0
+   ]
+  },
   "diameters_mm": [
    5.0,
    5.2,
    6.0,
-   6.2,
    8.0,
    10.0,
    12.0
   ],
   "teeth": 2,
+  "teeth_from": "GL 57.5 mm, with heel, Z 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), elastomers.",
   "technical_printed": "Drills can be combined with countersink WB 701 0 03. Countersinks fixed on heel. Continuously adjustable boring and countersink depth. Good guidance on return stroke for tear-free holes.",
@@ -700,6 +890,11 @@
   ],
   "calibration_residual_rpm": 54.4,
   "calibration_residual_vf": 0.0084,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 1.3,
+   "fn_mm_rev": 0.2889
+  },
   "band_span_rpm": [
    2933,
    9012
@@ -715,6 +910,13 @@
     "vf_hi_m_min": 1.3002,
     "fn_min_mm_rev": 0.2639,
     "fn_max_mm_rev": 0.4334
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 0.9684,
+    "vf_hi_m_min": 1.5945,
+    "fn_min_mm_rev": 0.2152,
+    "fn_max_mm_rev": 0.3543
    },
    {
     "rpm": 6000,
@@ -759,13 +961,20 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 101 0 10": [
+    4.5,
+    5.0,
+    8.0
+   ]
+  },
   "diameters_mm": [
    4.5,
    5.0,
-   6.2,
    8.0
   ],
   "teeth": 2,
+  "teeth_from": "GL 57.5 mm, Z 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "V-point tip with 2 bevels for maximised quality on the bottom side (exit). High wear resistant tungsten carbide grade for maximum lifetime. Drills can be combined with countersink WB 701 0 02. Countersinks can be clamped on the shank. Recessed flute for minimised friction and feed forces.",
@@ -776,6 +985,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0467,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2943,
    9054
@@ -791,6 +1005,13 @@
     "vf_hi_m_min": 1.4755,
     "fn_min_mm_rev": 0.2494,
     "fn_max_mm_rev": 0.4918
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1301,
+    "vf_hi_m_min": 2.0612,
+    "fn_min_mm_rev": 0.2511,
+    "fn_max_mm_rev": 0.4581
    },
    {
     "rpm": 6000,
@@ -834,16 +1055,31 @@
     "factor": 1.3
    }
   ],
+  "diameters_by_part": {
+   "WB 101 0 02": [
+    5.0,
+    6.0,
+    8.0
+   ],
+   "WB 101 0 07": [
+    3.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    10.0
+   ]
+  },
   "diameters_mm": [
    3.0,
    5.0,
    6.0,
-   6.2,
    7.0,
    8.0,
    10.0
   ],
   "teeth": 2,
+  "teeth_from": "GL 57.5 mm, without heel, Z 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "V-point tip with 2 bevels for maximised quality on the bottom side (exit). Solid tungsten carbide design with high wear resistant tungsten carbide grade. High stability and long performance time. Polished gullet for minimum friction and feed forces. Very large resharpening area.",
@@ -855,6 +1091,11 @@
   ],
   "calibration_residual_rpm": 54.7,
   "calibration_residual_vf": 0.0467,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4444
+  },
   "band_span_rpm": [
    2943,
    9054
@@ -870,6 +1111,13 @@
     "vf_hi_m_min": 1.4755,
     "fn_min_mm_rev": 0.2494,
     "fn_max_mm_rev": 0.4918
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1301,
+    "vf_hi_m_min": 2.0612,
+    "fn_min_mm_rev": 0.2511,
+    "fn_max_mm_rev": 0.4581
    },
    {
     "rpm": 6000,
@@ -909,14 +1157,22 @@
     "factor": 1.2
    }
   ],
+  "diameters_by_part": {
+   "WB 100 0 50": [
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ]
+  },
   "diameters_mm": [
    5.0,
    6.0,
-   6.2,
    8.0,
    10.0
   ],
   "teeth": 1,
+  "teeth_from": "GL 70 mm, Z 1",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Gypsum bonded particle and fibre materials, cement bonded particle and fibre materials, flame resistant particle and fibre materials, solid resin glulam, fibre reinforced plastics.",
   "technical_printed": "DP tipped through hole boring bit for maximum lifetime, particularly in abrasive materials. Large gullet for optimum chip removal.",
@@ -996,8 +1252,17 @@
     "factor": 0.7
    }
   ],
+  "diameters_by_part": {
+   "WB 310 0 04": [
+    15.0,
+    18.0,
+    20.0,
+    25.0,
+    35.0,
+    40.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    15.0,
    18.0,
    20.0,
@@ -1007,6 +1272,7 @@
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Good centering in solid wood by protruding centre point.",
@@ -1094,8 +1360,23 @@
     "factor": 1.0
    }
   ],
+  "diameters_by_part": {
+   "WB 310 0 13": [
+    15.0,
+    16.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    30.0,
+    34.0,
+    35.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    15.0,
    16.0,
    18.0,
@@ -1111,6 +1392,7 @@
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 59.5 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindle or stable drilling units.",
@@ -1191,8 +1473,17 @@
     "factor": 1.0
    }
   ],
+  "diameters_by_part": {
+   "WB 310 0 13": [
+    15.0,
+    20.0,
+    25.0,
+    26.0,
+    30.0,
+    35.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    15.0,
    20.0,
    25.0,
@@ -1202,6 +1493,7 @@
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 58 mm, Z 2 / V2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindles or stable drilling units. Design with reduced protrusion of centre point and spurs for deep holes in thin panels.",
@@ -1282,8 +1574,21 @@
     "factor": 1.0
    }
   ],
+  "diameters_by_part": {
+   "WB 320 0 13": [
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    30.0,
+    34.0,
+    35.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    18.0,
    20.0,
    22.0,
@@ -1295,8 +1600,9 @@
    34.0,
    35.0
   ],
-  "teeth": 2,
-  "spurs": 2,
+  "teeth": 3,
+  "spurs": 3,
+  "teeth_from": "GL 57 mm, Z 3 / V 3",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Round spur geometry for increased edge quality. Solid tungsten carbide design. High wear resistant tungsten carbide grade. Tear-free edges in panels with glued plastic edgebanders when used on main spindle, boring units as well as drilling machines.",
@@ -1369,12 +1675,17 @@
     "factor": 0.7
    }
   ],
+  "diameters_by_part": {
+   "WL 920 0": [
+    35.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    35.0
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spurs and main cutting edge in turnblade design. Replaceable centre point, resharpenable and adjustable for deep holes near to the bottom surface layer without marks. Diameter constant tool.",
@@ -1454,8 +1765,16 @@
     "factor": 0.7
    }
   ],
+  "diameters_by_part": {
+   "WB 310 0 50": [
+    15.0,
+    20.0,
+    25.0,
+    26.0,
+    35.0
+   ]
+  },
   "diameters_mm": [
-   6.3,
    15.0,
    20.0,
    25.0,
@@ -1464,6 +1783,7 @@
   ],
   "teeth": 2,
   "spurs": 2,
+  "teeth_from": "GL 57 / GL 70 mm, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., fire resistant particle and fibre materials, laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "DP tipped for increased performance time compared to tungsten carbide. Suitability for high volume production. Diamaster PRO tipping, resharpenable two/three times with normal wear. Preferred used on automatic machines. Drills can only be used in column drilling machines when workpieces are clamped tightly.",

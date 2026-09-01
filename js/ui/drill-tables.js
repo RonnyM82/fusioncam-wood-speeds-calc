@@ -25,7 +25,7 @@ export const DRILL_TOOLS = [
     id: 'hinge',
     label: 'Hinge drill',
     hint: 'Cup boring for concealed hinges, on a machining centre or a boring head.',
-    subfamilies: ['hinge_drill', 'hinge_drill_hw_solid', 'hinge_drill_hw_solid_reinforced', 'hinge_drill_turnblade', 'hinge_drill_dp'],
+    subfamilies: ['hinge_drill', 'hinge_drill_hw_solid', 'hinge_drill_hw_solid_three_edge', 'hinge_drill_turnblade', 'hinge_drill_dp'],
   },
 ];
 

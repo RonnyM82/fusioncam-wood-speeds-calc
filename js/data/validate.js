@@ -149,8 +149,21 @@ function validateDrills(drills, rules, errors) {
       }
     }
 
+    for (const m of e.materials ?? []) {
+      if (!MATERIALS.has(m)) errors.push(`${id}: unknown material "${m}" in the tool's own scope`);
+    }
     const rpmOk = typeof e.rpm_min === 'number' && typeof e.rpm_max === 'number' && e.rpm_min > 0 && e.rpm_max > e.rpm_min;
     if (!rpmOk) errors.push(`${id}: the published speed range must be two positive numbers, low below high`);
+    // Absolute bounds, not just internal consistency. Without them a band with
+    // every value multiplied by ten passed every check: the ratios, the ordering
+    // and the speed coverage all still held. These are the outer edges of what a
+    // wood drill can physically be, not a target.
+    if (rpmOk && (e.rpm_min < 200 || e.rpm_max > 30000)) {
+      errors.push(`${id}: a speed range of ${e.rpm_min}-${e.rpm_max} rpm is outside anything this chapter publishes`);
+    }
+    if (e.diameter_min_mm < 1 || e.diameter_max_mm > 80) {
+      errors.push(`${id}: a diameter range of ${e.diameter_min_mm}-${e.diameter_max_mm} mm is outside anything this chapter publishes`);
+    }
     if (e.rpm_recommended_min != null && rpmOk && (e.rpm_recommended_min < e.rpm_min || e.rpm_recommended_min > e.rpm_max)) {
       errors.push(`${id}: rpm_recommended_min sits outside the published speed range`);
     }
@@ -184,6 +197,11 @@ function validateDrills(drills, rules, errors) {
             shapeOk = false;
             return;
           }
+          if (p.fn_min_mm_rev < 0.02 || p.fn_max_mm_rev > 2.5) {
+            errors.push(`${id}: feed band point ${j} runs ${p.fn_min_mm_rev}-${p.fn_max_mm_rev} mm/rev, outside anything a wood drill takes`);
+            shapeOk = false;
+            return;
+          }
           if (j > 0 && p.rpm <= pts[j - 1].rpm) {
             errors.push(`${id}: feed band point ${j} does not rise in spindle speed`);
             shapeOk = false;
@@ -213,6 +231,14 @@ function validateDrills(drills, rules, errors) {
         }
 
         const ex = band.worked_example;
+        // Every served tool must carry the operating point its own diagram
+        // prints, because that is the only check that bounds the magnitude of a
+        // read rather than its shape. Six entries once shipped without one,
+        // because the reader's number pattern could not match a marker at 4,500
+        // rpm, and nothing downstream noticed.
+        if (ex == null && e.serves === true) {
+          errors.push(`${id}: a served tool must carry the worked operating point printed on its own diagram`);
+        }
         if (ex != null && shapeOk) {
           if (rpmOk && (ex.rpm < e.rpm_min || ex.rpm > e.rpm_max)) {
             errors.push(`${id}: the worked example sits outside the published speed range`);
@@ -240,6 +266,7 @@ function validateDrills(drills, rules, errors) {
         if (seenMaterials.has(f.material)) errors.push(`${id}: duplicate factor row "${f.material}"`);
         seenMaterials.add(f.material);
         if (typeof f.factor !== 'number' || !(f.factor > 0)) errors.push(`${id}: factor for "${f.material}" must be a positive number`);
+        else if (f.factor < 0.4 || f.factor > 2) errors.push(`${id}: a correction factor of ${f.factor} for "${f.material}" is outside anything this chapter publishes`);
         if (band && f.material === band.baseline_material && f.factor === 1) baselineRows += 1;
       }
       if (band && baselineRows !== 1) {
