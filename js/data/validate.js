@@ -18,7 +18,7 @@ const MACHINE_CLASSES = new Set(['big_iron_10hp_plus']);
 // join between the two.
 const DRILL_FAMILIES = new Set(['dowel_drill', 'through_hole_drill', 'boring_pin', 'hinge_drill', 'turnblade_hinge_drill', 'twist_drill', 'levin_drill', 'cylinder_head_drill']);
 const DRILL_EDGE_MATERIALS = new Set(['HW_tipped', 'HW_solid', 'HS_solid', 'DP_tipped']);
-const DRILL_MACHINE_CLASSES = new Set(['cnc_machining_centre', 'point_to_point', 'through_feed', 'drill_bank', 'multi_spindle', 'hinge_boring', 'column_drill', 'portable_drill', 'special_purpose_drill']);
+const DRILL_MACHINE_CLASSES = new Set(['cnc_machining_centre', 'point_to_point', 'through_feed', 'drill_bank', 'multi_spindle', 'hinge_boring', 'column_drill', 'portable_drill', 'special_purpose_drill', 'drilling_machine']);
 // Decision 1 (2026-09-01): the scope is CNC machining centres and drill banks. An
 // entry aimed only at drill presses may be recorded but must never serve, so the
 // gate enforces the scope rather than a comment doing it.

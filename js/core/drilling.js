@@ -128,7 +128,10 @@ export function peckPlan(chipClearing, dMm, holeDepthMm) {
         }
         break;
       case 'feed_factor_past_ratio':
-        if (ratio > rule.ratio_of_d) plan.feedFactor = rule.factor;
+        if (ratio > rule.ratio_of_d) {
+          plan.feedFactor = rule.factor;
+          plan.statements.push(`This hole is deeper than ${rule.ratio_of_d} times the drill diameter, so the feed is ${Math.round((1 - rule.factor) * 100)}% below the published value for a shallower one.`);
+        }
         break;
       default:
         break;

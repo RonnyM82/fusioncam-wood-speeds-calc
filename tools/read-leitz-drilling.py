@@ -234,9 +234,15 @@ def read_page(doc, pno):
     # drill that has no spurs, "GL 70 mm, Z 1" on a single-edge diamond drill.
     # Matching on the ending is what tells a heading from the prose that also
     # mentions a Z number.
+    # A heading is short and does not end in a full stop. The prose that also
+    # names an edge count is a sentence: page 25 says "…in comparison to boring
+    # bits with Z 2 / V 2." while its own tables say Z 3 / V 3, and taking that
+    # sentence reported a three-edged drill as two-edged.
     heads = [s["text"].strip() for s in sp
-             if re.search(r"\bZ\s*\d(\s*/\s*V\s*\d)?\s*$", s["text"].strip()) and len(s["text"].strip()) > 8]
-    zm = re.search(r"\bZ\s*(\d)(?:\s*/\s*V\s*(\d))?\s*$", heads[0]) if heads else None
+             if re.search(r"\bZ\s*\d(\s*/\s*V\s*\d)?\b", s["text"].strip())
+             and 8 < len(s["text"].strip()) < 46
+             and not s["text"].strip().endswith(".")]
+    zm = re.search(r"\bZ\s*(\d)(?:\s*/\s*V\s*(\d))?\b", heads[0]) if heads else None
     if zm:
         rec["teeth"] = int(zm.group(1))
         if zm.group(2):
@@ -495,7 +501,7 @@ def judge(rec):
 # are the next entries in, not a deliberate exclusion. Two things do rule
 # themselves out: the cylinder-head drills on their own machine list, and 6.5
 # countersinks and 6.6 step drills, which are not boring a hole to size.
-IN_SCOPE = ("6.1", "6.2", "6.3")
+IN_SCOPE = ("6.1", "6.2", "6.3", "6.4.1", "6.4.2")
 
 
 def main():

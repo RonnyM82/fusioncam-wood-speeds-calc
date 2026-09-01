@@ -226,7 +226,8 @@ test('DR17', 'every served entry produces a number at its own published extremes
       }
     }
   }
-  assert(served === 12, `expected twelve served subfamilies, got ${served}`);
+  assert(served === data.drills.entries.filter((e) => e.serves).length && served >= 16,
+    `expected every served subfamily to be swept, got ${served}`);
 });
 
 test('DR19', 'with no speed entered, the tool runs at the speed its own diagram marks', () => {

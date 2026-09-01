@@ -82,9 +82,28 @@ stay in lockstep. Conventions rather than data live in three new `rules.json`
 blocks: `drilling`, `drilling_attribution` and `drill_bank`, under the new
 `session-5-drilling` source key.
 
-**Twelve entries, from three of the chapter's six sections.** Dowel drills (6.1.1,
-6.1.2, 6.1.3), through-hole drills (6.2.1 to 6.2.4) and hinge drills (6.3.1 to
-6.3.4).
+**Sixteen entries.** Dowel drills (6.1.1 to 6.1.3), through-hole drills (6.2.1 to
+6.2.4), hinge drills (6.3.1 to 6.3.4), twist drills (6.4.1) and Levin drills
+(6.4.2).
+
+**The 6.4 tools were added on 2026-09-02**, after the claim that all of 6.4 was
+drill-press equipment turned out to be wrong. Every one of them lists multi
+spindle units, which are drill banks, and the twist drills also list CNC
+machining centres. They matter for two reasons. The solid-carbide twist drill is
+the only tool in the served set that goes under 3 mm, publishing 2, 2.5, 3, 3.2,
+3.5, 4 and 5 mm. And they carry the only chip-clearing rules in the served set,
+so they are what turns the peck output on: a clearing stroke past four diameters
+on the double-heel twist drill, no stroke needed to four diameters on the HSS
+Levin drill, none to 75 mm on the carbide one, and a feed cut of 20% past four
+diameters on both Levin drills.
+
+Two things about those pages needed handling. Their machine lists differ per
+page, unlike sections 6.1 to 6.3 which all print one list, so `machine_classes`
+is now read from each page's own printed text rather than assumed. And the Levin
+pages print a depth rule, "Drilling depth > 4 x D = 0.8", in the place a material
+factor table would sit. It is not a material correction and is routed to
+`chip_clearing` instead, where the calculator applies it to the whole cycle and
+says on the page that it did.
 
 **What is not here, and why, corrected 2026-09-02.** This is a first pass, not the
 whole of the served scope. An earlier version of this section said chapter 6.4 was

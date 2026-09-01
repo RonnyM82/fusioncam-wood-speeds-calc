@@ -114,6 +114,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -217,6 +218,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -316,6 +318,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -420,6 +423,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -515,6 +519,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -617,6 +622,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -716,6 +722,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -810,6 +817,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -914,6 +922,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -1015,6 +1024,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -1107,6 +1117,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -1199,6 +1210,7 @@
     "hinge_boring",
     "multi_spindle"
    ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
    "feed_band": {
     "basis": "mm_per_rev",
     "baseline_material": "chipboard_plastic_coated",
@@ -1252,6 +1264,392 @@
    "source": "leitz-lexicon-7-drilling",
    "data_class": "vendor",
    "notes": "Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant board. Its printed workpiece list carries no solid timber, so solid timber is outside its scope. Leitz recommends it on automatic machines."
+  },
+  {
+   "subfamily_id": "twist_drill_hw_solid",
+   "section": "6.4.1",
+   "family": "twist_drill",
+   "label": "Twist drill, solid carbide",
+   "edge_material": "HW_solid",
+   "teeth": 2,
+   "teeth_source": "HW solid, Z 2",
+   "serves": true,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), plastics (thermoplastic, fibre reinforced etc.), NF-metals (aluminium, copper etc.).",
+   "diameter_min_mm": 2.0,
+   "diameter_max_mm": 5.0,
+   "diameters_published_mm": [
+    2.0,
+    2.5,
+    3.0,
+    3.2,
+    3.5,
+    4.0,
+    5.0
+   ],
+   "rpm_min": 3000,
+   "rpm_max": 9000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "point_to_point",
+    "through_feed",
+    "cnc_machining_centre",
+    "hinge_boring",
+    "multi_spindle",
+    "column_drill",
+    "portable_drill"
+   ],
+   "machines_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units, column drilling machines, portable drills.",
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 29,
+    "diagram_page_pdf": 31,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.154,
+      "fn_max_mm_rev": 0.495
+     },
+     {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.2,
+      "fn_max_mm_rev": 0.49
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.216,
+      "fn_max_mm_rev": 0.476
+     },
+     {
+      "rpm": 8950,
+      "fn_min_mm_rev": 0.221,
+      "fn_max_mm_rev": 0.446
+     }
+    ],
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.3333
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "mdf",
+     "factor": 0.7
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "chipboard_uncoated",
+     "factor": 1.3
+    }
+   ],
+   "chip_clearing": null,
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.4.1, blind and through holes for general work. Solid tungsten carbide with a V point. This is the tool that covers the small sizes: its own table publishes 2, 2.5, 3, 3.2, 3.5, 4 and 5 mm, and nothing else in the served set goes under 3 mm."
+  },
+  {
+   "subfamily_id": "twist_drill_hw_double_heel",
+   "section": "6.4.1",
+   "family": "twist_drill",
+   "label": "Twist drill, double heel",
+   "edge_material": "HW_tipped",
+   "teeth": 2,
+   "teeth_source": "HW, Z 2 / V 2, with heel",
+   "serves": true,
+   "materials": [
+    "mdf",
+    "laminated_pb",
+    "laminated_chipboard",
+    "particleboard",
+    "plywood",
+    "softwood_ply",
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+   "diameter_min_mm": 4.0,
+   "diameter_max_mm": 12.0,
+   "diameters_published_mm": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    12.0
+   ],
+   "rpm_min": 3000,
+   "rpm_max": 6000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "multi_spindle",
+    "column_drill",
+    "special_purpose_drill",
+    "portable_drill",
+    "drilling_machine"
+   ],
+   "machines_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "chipboard_plastic_coated",
+    "diagram_page_printed": 34,
+    "diagram_page_pdf": 36,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.292,
+      "fn_max_mm_rev": 0.599
+     },
+     {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.263,
+      "fn_max_mm_rev": 0.51
+     },
+     {
+      "rpm": 5000,
+      "fn_min_mm_rev": 0.276,
+      "fn_max_mm_rev": 0.501
+     },
+     {
+      "rpm": 5950,
+      "fn_min_mm_rev": 0.297,
+      "fn_max_mm_rev": 0.5
+     }
+    ],
+    "worked_example": {
+     "rpm": 5000,
+     "vf_m_min": 2.0,
+     "fn_mm_rev": 0.4
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "chipboard_plastic_coated",
+     "factor": 1.0
+    },
+    {
+     "material": "solid_wood",
+     "factor": 0.7
+    },
+    {
+     "material": "laminated_veneer_lumber",
+     "factor": 0.8
+    }
+   ],
+   "chip_clearing": {
+    "rules": [
+     {
+      "kind": "clearing_stroke_recommended_past",
+      "ratio_of_d": 4
+     }
+    ],
+    "source": "leitz-lexicon-7-drilling",
+    "data_class": "vendor"
+   },
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.4.1. Tungsten carbide tipped, double heel for guidance on the way in and on the return stroke. Its page carries the first published chip-clearing rule in the served set: past four times the drill diameter, retract to clear the flutes."
+  },
+  {
+   "subfamily_id": "levin_drill_hs_solid",
+   "section": "6.4.2",
+   "family": "levin_drill",
+   "label": "Levin drill, high speed steel",
+   "edge_material": "HS_solid",
+   "teeth": 1,
+   "teeth_source": "HS solid, Z 1",
+   "serves": true,
+   "materials": [
+    "hardwood",
+    "softwood"
+   ],
+   "materials_printed": "Softwood and hardwood.",
+   "diameter_min_mm": 5.0,
+   "diameter_max_mm": 12.0,
+   "diameters_published_mm": [
+    5.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0
+   ],
+   "rpm_min": 3000,
+   "rpm_max": 6000,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "multi_spindle",
+    "column_drill",
+    "special_purpose_drill",
+    "portable_drill",
+    "drilling_machine"
+   ],
+   "machines_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "solid_wood",
+    "diagram_page_printed": 41,
+    "diagram_page_pdf": 43,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.158,
+      "fn_max_mm_rev": 0.424
+     },
+     {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.218,
+      "fn_max_mm_rev": 0.418
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.247,
+      "fn_max_mm_rev": 0.413
+     }
+    ],
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.3333
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "solid_wood",
+     "factor": 1.0
+    }
+   ],
+   "chip_clearing": {
+    "rules": [
+     {
+      "kind": "no_clearing_stroke_to_ratio",
+      "ratio_of_d": 4
+     },
+     {
+      "kind": "feed_factor_past_ratio",
+      "ratio_of_d": 4,
+      "factor": 0.8
+     }
+    ],
+    "source": "leitz-lexicon-7-drilling",
+    "data_class": "vendor"
+   },
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.4.2, deep holes in solid timber. A spiral flute with a large chip gullet, which is why it reaches four times its diameter with no clearing stroke at all. Its printed workpiece list is softwood and hardwood only. The one factor its page prints is a depth rule, not a material one."
+  },
+  {
+   "subfamily_id": "levin_drill_hw",
+   "section": "6.4.2",
+   "family": "levin_drill",
+   "label": "Levin drill, carbide",
+   "edge_material": "HW_solid",
+   "teeth": 1,
+   "teeth_source": "HW, Z 1 / V 1",
+   "serves": true,
+   "materials": [
+    "hardwood",
+    "softwood",
+    "plywood",
+    "softwood_ply"
+   ],
+   "materials_printed": "Softwood and hardwood, laminated veneer lumber (plywood, multiplex plywood etc.), glued lumber.",
+   "diameter_min_mm": 12.0,
+   "diameter_max_mm": 16.0,
+   "diameters_published_mm": [
+    12.0,
+    14.0,
+    16.0
+   ],
+   "rpm_min": 3000,
+   "rpm_max": 7500,
+   "rpm_recommended_min": null,
+   "machine_classes": [
+    "multi_spindle",
+    "column_drill",
+    "special_purpose_drill",
+    "portable_drill",
+    "drilling_machine"
+   ],
+   "machines_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+   "feed_band": {
+    "basis": "mm_per_rev",
+    "baseline_material": "solid_wood",
+    "diagram_page_printed": 42,
+    "diagram_page_pdf": 44,
+    "points": [
+     {
+      "rpm": 3000,
+      "fn_min_mm_rev": 0.158,
+      "fn_max_mm_rev": 0.424
+     },
+     {
+      "rpm": 4500,
+      "fn_min_mm_rev": 0.218,
+      "fn_max_mm_rev": 0.418
+     },
+     {
+      "rpm": 6000,
+      "fn_min_mm_rev": 0.247,
+      "fn_max_mm_rev": 0.413
+     }
+    ],
+    "worked_example": {
+     "rpm": 4500,
+     "vf_m_min": 1.5,
+     "fn_mm_rev": 0.3333
+    },
+    "source": "leitz-lexicon-7-drilling-chart-read",
+    "data_class": "measured_chart_read"
+   },
+   "material_factors": [
+    {
+     "material": "solid_wood",
+     "factor": 1.0
+    }
+   ],
+   "chip_clearing": {
+    "rules": [
+     {
+      "kind": "no_clearing_stroke_to_depth_mm",
+      "depth_mm": 75
+     },
+     {
+      "kind": "feed_factor_past_ratio",
+      "ratio_of_d": 4,
+      "factor": 0.8
+     }
+    ],
+    "source": "leitz-lexicon-7-drilling",
+    "data_class": "vendor"
+   },
+   "source": "leitz-lexicon-7-drilling",
+   "data_class": "vendor",
+   "notes": "Section 6.4.2, deep holes in solid timber, laminated veneer lumber and glued lumber, and joint holes in timber frame work. Rated to 75 mm deep with no clearing stroke, which Leitz states as an absolute depth rather than a multiple of the diameter."
   }
  ]
 }

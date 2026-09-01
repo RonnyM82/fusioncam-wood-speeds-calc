@@ -9,6 +9,7 @@ Run it from the repository root, after tools/read-leitz-drilling.py:
     python tools/build-drill-entries.py
 """
 import json
+import re
 from collections import OrderedDict
 from pathlib import Path
 
@@ -21,6 +22,37 @@ DRILLS = ROOT / "data" / "drills.json"
 # spindle units. A multi-spindle unit is the drill bank, so the whole set is
 # inside decision 1's scope.
 MACHINES = ["point_to_point", "through_feed", "cnc_machining_centre", "hinge_boring", "multi_spindle"]
+
+# Printed machine names to the vocabulary, longest first so "CNC machining
+# centres" is not eaten by "machining centres". Sections 6.1 to 6.3 all print one
+# list; 6.4 does not, which is why these are read from each page rather than
+# assumed. A multi spindle unit is a drill bank, and that is what puts several
+# 6.4 tools inside the served scope.
+MACHINE_MAP = [
+    ("point-to-point drilling machines", "point_to_point"),
+    ("through feed drilling machines", "through_feed"),
+    ("cnc machining centres", "cnc_machining_centre"),
+    ("stationary routers", "cnc_machining_centre"),
+    ("machining centres", "cnc_machining_centre"),
+    ("hinge boring machines", "hinge_boring"),
+    ("multi spindle units", "multi_spindle"),
+    ("column drilling machines", "column_drill"),
+    ("special purpose drilling machines", "special_purpose_drill"),
+    ("special cutting machines", "special_purpose_drill"),
+    ("portable drills", "portable_drill"),
+    ("drilling machines", "drilling_machine"),
+]
+
+
+def machines_from(printed):
+    text = (printed or "").lower()
+    found, seen = [], set()
+    for phrase, key in MACHINE_MAP:
+        if phrase in text and key not in seen:
+            seen.add(key)
+            found.append(key)
+            text = text.replace(phrase, " ")
+    return found
 
 # Printed factor row -> the vocabulary key, or keys where one printed row covers
 # two materials the calculator picks separately.
@@ -35,8 +67,18 @@ FACTOR_MAP = {
     "MDF, solid wood": ["mdf", "solid_wood"],
     "Solid wood": ["solid_wood"],
     "Glulam": ["glulam"],
+    "Laminated veneer lumber": ["laminated_veneer_lumber"],
 }
-BASELINE_MAP = {"Chipboard plastic coated": "chipboard_plastic_coated"}
+BASELINE_MAP = {
+    "Chipboard plastic coated": "chipboard_plastic_coated",
+    "Solid wood": "solid_wood",
+    "Softwood": "softwood",
+}
+# Some pages print a depth rule where the material factors would sit. It is not a
+# material correction and must not be read as one: it belongs with the chip
+# clearing rules, where the calculator applies it to the whole cycle past the
+# depth it names.
+DEPTH_FACTOR = re.compile(r"^Drilling depth\s*>\s*(\d+)\s*x\s*D$", re.I)
 
 # One entry per subfamily. Diameters are the tool table's own D column, checked
 # against the ranges recorded in research-session-5-drilling.md. band_page names
@@ -126,6 +168,39 @@ SUBFAMILIES = [
          note="Section 6.3.4. Diamond tipped for hard and abrasive faces such as HPL and CPL, and for fire-resistant "
               "board. Its printed workpiece list carries no solid timber, so solid timber is outside its scope. "
               "Leitz recommends it on automatic machines."),
+
+    # Chapter 6.4, the tools an earlier pass wrongly ruled out. Every one of them
+    # lists multi spindle units, which are drill banks, so they sit inside the
+    # served scope. These are also the only served tools that publish a
+    # chip-clearing rule, so they are what turns the peck output on.
+    dict(id="twist_drill_hw_solid", section="6.4.1", band_page=31, pages=[31],
+         parts=["WB 101 0 04"],
+         family="twist_drill", label="Twist drill, solid carbide", edge="HW_solid", materials=PANELS + WOOD,
+         note="Section 6.4.1, blind and through holes for general work. Solid tungsten carbide with a V point. This "
+              "is the tool that covers the small sizes: its own table publishes 2, 2.5, 3, 3.2, 3.5, 4 and 5 mm, and "
+              "nothing else in the served set goes under 3 mm."),
+    dict(id="twist_drill_hw_double_heel", section="6.4.1", band_page=36, pages=[36],
+         parts=["WB 120 0 25", "WB 120 0 27"],
+         family="twist_drill", label="Twist drill, double heel", edge="HW_tipped", materials=PANELS + WOOD,
+         clearing=[dict(kind="clearing_stroke_recommended_past", ratio_of_d=4)],
+         note="Section 6.4.1. Tungsten carbide tipped, double heel for guidance on the way in and on the return "
+              "stroke. Its page carries the first published chip-clearing rule in the served set: past four times "
+              "the drill diameter, retract to clear the flutes."),
+    dict(id="levin_drill_hs_solid", section="6.4.2", band_page=43, pages=[43],
+         parts=["WB 100 0"],
+         family="levin_drill", label="Levin drill, high speed steel", edge="HS_solid", materials=WOOD,
+         clearing=[dict(kind="no_clearing_stroke_to_ratio", ratio_of_d=4)],
+         note="Section 6.4.2, deep holes in solid timber. A spiral flute with a large chip gullet, which is why it "
+              "reaches four times its diameter with no clearing stroke at all. Its printed workpiece list is "
+              "softwood and hardwood only. The one factor its page prints is a depth rule, not a material one."),
+    dict(id="levin_drill_hw", section="6.4.2", band_page=44, pages=[44],
+         parts=["WB 110 0"],
+         family="levin_drill", label="Levin drill, carbide", edge="HW_solid",
+         materials=WOOD + ["plywood", "softwood_ply"],
+         clearing=[dict(kind="no_clearing_stroke_to_depth_mm", depth_mm=75)],
+         note="Section 6.4.2, deep holes in solid timber, laminated veneer lumber and glued lumber, and joint holes "
+              "in timber frame work. Rated to 75 mm deep with no clearing stroke, which Leitz states as an absolute "
+              "depth rather than a multiple of the diameter."),
 ]
 
 
@@ -145,7 +220,13 @@ def main():
         # allowed when the printed factors agree.
         factors = OrderedDict()
         factors[baseline] = 1.0
+        clearing = list(sf.get("clearing", []))
         for f in r["factors_printed"]:
+            depth = DEPTH_FACTOR.match(f["printed"])
+            if depth:
+                clearing.append(dict(kind="feed_factor_past_ratio",
+                                     ratio_of_d=int(depth.group(1)), factor=f["factor"]))
+                continue
             keys = FACTOR_MAP.get(f["printed"])
             if not keys:
                 raise SystemExit(f"{sf['id']}: no vocabulary for printed factor row {f['printed']!r}")
@@ -205,10 +286,15 @@ def main():
             "rpm_min": r["rpm_min"],
             "rpm_max": r["rpm_max"],
             "rpm_recommended_min": r.get("rpm_recommended_min"),
-            "machine_classes": MACHINES,
+            "machine_classes": machines_from(r.get("machine_printed")) or MACHINES,
+            "machines_printed": r.get("machine_printed"),
             "feed_band": band,
             "material_factors": [{"material": k, "factor": v} for k, v in factors.items()],
-            "chip_clearing": None,
+            "chip_clearing": None if not clearing else {
+                "rules": clearing,
+                "source": "leitz-lexicon-7-drilling",
+                "data_class": "vendor",
+            },
             "source": "leitz-lexicon-7-drilling",
             "data_class": "vendor",
             "notes": sf["note"],

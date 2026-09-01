@@ -363,7 +363,7 @@
   ],
   "teeth": 2,
   "spurs": 2,
-  "teeth_from": "M10, threaded shank with seating 11 mm, without heel, Z 2 / V 2",
+  "teeth_from": "M10,  threaded shank, without heel, Z 2 / V 2",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Spur geometry with shear cut. Recessed flute for minimised friction and feed force. Threaded shank for direct mounting in the drilling spindle. M10, threaded shank with seating 11 mm, without heel, Z 2 / V 2 WB 120 0 17 D mm",
@@ -673,6 +673,8 @@
    6.0,
    8.0
   ],
+  "teeth": 1,
+  "teeth_from": "GL 57.5 / GL 70 mm, Z 1/1",
   "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units.",
   "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
   "technical_printed": "Solid tungsten carbide design for high performance time. Large resharpening area. Tool suitable for RH and LH rotation. Drill design D = 3 mm particularly suitable for pre-drilling screw holes in plastic coated and veneered furniture parts. Infeed depth in hardwood and glulam maximum 2 x D.",
@@ -1837,6 +1839,744 @@
    }
   ],
   "coverage_fraction": 0.988,
+  "accepted": true
+ },
+ {
+  "page_pdf": 31,
+  "problems": [],
+  "page_printed": 29,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW solid, Z 2",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "MDF, solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Chipboard, uncoated",
+    "factor": 1.3
+   }
+  ],
+  "diameters_by_part": {
+   "WB 101 0 04": [
+    2.0,
+    2.5,
+    3.0,
+    3.2,
+    3.5,
+    4.0,
+    5.0
+   ]
+  },
+  "diameters_mm": [
+   2.0,
+   2.5,
+   3.0,
+   3.2,
+   3.5,
+   4.0,
+   5.0
+  ],
+  "teeth": 2,
+  "teeth_from": "HW solid, Z 2",
+  "machine_printed": "Point-to-point drilling machines, through feed drilling machines, CNC machining centres, hinge boring machines, multi spindle units, column drilling machines, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.), plastics (thermoplastic, fibre reinforced etc.), NF-metals (aluminium, copper etc.).",
+  "technical_printed": "Flat V-point.",
+  "application_printed": "For multi-purpose drilling of blind and through holes.",
+  "part_numbers": [
+   "WB 101 0 04"
+  ],
+  "calibration_residual_rpm": 54.8,
+  "calibration_residual_vf": 0.051,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.3333
+  },
+  "band_span_rpm": [
+   2874,
+   8962
+  ],
+  "band_covers_rpm": [
+   3000,
+   8950
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.4626,
+    "vf_hi_m_min": 1.4844,
+    "fn_min_mm_rev": 0.1542,
+    "fn_max_mm_rev": 0.4948
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 0.9001,
+    "vf_hi_m_min": 2.2059,
+    "fn_min_mm_rev": 0.2,
+    "fn_max_mm_rev": 0.4902
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.2982,
+    "vf_hi_m_min": 2.8572,
+    "fn_min_mm_rev": 0.2164,
+    "fn_max_mm_rev": 0.4762
+   },
+   {
+    "rpm": 8950,
+    "vf_lo_m_min": 1.9742,
+    "vf_hi_m_min": 3.9888,
+    "fn_min_mm_rev": 0.2206,
+    "fn_max_mm_rev": 0.4457
+   }
+  ],
+  "coverage_fraction": 0.992,
+  "accepted": true
+ },
+ {
+  "page_pdf": 35,
+  "problems": [
+   "the diagram's band covers only 2500-3500 rpm of the tool's published 1500-4000, which is 40%. Too little of the range to trust the read."
+  ],
+  "page_printed": 33,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HS solid, Z 2 / V 2",
+  "rpm_min": 1500,
+  "rpm_max": 4000,
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.7
+   }
+  ],
+  "diameters_by_part": {
+   "WB 120 0 05": [
+    3.0,
+    4.0,
+    4.5,
+    5.0,
+    5.5,
+    6.0,
+    6.5,
+    7.0,
+    7.5,
+    8.0,
+    10.0,
+    12.0
+   ]
+  },
+  "diameters_mm": [
+   3.0,
+   4.0,
+   4.5,
+   5.0,
+   5.5,
+   6.0,
+   6.5,
+   7.0,
+   7.5,
+   8.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "teeth_from": "HS solid, Z 2 / V 2",
+  "machine_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, laminated veneer lumber (plywood, multiplex plywood etc.), plastics (thermoplastic).",
+  "technical_printed": "Design in HS solid with long centre point and round spurs.",
+  "application_printed": "For multi-purpose drilling of tear-free blind holes.",
+  "part_numbers": [
+   "WB 120 0 02",
+   "WB 120 0 05"
+  ],
+  "calibration_residual_rpm": 11.3,
+  "calibration_residual_vf": 0.1007,
+  "worked_example": {
+   "rpm": 2500,
+   "vf_m_min": 1.2,
+   "fn_mm_rev": 0.48
+  },
+  "band_span_rpm": [
+   2520,
+   3503
+  ],
+  "band_covers_rpm": [
+   2500,
+   3500
+  ],
+  "points": [
+   {
+    "rpm": 2500,
+    "vf_lo_m_min": 0.7079,
+    "vf_hi_m_min": 1.7061,
+    "fn_min_mm_rev": 0.2832,
+    "fn_max_mm_rev": 0.6824
+   },
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.9917,
+    "vf_hi_m_min": 1.9829,
+    "fn_min_mm_rev": 0.3306,
+    "fn_max_mm_rev": 0.661
+   },
+   {
+    "rpm": 3500,
+    "vf_lo_m_min": 1.3495,
+    "vf_hi_m_min": 2.339,
+    "fn_min_mm_rev": 0.3856,
+    "fn_max_mm_rev": 0.6683
+   }
+  ],
+  "coverage_fraction": 0.4,
+  "accepted": false
+ },
+ {
+  "page_pdf": 36,
+  "problems": [],
+  "page_printed": 34,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW, Z 2 / V 2, with heel",
+  "rpm_min": 3000,
+  "rpm_max": 6000,
+  "baseline_printed": "Chipboard plastic coated",
+  "factors_printed": [
+   {
+    "printed": "Solid wood",
+    "factor": 0.7
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 0.8
+   }
+  ],
+  "diameters_by_part": {
+   "WB 120 0 27": [
+    5.0,
+    6.0,
+    8.0,
+    10.0
+   ],
+   "WB 120 0 25": [
+    4.0,
+    5.0,
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    12.0
+   ]
+  },
+  "diameters_mm": [
+   4.0,
+   5.0,
+   6.0,
+   7.0,
+   8.0,
+   9.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "teeth_from": "HW, Z 2 / V 2, with heel",
+  "machine_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, chipboard and fibre materials (MDF, HDF etc.), uncoated, plastic coated, veneered etc., laminated veneer lumber (plywood, multiplex plywood etc.).",
+  "technical_printed": "Tungsten carbide tipped design.",
+  "application_printed": "For multi-purpose drilling of tear-free blind holes.",
+  "part_numbers": [
+   "WB 120 0 25",
+   "WB 120 0 27"
+  ],
+  "calibration_residual_rpm": 13.9,
+  "calibration_residual_vf": 0.0179,
+  "worked_example": {
+   "rpm": 5000,
+   "vf_m_min": 2.0,
+   "fn_mm_rev": 0.4
+  },
+  "band_span_rpm": [
+   2985,
+   5975
+  ],
+  "band_covers_rpm": [
+   3000,
+   5950
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.8771,
+    "vf_hi_m_min": 1.7972,
+    "fn_min_mm_rev": 0.2924,
+    "fn_max_mm_rev": 0.5991
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 1.1832,
+    "vf_hi_m_min": 2.2956,
+    "fn_min_mm_rev": 0.2629,
+    "fn_max_mm_rev": 0.5101
+   },
+   {
+    "rpm": 5000,
+    "vf_lo_m_min": 1.3803,
+    "vf_hi_m_min": 2.5036,
+    "fn_min_mm_rev": 0.2761,
+    "fn_max_mm_rev": 0.5007
+   },
+   {
+    "rpm": 5950,
+    "vf_lo_m_min": 1.768,
+    "vf_hi_m_min": 2.9734,
+    "fn_min_mm_rev": 0.2971,
+    "fn_max_mm_rev": 0.4997
+   }
+  ],
+  "coverage_fraction": 0.983,
+  "accepted": true
+ },
+ {
+  "page_pdf": 37,
+  "problems": [
+   "could not find the spindle-speed axis labels"
+  ],
+  "page_printed": 35,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW solid, Z 2 / V2, with heel",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.8
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 1.1
+   }
+  ],
+  "diameters_by_part": {
+   "WB 120 0 35": [
+    6.0,
+    6.5,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0
+   ]
+  },
+  "diameters_mm": [
+   6.0,
+   6.5,
+   8.0,
+   10.0,
+   12.0,
+   14.0,
+   16.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "teeth_from": "HW solid, Z 2 / V2, with heel",
+  "machine_printed": "Stationary routers with/without CNC control, machining centres, special cutting machines to machine frame parts, column drilling machines, drilling machines, multi spindle units, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, modified timber for window construction, laminated veneer lumber (plywood, multiplex etc.), glued lumber.",
+  "technical_printed": "Design in solid tungsten carbide, Z 2/V 2 and centre point. Extra-long centre point for use of the drills at an angle. Design with double heel for improved guidance while drilling and return stroke from the hole.",
+  "application_printed": "For drilling deep holes. Particularly suitable for drilling connection and dowel holes in timber frame and window construction.",
+  "part_numbers": [
+   "WB 120 0 35"
+  ],
+  "accepted": false
+ },
+ {
+  "page_pdf": 38,
+  "problems": [
+   "the band at 3050 rpm spans 1.25x, outside what the diagrams publish",
+   "the band at 5500 rpm spans 1.24x, outside what the diagrams publish",
+   "the band at 8000 rpm spans 1.23x, outside what the diagrams publish"
+  ],
+  "page_printed": 36,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW solid, Z 2 / V 2, Marathon",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.8
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 1.2
+   }
+  ],
+  "diameters_by_part": {
+   "WB 120 0 34": [
+    6.0,
+    6.5,
+    8.0,
+    10.0,
+    12.0,
+    14.0,
+    16.0
+   ]
+  },
+  "diameters_mm": [
+   6.0,
+   6.5,
+   8.0,
+   10.0,
+   12.0,
+   14.0,
+   16.0
+  ],
+  "teeth": 2,
+  "spurs": 2,
+  "teeth_from": "HW solid, Z 2 / V 2, Marathon",
+  "machine_printed": "Stationary routers with/without CNC control, machining centres, special cutting machines to machine frame parts, column drilling machines, drilling machines, multi spindle units, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, modified timber for window construction, laminated veneer lumber (plywood, multiplex etc.), glued lumber.",
+  "technical_printed": "Design in solid tungsten carbide, Z 2/V 2 and centre point. Marathon coating for increased performance time. Extra-long centre point for use of the drills at an angle. Very large gullets for perfect chip removal particularly when drilling in end grain.",
+  "application_printed": "For drilling very deep holes without interim clearance strokes. Particularly suitable for drilling connection and dowel holes in timber frame and window construction.",
+  "part_numbers": [
+   "WB 120 0 34"
+  ],
+  "calibration_residual_rpm": 13.4,
+  "calibration_residual_vf": 0.0119,
+  "band_span_rpm": [
+   3043,
+   7992
+  ],
+  "band_covers_rpm": [
+   3050,
+   8000
+  ],
+  "points": [
+   {
+    "rpm": 3050,
+    "vf_lo_m_min": 1.9705,
+    "vf_hi_m_min": 2.4613,
+    "fn_min_mm_rev": 0.6461,
+    "fn_max_mm_rev": 0.807
+   },
+   {
+    "rpm": 5500,
+    "vf_lo_m_min": 2.7282,
+    "vf_hi_m_min": 3.3801,
+    "fn_min_mm_rev": 0.496,
+    "fn_max_mm_rev": 0.6146
+   },
+   {
+    "rpm": 8000,
+    "vf_lo_m_min": 3.4967,
+    "vf_hi_m_min": 4.312,
+    "fn_min_mm_rev": 0.4371,
+    "fn_max_mm_rev": 0.539
+   }
+  ],
+  "coverage_fraction": 0.825,
+  "accepted": false
+ },
+ {
+  "page_pdf": 39,
+  "problems": [
+   "no printed speed range found"
+  ],
+  "page_printed": 37,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.8
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 1.2
+   }
+  ],
+  "diameters_by_part": {},
+  "diameters_mm": [],
+  "tool_materials_printed": "Softwood Operation: Drilling Correction factor for vf: Hardwood = 0.8 Laminated veneer lumber = 1.2 Feed speed vf depending on the spindle RPM n Hirnholz Quer zur Faser vf [m*min-1] 2000 4000 6000 8000 10000 12000 0 1 2 3 4 5 6 7 8 9 10 11 12 4500 4,5 n [min-1] Diameter: D = 6 - 12 mm Workpiece material: Softwood Operation: Drilling Correction factor for vf: Hardwood = 0.8 Laminated veneer lumber = 1.2",
+  "part_numbers": [],
+  "calibration_residual_rpm": 13.4,
+  "calibration_residual_vf": 5.9011,
+  "band_span_rpm": [
+   2807,
+   8396
+  ],
+  "accepted": false
+ },
+ {
+  "page_pdf": 41,
+  "problems": [
+   "could not find the spindle-speed axis labels"
+  ],
+  "page_printed": 39,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW solid, Z 2, V-point",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.8
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 1.1
+   }
+  ],
+  "diameters_by_part": {
+   "WB 101 0 13": [
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    12.0
+   ]
+  },
+  "diameters_mm": [
+   7.0,
+   8.0,
+   9.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "teeth_from": "HW solid, Z 2, V-point",
+  "machine_printed": "Stationary routers with/without CNC control, machining centres, special cutting machines to machine frame parts, column drilling machines, drilling machines, multi spindle units, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, modified timber for window construction, laminated veneer lumber (plywood, multiplex etc.), glued lumber.",
+  "technical_printed": "Solid tungsten carbide design, Z 2 with V-point. Design with double heel for improved guidance while drilling and return stroke from the hole.",
+  "application_printed": "For drilling deep holes. Particularly for timber frame and window construction.",
+  "part_numbers": [
+   "WB 101 0 13"
+  ],
+  "accepted": false
+ },
+ {
+  "page_pdf": 42,
+  "problems": [
+   "no band polygon found inside the plot area"
+  ],
+  "page_printed": 40,
+  "section": "6.4.1",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW solid, Z 2, V-point, Marathon",
+  "rpm_min": 3000,
+  "rpm_max": 9000,
+  "baseline_printed": "Softwood",
+  "factors_printed": [
+   {
+    "printed": "Hardwood",
+    "factor": 0.8
+   },
+   {
+    "printed": "Laminated veneer lumber",
+    "factor": 1.2
+   }
+  ],
+  "diameters_by_part": {
+   "WB 101 0 12": [
+    6.0,
+    7.0,
+    8.0,
+    9.0,
+    10.0,
+    12.0
+   ]
+  },
+  "diameters_mm": [
+   6.0,
+   7.0,
+   8.0,
+   9.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 2,
+  "teeth_from": "HW solid, Z 2, V-point, Marathon",
+  "machine_printed": "Stationary routers with/without CNC control, machining centres, special cutting machines to machine frame parts, column drilling machines, drilling machines, multi spindle units, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, modified timber for window construction, laminated veneer lumber (plywood, multiplex etc.), glued lumber.",
+  "technical_printed": "Solid tungsten carbide design, Z 2 with V-point. Marathon coating for increased performance time. Very large gullets for perfect chip removal.",
+  "application_printed": "For drilling very deep holes without interim clearance strokes at high feed speed particularly for timber frame and window construction.",
+  "part_numbers": [
+   "WB 101 0 12"
+  ],
+  "calibration_residual_rpm": 13.4,
+  "calibration_residual_vf": 0.0492,
+  "accepted": false
+ },
+ {
+  "page_pdf": 43,
+  "problems": [],
+  "page_printed": 41,
+  "section": "6.4.2",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HS solid, Z 1",
+  "rpm_min": 3000,
+  "rpm_max": 6000,
+  "baseline_printed": "Solid wood",
+  "factors_printed": [
+   {
+    "printed": "Drilling depth > 4 x D",
+    "factor": 0.8
+   }
+  ],
+  "diameters_by_part": {
+   "WB 100 0": [
+    5.0,
+    6.0,
+    8.0,
+    10.0,
+    12.0
+   ]
+  },
+  "diameters_mm": [
+   5.0,
+   6.0,
+   8.0,
+   10.0,
+   12.0
+  ],
+  "teeth": 1,
+  "teeth_from": "HS solid, Z 1",
+  "machine_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood.",
+  "technical_printed": "Solid HS design, Z 1. V-point for producing tear-free holes on both sides when drilling through holes. Very large gullets for perfect chip removal particularly when drilling in end grain. V-point for through hole drilling WB 100 0 D mm",
+  "application_printed": "For drilling deep holes. Suitable for depths up to approx. 4 x D without interim clearance strokes.",
+  "part_numbers": [],
+  "calibration_residual_rpm": 11.3,
+  "calibration_residual_vf": 0.0246,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.3333
+  },
+  "band_span_rpm": [
+   2985,
+   5984
+  ],
+  "band_covers_rpm": [
+   3000,
+   6000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.4746,
+    "vf_hi_m_min": 1.2729,
+    "fn_min_mm_rev": 0.1582,
+    "fn_max_mm_rev": 0.4243
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 0.9831,
+    "vf_hi_m_min": 1.8819,
+    "fn_min_mm_rev": 0.2185,
+    "fn_max_mm_rev": 0.4182
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4832,
+    "vf_hi_m_min": 2.4809,
+    "fn_min_mm_rev": 0.2472,
+    "fn_max_mm_rev": 0.4135
+   }
+  ],
+  "coverage_fraction": 1.0,
+  "accepted": true
+ },
+ {
+  "page_pdf": 44,
+  "problems": [],
+  "page_printed": 42,
+  "section": "6.4.2",
+  "section_title": "Multi-purpose drilling",
+  "heading": "HW, Z 1 / V 1",
+  "rpm_min": 3000,
+  "rpm_max": 7500,
+  "baseline_printed": "Solid wood",
+  "factors_printed": [
+   {
+    "printed": "Drilling depth > 4 x D",
+    "factor": 0.8
+   }
+  ],
+  "diameters_by_part": {
+   "WB 110 0": [
+    12.0,
+    14.0,
+    16.0
+   ]
+  },
+  "diameters_mm": [
+   12.0,
+   14.0,
+   16.0
+  ],
+  "teeth": 1,
+  "spurs": 1,
+  "teeth_from": "HW, Z 1 / V 1",
+  "machine_printed": "Column drilling machines, drilling machines, multi spindle units, special purpose drilling machines, portable drills.",
+  "tool_materials_printed": "Softwood and hardwood, laminated veneer lumber (plywood, multiplex plywood etc.), glued lumber.",
+  "technical_printed": "Tungsten carbide design, Z 1/V 1 and centre point. Very large gullets for good chip removal, particularly when drilling in end grain. Drill point for blind holes WB 110 0 D mm",
+  "application_printed": "For drilling deep holes. Suitable for depths up to 75 mm without interim clearance strokes. Particularly suitable for producing joint holes in timber frame construction.",
+  "part_numbers": [],
+  "calibration_residual_rpm": 11.3,
+  "calibration_residual_vf": 0.0246,
+  "worked_example": {
+   "rpm": 4500,
+   "vf_m_min": 1.5,
+   "fn_mm_rev": 0.3333
+  },
+  "band_span_rpm": [
+   2985,
+   5984
+  ],
+  "band_covers_rpm": [
+   3000,
+   6000
+  ],
+  "points": [
+   {
+    "rpm": 3000,
+    "vf_lo_m_min": 0.4746,
+    "vf_hi_m_min": 1.2729,
+    "fn_min_mm_rev": 0.1582,
+    "fn_max_mm_rev": 0.4243
+   },
+   {
+    "rpm": 4500,
+    "vf_lo_m_min": 0.9831,
+    "vf_hi_m_min": 1.8819,
+    "fn_min_mm_rev": 0.2185,
+    "fn_max_mm_rev": 0.4182
+   },
+   {
+    "rpm": 6000,
+    "vf_lo_m_min": 1.4832,
+    "vf_hi_m_min": 2.4809,
+    "fn_min_mm_rev": 0.2472,
+    "fn_max_mm_rev": 0.4135
+   }
+  ],
+  "coverage_fraction": 0.667,
   "accepted": true
  }
 ]

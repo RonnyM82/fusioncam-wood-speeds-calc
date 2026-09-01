@@ -27,14 +27,28 @@ export const DRILL_TOOLS = [
     hint: 'Cup boring for concealed hinges, on a machining centre or a boring head.',
     subfamilies: ['hinge_drill', 'hinge_drill_hw_solid', 'hinge_drill_hw_solid_three_edge', 'hinge_drill_turnblade', 'hinge_drill_dp'],
   },
+  {
+    id: 'twist',
+    label: 'Twist drill',
+    hint: 'General blind and through holes, and the only drills here that go below 3 mm.',
+    subfamilies: ['twist_drill_hw_solid', 'twist_drill_hw_double_heel'],
+  },
+  {
+    id: 'levin',
+    label: 'Levin drill',
+    hint: 'Deep holes in solid timber. A large chip gullet, so it goes deep without stopping to clear.',
+    subfamilies: ['levin_drill_hs_solid', 'levin_drill_hw'],
+  },
 ];
 
 // Drills come in whole millimetres. The router list is built on imperial
 // fractions, and carrying 12.7 into drilling would offer a drill nobody owns.
 export const DRILL_DIAMETERS = {
-  dowel: [3, 4, 5, 6, 8, 10],
+  dowel: [4, 5, 6, 7, 8, 10, 12, 14, 16],
   through: [3, 4.5, 5, 6, 8, 10, 12],
   hinge: [15, 18, 20, 25, 26, 30, 35, 40],
+  twist: [2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12],
+  levin: [5, 6, 8, 10, 12, 14, 16],
 };
 
 // Drilling serves a different vocabulary of numbers. The speed and the plunge
