@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fusion panel - wood speeds and feeds</title>
+  <meta name="description" content="The wood speeds and feeds calculator as a panel inside the Fusion add-in. Every number traces to a published source.">
+  <!-- A classic script, before the stylesheets, so it runs before the first
+       paint and before any module can fail. Two jobs, both copied from the
+       proven palette page of the wait-code add-in (spike-results-windows.md
+       section 11, items 5 and 8).
+
+       1. The colour scheme. The add-in reads Fusion's theme and appends
+          ?theme=dark or ?theme=light to the panel address. The vendored
+          tokens switch scheme on the root's data-lt-scheme attribute, so
+          that is the attribute set here. Without the query the tokens follow
+          the operating system, which is the site's behaviour.
+
+       2. The error surface. The Fusion palette has no visible console, so an
+          uncaught error used to mean a blank panel. Any uncaught error or
+          unhandled promise rejection renders into #notice as the design
+          system's danger banner, with its icon and its words. Before #notice
+          exists the banner lands on the body, or on the root as a last
+          resort. Every element is built through the DOM, never from a
+          string, so the error text cannot inject markup. -->
+  <script>
+    (function () {
+      var theme = new URLSearchParams(location.search).get('theme');
+      if (theme === 'dark' || theme === 'light') {
+        document.documentElement.setAttribute('data-lt-scheme', theme);
+      }
+
+      var SVG_NS = 'http://www.w3.org/2000/svg';
+      var XLINK_NS = 'http://www.w3.org/1999/xlink';
+
+      function lines(parent, text) {
+        var parts = String(text).split('\n');
+        for (var i = 0; i < parts.length; i++) {
+          if (i > 0) parent.appendChild(document.createElement('br'));
+          parent.appendChild(document.createTextNode(parts[i]));
+        }
+      }
+
+      function show(message, detail) {
+        try {
+          var alert = document.createElement('div');
+          alert.className = 'lt-alert lt-alert--danger';
+          alert.setAttribute('role', 'alert');
+
+          var icon = document.createElementNS(SVG_NS, 'svg');
+          icon.setAttribute('class', 'lt-icon');
+          icon.setAttribute('aria-hidden', 'true');
+          icon.setAttribute('focusable', 'false');
+          var use = document.createElementNS(SVG_NS, 'use');
+          use.setAttribute('href', '#lt-ic-alert');
+          use.setAttributeNS(XLINK_NS, 'xlink:href', '#lt-ic-alert');
+          icon.appendChild(use);
+          alert.appendChild(icon);
+
+          var body = document.createElement('div');
+          body.className = 'lt-alert__body';
+          var title = document.createElement('span');
+          title.className = 'lt-alert__title';
+          title.textContent = 'The panel hit an error while loading. Report this text.';
+          body.appendChild(title);
+          var p = document.createElement('p');
+          lines(p, message);
+          body.appendChild(p);
+          if (detail) {
+            var d = document.createElement('p');
+            lines(d, detail);
+            body.appendChild(d);
+          }
+          alert.appendChild(body);
+
+          var host = document.getElementById('notice') || document.body || document.documentElement;
+          host.appendChild(alert);
+        } catch (ignore) {
+          /* nothing left to do */
+        }
+      }
+
+      window.addEventListener('error', function (e) {
+        var where = e.filename ? e.filename + ':' + e.lineno + ':' + e.colno : '';
+        var stack = e.error && e.error.stack ? e.error.stack : '';
+        show(e.message || 'unknown error', [where, stack].filter(Boolean).join('\n'));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        var r = e.reason || {};
+        show('Unhandled promise rejection: ' + (r.message || String(r)), r.stack || '');
+      });
+    })();
+  </script>
+  <!-- Livetools Design System. Tokens first: every rule in lt-components.css
+       reads a --lt-* value and gets nothing if the tokens have not landed.
+       fusion.css loads last, in the styles.css slot, so the app layer wins
+       without a specificity fight. It does not import styles.css: the panel
+       shares the tokens and the components with the site, not its page
+       furniture.
+
+       Every address carries ?v=<PAGE_BUILD>, the same string as PAGE_BUILD in
+       js/ui/fusion-panel.js, and tests/fusion-protocol.test.js FP15 pins the
+       two equal. The Fusion palette browser serves a stale cached copy after
+       an update, and a full Fusion restart is the only other clear
+       (spike-results-windows.md section 11, item 6). Bump PAGE_BUILD on every
+       change to this page or its files, then the query strings here. -->
+  <link rel="stylesheet" href="tokens/lt-tokens.css?v=2026-09-01b">
+  <link rel="stylesheet" href="app-tokens.css?v=2026-09-01b">
+  <link rel="stylesheet" href="components/lt-components.css?v=2026-09-01b">
+  <link rel="stylesheet" href="fusion.css?v=2026-09-01b">
+</head>
+<body>
+  <header>
+    <h1>Wood speeds &amp; feeds</h1>
+    <p class="tagline">The calculator inside Fusion. Pick a material for each setup, confirm each tool once, then apply the numbers to the operations you tick. Every number traces to a published source.</p>
+  </header>
+
+  <!-- Controls belong on a panel, and the panel stays light in both colour
+       schemes. The header sits on the page surface. Every section below is
+       rendered by js/ui/fusion-panel.js, which owns the panel state. -->
+  <main id="app" class="lt-panel">
+    <div id="notice"></div>
+    <div id="context"></div>
+    <section id="settings"></section>
+    <section id="tools"></section>
+    <section id="setups"></section>
+    <div id="actions"></div>
+    <!-- The write report arrives from the add-in after the user has acted,
+         so the region is live. Banners rendered inside it carry no role of
+         their own: a role inside a live region would announce twice. -->
+    <section id="report" aria-live="polite"></section>
+  </main>
+
+  <!-- The lt glyph set, inlined once per page and display-less via .lt-sprite.
+       A verbatim copy of icons/lt/sprite.svg from its root <svg> onward; when
+       that file is re-vendored, re-copy this block. Check it with:
+           diff <(sed -n '22,205p' icons/lt/sprite.svg) <(the block below)
+       An external <use href="file.svg#id"> would avoid the copy, but browser
+       support for cross-file references is not universal, and a badge that
+       loses its glyph is a status carrying colour alone. -->
+  <svg class="lt-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <!-- add: the primary "new thing" affordance -->
+    <symbol id="lt-ic-add" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M12 5v14"/>
+      <path class="lt-ic-ink" d="M5 12h14"/>
+    </symbol>
+    <!-- settings: hub and cross-ticks -->
+    <symbol id="lt-ic-settings" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="3"/>
+      <path class="lt-ic-ink" d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+    </symbol>
+    <!-- alert: the danger/error mark; pairs with words, never colour alone -->
+    <symbol id="lt-ic-alert" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+      <path class="lt-ic-ink" d="M12 8v4"/>
+      <path class="lt-ic-ink" d="M12 16h.01"/>
+    </symbol>
+    <!-- warning: the caution triangle -->
+    <symbol id="lt-ic-warning" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+      <path class="lt-ic-ink" d="M12 9v4"/>
+      <path class="lt-ic-ink" d="M12 17h.01"/>
+    </symbol>
+    <!-- success: check in a circle -->
+    <symbol id="lt-ic-success" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+      <path class="lt-ic-ink" d="m8 12 2.5 2.5L16 9"/>
+    </symbol>
+    <!-- info -->
+    <symbol id="lt-ic-info" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+      <path class="lt-ic-ink" d="M12 16v-4"/>
+      <path class="lt-ic-ink" d="M12 8h.01"/>
+    </symbol>
+    <!-- box: the empty-state crate -->
+    <symbol id="lt-ic-box" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M3 7h18v13H3z"/>
+      <path class="lt-ic-ink" d="M8 7V4h8v3"/>
+      <path class="lt-ic-ink" d="M9 13h6"/>
+    </symbol>
+    <!-- pencil: a draft, something started and not yet ruled on -->
+    <symbol id="lt-ic-pencil" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M4 20v-4L16 4l4 4L8 20Z"/>
+      <path class="lt-ic-ink" d="M13 7l4 4"/>
+    </symbol>
+    <!-- check: settled and in force. A BARE tick; the circled tick is
+         lt-ic-success and means an outcome, not a state. -->
+    <symbol id="lt-ic-check" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M4 13l5.5 5.5L20 6"/>
+    </symbol>
+    <!-- dash-circle: withdrawn. Ruled out by a decision, not forbidden. -->
+    <symbol id="lt-ic-dash-circle" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+      <path class="lt-ic-ink" d="M7.5 12h9"/>
+    </symbol>
+    <!-- slash: banned. The prohibition sign, and the only glyph here that
+         carries a 45-degree bar, which is what separates it from
+         dash-circle at 16px. -->
+    <symbol id="lt-ic-slash" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="12" cy="12" r="9"/>
+      <path class="lt-ic-ink" d="M5.6 5.6l12.8 12.8"/>
+    </symbol>
+    <!-- bookmark: reserved. Held for a purpose, in use by nobody yet. -->
+    <symbol id="lt-ic-bookmark" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M6 3h12v18l-6-5-6 5Z"/>
+    </symbol>
+    <!-- tilde: capable. Allowed, not recommended. -->
+    <symbol id="lt-ic-tilde" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M3 12c3-7 6-7 9 0c3 7 6 7 9 0"/>
+    </symbol>
+    <!-- flask: experimental. Under trial, results not in. -->
+    <symbol id="lt-ic-flask" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M9 3v7l-5 9a1 1 0 0 0 1 2h14a1 1 0 0 0 1-2l-5-9V3"/>
+      <path class="lt-ic-ink" d="M8 3h8"/>
+      <path class="lt-ic-ink" d="M7 16h10"/>
+    </symbol>
+    <!-- search: known-item lookup. -->
+    <symbol id="lt-ic-search" viewBox="0 0 24 24">
+      <circle class="lt-ic-ink" cx="10" cy="10" r="6"/>
+      <path class="lt-ic-ink" d="M14.5 14.5L20 20"/>
+    </symbol>
+    <!-- filter: narrowing a set. The funnel, not the three-bar mark. -->
+    <symbol id="lt-ic-filter" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M3 5h18l-7 8v6l-4 2v-8Z"/>
+    </symbol>
+    <!-- close: dismiss. One glyph for every dismissal. -->
+    <symbol id="lt-ic-close" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M6 6l12 12"/>
+      <path class="lt-ic-ink" d="M18 6L6 18"/>
+    </symbol>
+    <!-- chevron-down: this control opens something below it. -->
+    <symbol id="lt-ic-chevron-down" viewBox="0 0 24 24">
+      <path class="lt-ic-ink" d="M6 9l6 6 6-6"/>
+    </symbol>
+  </svg>
+
+  <!-- Elements before the app, so every custom element is defined by the time
+       fusion-panel.js writes to a .value property. A property set on an
+       element that has not upgraded yet shadows the class accessor and is
+       never read again. -->
+  <script type="module" src="components/lt-elements.js?v=2026-09-01b"></script>
+  <script type="module" src="js/ui/fusion-panel.js?v=2026-09-01b"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "f26a6eb2-1754-4460-970a-7a05d14158f8",
+    "author": "Scott Moyse",
+    "description": {
+        "": "Reads every toolpath in the document and serves wood speeds and feeds from wood.fusioncam.co."
+    },
+    "version": "0.1.0",
+    "runOnStartup": false,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}

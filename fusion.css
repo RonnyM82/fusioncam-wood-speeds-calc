@@ -1,0 +1,171 @@
+/* ---------------------------------------------------------------------------
+   Fusion panel, app layer.
+
+   Loads after lt-tokens.css and lt-components.css, in the slot styles.css
+   occupies on index.html. It does not import styles.css: the two pages share
+   the vendored tokens and components, not each other's page furniture. Every
+   colour, size, space and radius here reads a --lt-* token. Nothing in this
+   file declares a literal, and conformance.py fails the build if one appears.
+
+   SURFACES follow the site. <body> is the page surface and follows the
+   colour scheme. <main> is a panel and is light in BOTH schemes, which is why
+   every control sits inside it. The header sits on the page.
+
+   THERE IS NO DARK-MODE BLOCK HERE, deliberately. lt-tokens.css owns
+   prefers-color-scheme and re-declares its surfaces, its ink and its
+   color-scheme together. A second dark-mode system beside it is two sources
+   of truth that drift (the styles.css record of the same decision).
+   --------------------------------------------------------------------------- */
+
+:root {
+  font-family: var(--lt-font-sans);
+}
+
+/* Fusion's palette is a narrow docked browser, so the page runs a narrower
+   measure than the site and smaller padding. */
+body {
+  margin: 0 auto;
+  padding: var(--lt-space-4);
+  max-width: 48rem;
+  background: var(--lt-surface-page);
+  color: var(--lt-text-primary);
+  font-size: var(--lt-text-md);
+  line-height: var(--lt-leading-md);
+}
+
+header h1 {
+  font-size: var(--lt-text-lg);
+  line-height: var(--lt-leading-lg);
+  margin: var(--lt-space-2) 0;
+}
+.tagline {
+  color: var(--lt-text-secondary);
+  margin-top: 0;
+  font-size: var(--lt-text-sm);
+  line-height: var(--lt-leading-sm);
+}
+
+/* The panel paints its own background through .lt-panel. This adds only the
+   geometry, never a background: a later single-class rule setting one would
+   beat the surface class and leave the ink saying the opposite. */
+main {
+  padding: var(--lt-space-4) var(--lt-space-5);
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-lg);
+}
+
+/* Scoped, not a bare h2: a bare element selector reaches inside any component
+   that generates its own heading (the styles.css record). */
+#settings h2, #tools h2, #setups h2, #report h2 {
+  font-size: var(--lt-text-base);
+  line-height: var(--lt-leading-base);
+  margin: var(--lt-space-5) 0 var(--lt-space-3);
+}
+
+/* The sections space themselves; banners and components carry no outer
+   margin of their own. */
+#notice, #report { display: grid; gap: var(--lt-space-3); }
+#notice:not(:empty) { margin-block-end: var(--lt-space-4); }
+
+.doc-line {
+  margin: 0;
+  font-size: var(--lt-text-sm);
+  color: var(--lt-text-secondary);
+}
+
+.section-note {
+  margin: 0 0 var(--lt-space-3);
+  font-size: var(--lt-text-sm);
+  color: var(--lt-text-secondary);
+}
+
+/* The profile picker spans its field and the three options share the width
+   evenly, the same shape as the site's profile group. */
+.profile-group { display: flex; }
+.profile-group > .lt-btn { flex: 1; }
+
+/* One bounded block per tool. The grid wraps on the narrow palette, so the
+   description, the geometry field and the up-cut field stack rather than
+   crush. */
+.tool-rows { display: grid; gap: var(--lt-space-3); }
+.tool-row {
+  display: grid;
+  gap: var(--lt-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  padding: var(--lt-space-4);
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+}
+.tool-id { display: grid; gap: var(--lt-space-2); align-content: start; justify-items: start; }
+.tool-desc { font-weight: var(--lt-weight-semibold); }
+
+/* A setup section frames its material pick and its operation table. */
+.setup {
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  padding: var(--lt-space-4) var(--lt-space-5);
+  margin-block: var(--lt-space-4);
+}
+.setup h2 { margin-top: 0; }
+
+/* A grid item's minimum inline size is auto, so a wide operation table would
+   push the panel wide instead of scrolling inside .lt-table-wrap (the
+   styles.css measurement of 2026-08-31). A zero minimum keeps the wrapper in
+   charge of the overflow. */
+#setups .setup > * { min-inline-size: 0; }
+.setup .lt-table-wrap { margin-top: var(--lt-space-4); }
+
+/* Numbers a machinist transcribes: digits right-aligned, the document's
+   companion unit under each one, tabular so a column does not jitter. */
+td.val { text-align: right; }
+.val-primary {
+  display: block;
+  font-weight: var(--lt-weight-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.val-secondary {
+  display: block;
+  font-size: var(--lt-text-xs);
+  color: var(--lt-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The vendored .lt-table makes every th nowrap, which is wrong for operation
+   names. Let the row headers wrap (the styles.css record). */
+.setup th[scope="row"] { white-space: normal; }
+
+.op-reading { display: block; font-size: var(--lt-text-sm); }
+.op-reason { display: block; font-size: var(--lt-text-sm); color: var(--lt-text-secondary); }
+.op-state { display: grid; gap: var(--lt-space-2); justify-items: start; }
+.finish-check { margin-top: var(--lt-space-2); font-size: var(--lt-text-sm); }
+
+/* The diagnostic chips ride under their own served row. The served row drops
+   its bottom rule (the vendored table draws border-block-end on cells), so
+   the pair reads as one row of the table. */
+tr.has-chips th, tr.has-chips td { border-block-end: 0; }
+tr.op-chips td { padding-block-start: 0; }
+
+/* The write report: one banner for the outcome, then the rows as a stream in
+   the page, one line each, the app rule for anything past about three. */
+.report-rows {
+  display: grid;
+  gap: var(--lt-space-2);
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+  padding: var(--lt-space-4) var(--lt-space-5);
+}
+.report-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lt-space-2) var(--lt-space-3);
+  font-size: var(--lt-text-sm);
+}
+.report-row.is-inconsistent .report-name { font-weight: var(--lt-weight-bold); }
+.report-reason { color: var(--lt-text-secondary); }
+
+#actions { margin-block: var(--lt-space-5); }

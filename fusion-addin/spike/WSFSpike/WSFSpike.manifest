@@ -1,0 +1,13 @@
+{
+    "autodeskProduct": "Fusion360",
+    "type": "addin",
+    "id": "d7f1c32d-9213-4ebc-b514-da37ac4de327",
+    "author": "Scott Moyse",
+    "description": {
+        "": "Throwaway spike for the wood speeds and feeds add-in. Probes the Fusion API facts that protocol.md marks as spike."
+    },
+    "version": "0.1.0",
+    "runOnStartup": false,
+    "supportedOS": "windows|mac",
+    "editEnabled": true
+}
