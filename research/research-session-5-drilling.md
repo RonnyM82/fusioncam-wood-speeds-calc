@@ -204,6 +204,24 @@ Four things the build learned that the research did not know:
    is recorded and dormant: only Leitz serves, so nothing can disagree. The Amana
    and Onsrud numbers in this file remain the cross-checks.
 
+## The 1 to 2 mm gap, checked 2026-09-02
+
+The brief asked for 1 to 35 mm. The calculator serves 2 to 40 mm, and the missing
+end is not an oversight in the ingest. **The Leitz drilling chapter publishes no
+diameter below 2 mm anywhere**, on any tool, in any section. A sweep of every
+tool table's D column across all 59 pages returns 2.0 and 2.5 as the two smallest
+values, both on the solid-carbide twist drill, and both are served.
+
+The gap cannot be closed by extending what is there. A feed band does not vary
+with diameter, so serving a 1 mm drill from the twist drill's band would hand the
+user about 0.24 mm per revolution on a 1 mm tool, roughly a quarter of the drill's
+own diameter per turn. That is not a conservative extrapolation.
+
+The session's own source sweep found nothing published at 1 to 2 mm from any of
+the makers it looked at, so closing this needs a source none of this session has
+seen. Until one turns up, the honest position is that the calculator starts at
+2 mm and says so.
+
 ## Still open
 
 - Whether the page heading and title widen beyond routing. The site still calls

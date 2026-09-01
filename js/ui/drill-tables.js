@@ -41,7 +41,7 @@ export const DRILL_DIAMETERS = {
   dowel: [4, 5, 6, 7, 8, 10, 12, 14, 16],
   through: [3, 4.5, 5, 6, 8, 10, 12],
   hinge: [15, 18, 20, 25, 26, 30, 35, 40],
-  twist: [2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12],
+  twist: [2, 2.5, 3, 3.2, 3.5, 4, 5, 6, 8, 10, 12],
 };
 
 // Drilling serves a different vocabulary of numbers. The speed and the plunge
