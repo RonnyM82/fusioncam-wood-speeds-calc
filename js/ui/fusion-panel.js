@@ -14,8 +14,10 @@ import { loadData } from '../data/load-browser.js';
 import { validateData } from '../data/validate.js';
 import { machinePresets } from '../data/presets.js';
 import { calculate } from '../core/calculate.js';
+import { calculateDrilling } from '../core/drilling.js';
 import { buildChips } from '../core/diagnostics.js';
-import { feedPair, rpmPair, fzPair, diameterLabel } from './format.js';
+import { feedPair, rpmPair, fzPair, revPair, diameterLabel } from './format.js';
+import { DRILL_TOOLS, drillSubfamilyFor } from './drill-tables.js';
 import {
   PROTOCOL_VERSION, PROTOCOL_FLOOR,
   acceptsProtocol, isBadBuild, validateEnvelope, readJob,
@@ -23,14 +25,14 @@ import {
 } from '../fusion/protocol.js';
 import { identifyTool } from '../fusion/tool-identity.js';
 import { mapOperation } from '../fusion/map-operation.js';
-import { strategyLabel, pickChips, readFacts } from '../fusion/present.js';
+import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/present.js';
 
 // Rides the hello message, so the add-in can log which page answered it. It
 // is also the cache-bust key: every stylesheet and script address in
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-01f';
+const PAGE_BUILD = '2026-09-02b';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -143,9 +145,10 @@ const state = {
   rpm: null,               // the last spindle speed the field accepted
   rpmError: false,         // the field holds a value it has refused
   firstCut: true,
+  drillBank: false,        // the drills run on a fixed-speed boring head
   materialBySetup: {},     // setupId -> material id
   finishRows: new Set(),   // opIds marked as a finish pass
-  tools: new Map(),        // toolKey -> { geometry, confirmed, upcutLengthMm }
+  tools: new Map(),        // toolKey -> { kind, geometry, drillFamily, confirmed, upcutLengthMm }
   toolRows: [],            // distinct tools, in first-seen order
   toolKeyByOp: new Map(),  // opId -> toolKey
   served: new Map(),       // opId -> { result, rounded }, current render only
@@ -401,6 +404,7 @@ function restoreMemory(job) {
     if (PROFILES.some((p) => p.id === doc.profile)) state.profile = doc.profile;
     if (Number.isFinite(doc.rpm) && doc.rpm > 0) state.rpm = doc.rpm;
     if (typeof doc.firstCut === 'boolean') state.firstCut = doc.firstCut;
+    if (typeof doc.drillBank === 'boolean') state.drillBank = doc.drillBank;
     if (Array.isArray(doc.finishRows)) {
       state.finishRows = new Set(doc.finishRows.filter((x) => typeof x === 'string'));
     }
@@ -408,14 +412,21 @@ function restoreMemory(job) {
   const user = parseBlob(job.memory?.userBlob);
   if (user && user.tools) {
     for (const [key, t] of Object.entries(user.tools)) {
-      if (!t || !GEOMETRIES.some((g) => g.id === t.geometry)) continue;
-      // The user confirmed this geometry in an earlier session, and the
-      // add-in returned the record. That confirmation stands.
-      state.tools.set(key, {
-        geometry: t.geometry,
-        confirmed: true,
-        upcutLengthMm: Number.isFinite(t.upcutLengthMm) && t.upcutLengthMm > 0 ? t.upcutLengthMm : null,
-      });
+      if (!t) continue;
+      // The user confirmed this pick in an earlier session, and the add-in
+      // returned the record. That confirmation stands. A router bit stores
+      // a geometry and a drill stores a family (2026-09-02); a record with
+      // neither restores nothing.
+      if (GEOMETRIES.some((g) => g.id === t.geometry)) {
+        state.tools.set(key, {
+          geometry: t.geometry,
+          drillFamily: null,
+          confirmed: true,
+          upcutLengthMm: Number.isFinite(t.upcutLengthMm) && t.upcutLengthMm > 0 ? t.upcutLengthMm : null,
+        });
+      } else if (DRILL_TOOLS.some((f) => f.id === t.drillFamily)) {
+        state.tools.set(key, { geometry: null, drillFamily: t.drillFamily, confirmed: true, upcutLengthMm: null });
+      }
     }
   }
 }
@@ -440,7 +451,15 @@ function buildTools(job) {
       seen.add(id.key);
       state.toolRows.push({ key: id.key, kind: id.kind, guess: id.guess, guessSource: id.guessSource, tool: op.tool });
       if (!state.tools.has(id.key)) {
-        state.tools.set(id.key, { kind: id.kind, geometry: id.guess, confirmed: false, upcutLengthMm: null });
+        // The guess prefills the one question the tool takes: a geometry
+        // for a router bit, a family for a drill (tool-identity.js).
+        state.tools.set(id.key, {
+          kind: id.kind,
+          geometry: id.kind === 'router' ? id.guess : null,
+          drillFamily: id.kind === 'drill' ? id.guess : null,
+          confirmed: false,
+          upcutLengthMm: null,
+        });
       } else {
         // A record restored from memory carries no kind: the kind is a fact
         // about the tool Fusion sent, never a stored choice (2026-09-01).
@@ -461,6 +480,7 @@ function persistDoc() {
     profile: state.profile,
     rpm: state.rpm,
     firstCut: state.firstCut,
+    drillBank: state.drillBank,
     finishRows: [...state.finishRows],
     toolOverrides: {},
   })));
@@ -469,9 +489,13 @@ function persistDoc() {
 function persistUser() {
   const tools = {};
   for (const [key, t] of state.tools) {
-    if (!t.confirmed || !t.geometry) continue;
-    tools[key] = { geometry: t.geometry };
-    if (t.upcutLengthMm > 0) tools[key].upcutLengthMm = t.upcutLengthMm;
+    if (!t.confirmed) continue;
+    if (t.geometry) {
+      tools[key] = { geometry: t.geometry };
+      if (t.upcutLengthMm > 0) tools[key].upcutLengthMm = t.upcutLengthMm;
+    } else if (t.drillFamily) {
+      tools[key] = { drillFamily: t.drillFamily };
+    }
   }
   send(makePersist('user', JSON.stringify({ tools })));
 }
@@ -502,6 +526,17 @@ function roundedOutputs(outputs, flutesTotal) {
     rampMmMin: roundFeed(outputs.rampFeedMmMin),
     leadInMmMin: roundFeed(outputs.leadInFeedMmMin),
     leadOutMmMin: roundFeed(outputs.leadOutFeedMmMin),
+  };
+}
+
+// A drill row writes the spindle speed and the plunge feed only: the
+// cutting feed is not editable on a drill (protocol.md, apply). The same
+// steps as the routing rounding, so the card and Fusion hold one number
+// (2026-09-02).
+function roundedDrillOutputs(outputs) {
+  return {
+    rpm: Math.round(outputs.spindleRpm),
+    plungeMmMin: roundFeed(outputs.plungeFeedMmMin),
   };
 }
 
@@ -700,7 +735,8 @@ function renderSettings() {
         </div>
       </div>
       <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
-                       measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
+                       measure="rotation" min="1000" max="30000" step="500" stepper
+                       hint="For the router bits. A drill runs at its published speed."></lt-number-field>
       <div class="lt-field span-all">
         <span class="lt-field__label" id="profile-label">How hard to run it</span>
         <div id="profile" class="lt-btn-group profile-group" role="radiogroup"
@@ -713,6 +749,12 @@ function renderSettings() {
           <span>${escapeHtml(fcLabel)}</span>
         </label>
       </div>
+      ${jobHasDrill() ? `<div class="lt-field span-all">
+        <label class="lt-check">
+          <input type="checkbox" id="drillbank">
+          <span>The drills run on a drill bank, a fixed-speed boring head with its own drive</span>
+        </label>
+      </div>` : ''}
     </div>`;
 
   // The preset note left the page flow on 2026-09-01 (Scott, first run inside
@@ -794,6 +836,24 @@ function renderSettings() {
     persistDoc();
     renderSetups();
   });
+
+  // The drill-bank tick renders only when the document has a drilling
+  // operation (2026-09-02). On a bank the spindle floor and the spindle
+  // power do not apply (data/rules.json drill_bank), and the drilling core
+  // owns both rules; the panel only carries the tick.
+  const bank = $('drillbank');
+  if (bank) {
+    bank.checked = state.drillBank;
+    bank.addEventListener('change', (e) => {
+      state.drillBank = e.target.checked;
+      persistDoc();
+      renderSetups();
+    });
+  }
+}
+
+function jobHasDrill() {
+  return (state.job?.setups ?? []).some((s) => s.operations.some((op) => op.strategy === 'drill'));
 }
 
 // The profile picker, built the way js/ui/app.js builds it: role=radio
@@ -846,7 +906,9 @@ function buildProfile() {
 const KIND_NOTE = {
   drill: {
     label: 'Drill',
-    note: 'A drill takes no spiral direction. Drill rows serve when the drilling numbers reach the panel.',
+    // A drill takes the drill-type question instead (drillToolRow), so
+    // this note never renders for it.
+    note: 'A drill takes no spiral direction.',
   },
   ball: {
     label: 'Ball-nose or form tool',
@@ -861,6 +923,9 @@ const KIND_NOTE = {
 function renderTools() {
   const rows = state.toolRows.map((t, i) => {
     const st = state.tools.get(t.key);
+    if (t.kind === 'drill') {
+      return drillToolRow(t, st, i);
+    }
     if (t.kind !== 'router') {
       const k = KIND_NOTE[t.kind] ?? KIND_NOTE.chamfer;
       return `<div class="tool-row">
@@ -880,9 +945,12 @@ function renderTools() {
       ...GEOMETRIES.map((g) =>
         `<option value="${g.id}" ${g.id === st.geometry ? 'selected' : ''}>${g.label}</option>`),
     ].join('');
+    // A hint renders only while a guess waits for its confirmation. The
+    // reason the question exists at all lives once in the section note,
+    // never under every row (Scott, 2026-09-02).
     const hint = !st.confirmed && st.geometry
       ? `The panel guessed this from the ${t.guessSource === 'product_id' ? 'product number' : 'description'}. Confirm it before the rows serve.`
-      : 'Fusion does not record the spiral direction, so the panel asks once per tool.';
+      : null;
     const confirmBtn = !st.confirmed && st.geometry
       ? `<button type="button" class="lt-btn lt-btn--secondary" data-confirm="${escapeHtml(t.key)}">Confirm</button>`
       : '';
@@ -900,8 +968,8 @@ function renderTools() {
       <div class="lt-field">
         <label class="lt-field__label" for="tool-geo-${i}">Geometry</label>
         <select class="lt-select" id="tool-geo-${i}" data-key="${escapeHtml(t.key)}"
-                aria-describedby="tool-geo-${i}-hint">${options}</select>
-        <span class="lt-field__hint" id="tool-geo-${i}-hint">${escapeHtml(hint)}</span>
+                ${hint ? `aria-describedby="tool-geo-${i}-hint"` : ''}>${options}</select>
+        ${hint ? `<span class="lt-field__hint" id="tool-geo-${i}-hint">${escapeHtml(hint)}</span>` : ''}
       </div>
       ${upcut}
     </div>`;
@@ -909,7 +977,7 @@ function renderTools() {
 
   $('tools').innerHTML = `
     <h2>Tools</h2>
-    <p class="section-note">Confirm each router bit once. The panel remembers the answer for every document.</p>
+    <p class="section-note">Confirm each router bit and each drill once. The Fusion tool library records neither the spiral direction nor the drill family, so the panel asks, and it remembers the answer for every document.</p>
     <div class="tool-rows">${rows.join('') || '<p class="section-note">The document has no tools to confirm.</p>'}</div>`;
 
   for (const sel of $('tools').querySelectorAll('select[data-key]')) {
@@ -942,6 +1010,73 @@ function renderTools() {
       renderSetups();
     });
   }
+  for (const sel of $('tools').querySelectorAll('select[data-drill-key]')) {
+    sel.addEventListener('change', (e) => {
+      confirmDrillFamily(e.target.dataset.drillKey, e.target.value);
+    });
+  }
+  for (const btn of $('tools').querySelectorAll('button[data-confirm-drill]')) {
+    btn.addEventListener('click', (e) => {
+      const key = e.currentTarget.dataset.confirmDrill;
+      confirmDrillFamily(key, state.tools.get(key).drillFamily);
+      // The Confirm button is gone after the re-render: the keyboard lands
+      // on the row's drill-type select instead.
+      const i = state.toolRows.findIndex((t) => t.key === key);
+      if (i >= 0) $(`tool-drill-${i}`)?.focus();
+    });
+  }
+}
+
+// A drill's one question is its family. Fusion records the tool type and
+// the diameter, never whether the drill is a dowel, through-hole, hinge or
+// twist drill, and the chart differs by family (js/ui/drill-tables.js). The
+// guess comes from the description and only the user's confirmation makes
+// it real (decision A3, 2026-09-02). The diameter Fusion sends picks the
+// subfamily inside the family, exactly as the site's picker does.
+function drillToolRow(t, st, i) {
+  const badge = st.confirmed
+    ? badgeHtml('success', 'lt-ic-check', 'Confirmed')
+    : badgeHtml(ROW_BADGE.confirm.variant, ROW_BADGE.confirm.glyph,
+      st.drillFamily ? 'Confirm the guess' : 'Pick the drill type');
+  const options = [
+    `<option value="" ${st.drillFamily ? '' : 'selected'} disabled hidden>Pick the drill type</option>`,
+    ...DRILL_TOOLS.map((f) =>
+      `<option value="${f.id}" ${f.id === st.drillFamily ? 'selected' : ''}>${escapeHtml(f.label)}</option>`),
+  ].join('');
+  const family = DRILL_TOOLS.find((f) => f.id === st.drillFamily);
+  // Same rule as the router rows: a hint only while a pick waits for its
+  // confirmation, and the why lives once in the section note (2026-09-02).
+  const hint = !st.confirmed && family
+    ? `The panel guessed this from the description. Confirm it before the rows serve. ${family.hint}`
+    : null;
+  const confirmBtn = !st.confirmed && family
+    ? `<button type="button" class="lt-btn lt-btn--secondary" data-confirm-drill="${escapeHtml(t.key)}">Confirm</button>`
+    : '';
+  return `<div class="tool-row">
+      <div class="tool-id">
+        <span class="tool-desc">${escapeHtml(toolLabel(t.tool))}</span>
+        ${badge}
+        ${confirmBtn}
+      </div>
+      <div class="lt-field">
+        <label class="lt-field__label" for="tool-drill-${i}">Drill type</label>
+        <select class="lt-select" id="tool-drill-${i}" data-drill-key="${escapeHtml(t.key)}"
+                ${hint ? `aria-describedby="tool-drill-${i}-hint"` : ''}>${options}</select>
+        ${hint ? `<span class="lt-field__hint" id="tool-drill-${i}-hint">${escapeHtml(hint)}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function confirmDrillFamily(key, family) {
+  if (!DRILL_TOOLS.some((f) => f.id === family)) return;
+  const st = state.tools.get(key);
+  st.drillFamily = family;
+  st.confirmed = true;
+  persistUser();
+  keepFocus(() => {
+    renderTools();
+    renderSetups();
+  });
 }
 
 function confirmGeometry(key, geometry) {
@@ -975,9 +1110,13 @@ function toolLabel(tool) {
 }
 
 function upcutHint(tool) {
+  // The field holds the length of the up-cut flutes at the tip of a
+  // compression bit. The first wording read as if the diameter itself
+  // changed (Scott, 2026-09-02), so the hint now says what the value is
+  // and what an empty field assumes.
   return tool.diameterMm > 0
-    ? `Leave empty to use one tool diameter, ${roundMm(tool.diameterMm)} mm.`
-    : 'Leave empty to use one tool diameter.';
+    ? `The length of the up-cut flutes at the tip. If you leave it empty, the panel assumes one tool diameter: ${roundMm(tool.diameterMm)} mm.`
+    : 'The length of the up-cut flutes at the tip. If you leave it empty, the panel assumes one tool diameter.';
 }
 
 // ---------------------------------------------------------------------------
@@ -1110,9 +1249,22 @@ function opCard(op, setup, si, oi) {
     : '';
 
   const tool = state.tools.get(state.toolKeyByOp.get(op.opId));
+  // A drilling operation serves from the drilling chart (2026-09-02). It
+  // needs a drill in the spindle and a confirmed drill family; the hole
+  // itself comes from the resolved heights through mapOperation.
+  if (op.strategy === 'drill') {
+    if (!tool || tool.kind !== 'drill') {
+      const label = KIND_NOTE[tool?.kind]?.label ?? 'router bit';
+      return stateCard(op, ids, 'refused',
+        `This drilling operation runs a ${label.toLowerCase()}. The drilling charts cover drills only.`, '');
+    }
+    if (!tool.confirmed || !tool.drillFamily) {
+      return stateCard(op, ids, 'confirm', 'Confirm the drill type first, in the tools section above.', '');
+    }
+    return drillCard(op, setup, ids, tool);
+  }
   // A drill, a ball-nose or a chamfer tool takes no geometry question
-  // (2026-09-01). Its card refuses with the strategy's own reason through
-  // mapOperation, and a routing strategy run with such a tool refuses here,
+  // (2026-09-01). A routing strategy run with such a tool refuses here,
   // because the charts cover router bits only and calculate() has no tool
   // type to serve.
   const routerBit = !tool || tool.kind == null || tool.kind === 'router';
@@ -1160,10 +1312,93 @@ function opCard(op, setup, si, oi) {
   const rounded = roundedOutputs(result.outputs, mapped.calc.flutesTotal);
   state.served.set(op.opId, { result, rounded });
 
-  // At most three chips on the card, hot first, then warm, then cool; the
-  // rest live in the check list under the toggle, and the summary says how
-  // many hot ones are out of sight so nothing that needs action is hidden.
-  const chips = buildChips(result);
+  return servedCard(op, ids, {
+    finishToggle,
+    reading: mapped.reading,
+    stats: [
+      statCell('Spindle', rpmPair(rounded.rpm)),
+      statCell('Cutting feed', feedPair(rounded.cuttingMmMin)),
+      statCell('Chip', fzPair(rounded.feedPerToothMm)),
+    ],
+    capLabel: CAP_LABELS[result.limit.binding] ?? result.limit.binding,
+    chips: buildChips(result),
+  });
+}
+
+// The drill card (2026-09-02). The mapping gives the drill diameter and the
+// hole depth; the panel adds the material, the machine, the profile and the
+// drill-bank tick; the drilling core serves the published speed and the
+// plunge feed (js/core/drilling.js). The spindle speed field never reaches
+// a drill: a drill runs at its published speed, and a 35 mm hinge cutter at
+// a router's 18,000 rpm is a hazard, not a number.
+function drillCard(op, setup, ids, tool) {
+  const mapped = mapOperation(op, {});
+  if (mapped.status !== 'mapped') {
+    return stateCard(op, ids, mapped.status, mapped.reason, '',
+      { facts: mapped.status === 'unreadable' ? readFacts(op) : null });
+  }
+  const result = calculateDrilling(drillInput(setup, tool, mapped.calc), state.data);
+  if (result.status === 'refused') {
+    return stateCard(op, ids, 'refused', result.refusal.reason, '', { reading: mapped.reading });
+  }
+  if (result.status === 'blocked') {
+    return stateCard(op, ids, 'blocked', result.block.reason, '', { reading: mapped.reading });
+  }
+  const rounded = roundedDrillOutputs(result.outputs);
+  state.served.set(op.opId, { result, rounded });
+  const speedNote = DRILL_SPEED_NOTE[result.meta.rpmSource] ?? '';
+  return servedCard(op, ids, {
+    finishToggle: '',
+    reading: speedNote ? `${mapped.reading} ${speedNote}` : mapped.reading,
+    stats: [
+      statCell('Spindle', rpmPair(rounded.rpm)),
+      statCell('Plunge feed', feedPair(rounded.plungeMmMin)),
+      statCell('Feed per rev', revPair(rounded.plungeMmMin / rounded.rpm)),
+    ],
+    capLabel: result.limit.binding === 'vmax' ? CAP_LABELS.vmax : 'Published feed band',
+    chips: drillChips(result),
+  });
+}
+
+// Where the drill's speed came from (js/core/drilling.js meta.rpmSource).
+// The panel never enters a speed for a drill, so "entered" cannot occur.
+const DRILL_SPEED_NOTE = {
+  marked: 'Runs at the speed the published chart marks.',
+  published: 'Runs at the middle of the published speed range.',
+  machine: 'Runs at the machine\'s spindle limit.',
+};
+
+// The calculateDrilling() input: the mapped drill and hole plus panel state.
+// The material is the setup's pick, the machine the preset, the profile the
+// shared one, and the family the confirmed pick for this drill; the
+// diameter chooses the subfamily inside it as the site's picker does.
+function drillInput(setup, tool, calc) {
+  const mat = MATERIALS.find((m) => m.id === materialFor(setup.setupId));
+  const machine = presetById().machine;
+  return {
+    drillType: drillSubfamilyFor(tool.drillFamily, calc.diameterMm, state.data.drills.entries),
+    material: mat.kcMaterial,
+    diameterMm: calc.diameterMm,
+    holeDepthMm: calc.holeDepthMm,
+    profile: state.profile,
+    drillBank: state.drillBank,
+    machine: {
+      spindleKw: machine.spindleKw,
+      breakpointRpm: machine.breakpointRpm,
+      rpmMax: machine.rpmMax,
+      rpmMin: machine.rpmMin,
+      feedMaxMmMin: machine.feedMaxMmMin,
+    },
+  };
+}
+
+// The served card, shared by the routing and the drilling rows: the tick,
+// the reading, three stats, the binding cap, the top chips and the check
+// list. At most three chips show, hot first, then warm, then cool; the rest
+// live in the check list under the toggle, and the summary says how many
+// hot ones are out of sight so nothing that needs action is hidden. A chip
+// may carry a longer detail for the list; the badge shows its short text.
+function servedCard(op, ids, { finishToggle, reading, stats, capLabel, chips }) {
   const { shown, hiddenHot } = pickChips(chips, 3);
   const top = shown.map((c) =>
     badgeHtml(CHIP_VARIANT[c.level], STATUS_GLYPH[CHIP_VARIANT[c.level]], c.text)).join('');
@@ -1176,7 +1411,7 @@ function opCard(op, setup, si, oi) {
     const variant = CHIP_VARIANT[c.level];
     return `<li class="op-check op-check--${escapeHtml(c.level)}">
         <svg class="op-check__icon" aria-hidden="true" focusable="false"><use href="#${STATUS_GLYPH[variant]}"/></svg>
-        <span>${escapeHtml(c.text)}</span>
+        <span>${escapeHtml(c.detail ?? c.text)}</span>
       </li>`;
   }).join('');
 
@@ -1192,14 +1427,12 @@ function opCard(op, setup, si, oi) {
         </span>
       </label>
     </div>
-    <p class="op-card__reading">${escapeHtml(mapped.reading)}</p>
+    <p class="op-card__reading">${escapeHtml(reading)}</p>
     ${finishToggle}
     <dl class="op-stats">
-      ${statCell('Spindle', rpmPair(rounded.rpm))}
-      ${statCell('Cutting feed', feedPair(rounded.cuttingMmMin))}
-      ${statCell('Chip', fzPair(rounded.feedPerToothMm))}
+      ${stats.join('')}
     </dl>
-    <p class="op-card__cap"><span class="op-card__cap-label">What sets the feed:</span> <span class="op-card__cap-value">${escapeHtml(CAP_LABELS[result.limit.binding] ?? result.limit.binding)}</span></p>
+    <p class="op-card__cap"><span class="op-card__cap-label">What sets the feed:</span> <span class="op-card__cap-value">${escapeHtml(capLabel)}</span></p>
     <div class="op-card__chips lt-row">${top}</div>
     <details class="op-card__details" id="${ids.details}" ${state.openDetails.has(op.opId) ? 'open' : ''}>
       <summary id="${ids.summary}">
@@ -1330,6 +1563,7 @@ function applyWhy() {
   if (state.served.size === 0) {
     const unconfirmed = state.toolRows.some((t) => {
       const st = state.tools.get(t.key);
+      if (t.kind === 'drill') return !(st?.confirmed && st.drillFamily);
       return (t.kind == null || t.kind === 'router') && !(st?.confirmed && st.geometry);
     });
     return unconfirmed

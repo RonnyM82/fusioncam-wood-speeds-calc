@@ -37,6 +37,11 @@ connector cannot reach the fact and says who can.
    feed into a derived expression. The last write wins. Write the spindle
    speed, then the cutting feed, and let the feed per tooth follow
    (section 6).
+9. A height in mode `from contour`, `from hole top` or `from hole bottom`
+   never reaches `topHeight_value` or `bottomHeight_value`: the value stays
+   0.0 and `_absolute` reads false. The add-in must resolve those heights
+   from the selected geometry through `Setup.workCoordinateSystem`
+   (section 12, added 2026-09-02).
 
 ## What the test document carries now
 
@@ -528,6 +533,75 @@ rediscover it:
     `operation.parameters` as `opProp_syncId`, and only when the post
     declares it visible. Not needed by this add-in, but it explains a
     missing `opProp_` name if one ever comes up.
+
+## 12. Heights Fusion does not resolve, and the setup frame
+
+Recorded 2026-09-02 through the connector, after the first live run of the
+add-in refused three valid operations with "no positive depth" and left the
+drill unserved.
+
+Verdict: DIFFERENT from what section 2 implied. The `_value` parameter holds
+a resolved height only when `_absolute` is true.
+
+| Operation | Bottom mode | `bottomHeight_value` raw | `bottomHeight_absolute` |
+|---|---|---|---|
+| WSF contour compression multidepth | `from stock bottom` | −2.05 | true |
+| WSF contour upcut single depth left | `from stock bottom` | −2.05 | true |
+| WSF pocket upcut | `from contour` | 0.0 | false |
+| WSF adaptive upcut | `from contour` | 0.0 | false |
+| WSF slot compression | `from contour` | 0.0 | false |
+| WSF drill brad 3mm | `from hole bottom` (top `from hole top`) | 0.0 (top 0.0) | false (top false) |
+| WSF parallel bullnose | `from surface bottom` | −1.8 | true |
+
+For the plane modes Fusion writes the resolved height into `_value` and sets
+`_absolute` true. For `from contour`, `from hole top` and `from hole bottom`
+it leaves `_value` at 0.0, sets `_absolute` false, and resolves the height
+from the selected geometry when it generates. The first add-in build read
+`_value` regardless and shipped 0.0 as the bottom height, so the page
+computed a depth of zero for every 2D operation whose bottom sat on a
+selected face, and the drill read a hole of no depth. Both `_ref`
+parameters (`topHeight_ref`, `bottomHeight_ref`, `CadObjectParameterValue`)
+were empty on every operation; they hold the selection of a `from point`
+height.
+
+The selections. `contours` on the two contours, `pockets` on the pocket,
+the adaptive and the slot, and `machiningBoundarySel` on the parallel are
+`CadContours2dParameterValue`. `getCurveSelections()` returns a collection
+of `ChainSelection` (the edge chains, and the pocket and adaptive floors
+selected by their edge loops) and `FaceContourSelection` (the slot's floor
+face). Each carries `inputGeometry`, a vector of `BRepEdge` or `BRepFace`,
+and `outputGeometry`, a vector of `Curve3DPath` with no evaluator.
+`holeFaces` on the drill is a `CadObjectParameterValue` whose `value` is a
+vector with one `BRepFace`, a cylinder of radius 0.25 cm and axis
+(0, 0, −1). Every B-Rep bounding box reads in centimetres in model space:
+the pocket floor edges at z 1.1, the top-face chain at z 1.6, the hole face
+from z 1.0 to 1.6. A `SketchCircle.boundingBox` read as an empty box at the
+origin, so a sketch entity is read through its `worldGeometry` (a
+`Circle3D` at z 1.6 here) and the curve evaluator's strokes, never through
+its box.
+
+The setup frame. `Setup.workCoordinateSystem` exists and returns a
+`Matrix3D`; `getAsCoordinateSystem()` returns four values, the origin and
+the three axes. On this document the matrix read
+`[1 0 0 250, 0 1 0 300, 0 0 1 18, 0 0 0 1]`: the translation is in
+MILLIMETRES (the stock top centre of the 500 × 600 × 20 mm box) while the
+bounding boxes are in centimetres. Scaled to centimetres, the model top
+(z 1.6) lands at −0.2 and the model bottom (z 0.0) at −1.8, exactly
+`surfaceZHigh` and `surfaceZLow`. Whether the translation follows the
+document unit or is always millimetres is UNTESTABLE here (no inch
+document), so `snapshot.read_frame` tries millimetres, centimetres and
+inches, keeps the factor that reproduces the setup's own Z extents, and
+returns None when none does. `Operation.parentSetup` exists and returns the
+setup, so a single operation can find its frame.
+
+The resolved heights, read through the add-in's own
+`snapshot.read_document` inside Fusion: pocket, adaptive and slot bottom
+−7 mm with `zSource` `geometry` (the floor face, 5 mm below the model top
+and 7 mm below the stock top); drill top −2 mm and bottom −8 mm, a 6 mm hole
+from the model top; the plane-mode heights unchanged with `zSource`
+`parameter`. `read_operation` with and without the frame argument gave the
+same facts hash on all seven operations, so the apply-side change check
+still agrees with the snapshot.
 
 ## Other readings worth keeping
 

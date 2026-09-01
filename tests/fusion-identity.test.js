@@ -172,12 +172,16 @@ test('FI17', 'a missing vendor matches no series even with a plausible id', () =
 // The tool kind comes from Fusion's own type string (2026-09-01). Only a
 // router bit takes the geometry question; a drill or a ball-nose asked for a
 // spiral direction was the wrong question on the first run inside Fusion.
-test('FI18', 'a drill is kind drill and takes no geometry guess, whatever its description says', () => {
+test('FI18', 'a drill is kind drill, guesses a drill family from its description and never a geometry', () => {
+  // The drilling charts landed on 2026-09-02, so a drill's one question is
+  // its family. A brad point is the cabinetmaker's dowel drill, and the
+  // router word beside it changes nothing.
   const r = identifyTool(tool({ typeString: 'drill', description: '3dia Brad Point compression', vendor: 'Heliner', productId: '' }), chiploads);
   assert(r.kind === 'drill', `expected kind drill, got ${r.kind}`);
-  assert(r.guess === null && r.guessSource === null, 'a drill must carry no geometry guess');
+  assert(r.guess === 'dowel' && r.guessSource === 'description', `expected dowel from the description, got ${r.guess} from ${r.guessSource}`);
   const spot = identifyTool(tool({ typeString: 'spot drill', productId: '' }), chiploads);
   assert(spot.kind === 'drill', 'a spot drill is a drill');
+  assert(spot.guess === null && spot.guessSource === null, 'a drill with no family word guesses nothing');
 });
 
 test('FI19', 'a ball-nose or bull-nose is kind ball, a chamfer mill is kind chamfer', () => {
@@ -196,4 +200,26 @@ test('FI20', 'a flat end mill, an empty type and an unknown type are kind router
     assert(r.kind === 'router', `expected kind router for ${JSON.stringify(typeString)}, got ${r.kind}`);
     assert(r.guess === 'compression', `a router bit keeps its description guess for ${JSON.stringify(typeString)}`);
   }
+});
+
+test('FI21', 'drill family words: hinge, through, dowel, twist; two families cancel; a router bit never takes one', () => {
+  const cases = [
+    ['35 mm hinge drill', 'hinge'],
+    ['Hinge cup boring bit', 'hinge'],
+    ['8 mm through hole drill', 'through'],
+    ['5mm thru drill', 'through'],
+    ['dowel drill 8mm', 'dowel'],
+    ['twist drill 3 mm', 'twist'],
+    ['jobber drill', 'twist'],
+  ];
+  for (const [description, family] of cases) {
+    const r = identifyTool(tool({ typeString: 'drill', description, productId: '' }), chiploads);
+    assert(r.guess === family && r.guessSource === 'description', `"${description}" gave ${r.guess} from ${r.guessSource}`);
+  }
+  const two = identifyTool(tool({ typeString: 'drill', description: 'through dowel drill', productId: '' }), chiploads);
+  assert(two.guess === null && two.guessSource === null, 'two families in one description must cancel');
+  const router = identifyTool(tool({ description: 'hinge compression cutter', productId: '' }), chiploads);
+  assert(router.kind === 'router' && router.guess === 'compression', 'a router bit reads its geometry, never a drill family');
+  const ball = identifyTool(tool({ typeString: 'ball end mill', description: 'hinge', productId: '' }), chiploads);
+  assert(ball.guess === null, 'a ball-nose takes no guess of either kind');
 });

@@ -9,6 +9,7 @@
 import { test, assert, approx } from './helpers.js';
 import { loadData } from './load-node.js';
 import { calculate } from '../js/core/calculate.js';
+import { calculateDrilling } from '../js/core/drilling.js';
 import { mapOperation } from '../js/fusion/map-operation.js';
 
 const data = loadData();
@@ -112,10 +113,32 @@ test('FM6', 'slot: full width, heights depth with the box off, stepdown with it 
   approx(stepped.calc.apMm, 5, { abs: 1e-9 });
 });
 
-test('FM7', 'drill refuses with the pending-research wording', () => {
-  const m = mapOperation(op('drill'), CHOICES);
-  assert(m.status === 'unsupported', `expected unsupported, got ${m.status}`);
-  assert(m.reason === 'Drilling charts are pending research. The add-in leaves drills untouched until that data lands.', m.reason);
+// One height Fusion takes from the selected geometry, as the add-in ships it
+// after resolving it in the setup frame (protocol.md heights, 2026-09-02).
+function geometry(mode, zMm, spreadMm = 0) {
+  return { mode, offsetMm: 0, zMm, zSource: zMm == null ? null : 'geometry', zSpreadMm: zMm == null ? null : spreadMm };
+}
+
+// A drill operation: a 5 mm drill and a 13 mm hole from the hole faces.
+function drillOp({ tool = {}, heights = {} } = {}) {
+  return op('drill', {
+    tool: { typeString: 'drill', diameterMm: 5, flutes: 2, ...tool },
+    heights: { top: geometry('from hole top', 18), bottom: geometry('from hole bottom', 5), ...heights },
+  });
+}
+
+test('FM7', 'drill maps to the drilling calc from the diameter and the resolved hole', () => {
+  // The drilling charts landed (2026-09-02). Fusion takes a drill's heights
+  // from the hole faces and the add-in resolves them there; the depth is
+  // the hole top minus the hole bottom. No flute count enters the calc: the
+  // published band counts every cutting edge (data/schema.md).
+  const m = mapOperation(drillOp(), CHOICES);
+  assert(m.status === 'mapped', `expected mapped, got ${m.status}: ${m.reason}`);
+  assert(m.calc.mode === 'drill', `expected mode drill, got ${m.calc.mode}`);
+  approx(m.calc.diameterMm, 5, { abs: 1e-9 });
+  approx(m.calc.holeDepthMm, 13, { abs: 1e-9 });
+  assert(m.reading === '5 mm drill, hole 13 mm deep.', m.reading);
+  assert(!('toolType' in m.calc) && !('flutesTotal' in m.calc) && !('aeMm' in m.calc), 'a drill calc carries no router field');
 });
 
 test('FM8', '3D surfacing strategies refuse with the no-chart wording', () => {
@@ -361,4 +384,78 @@ test('FM29', 'every unreadable reason names the values it read, in millimetres t
   assert(flutes.reason.includes('(tool diameter 12.7 mm)'), flutes.reason);
   const diameter = mapOperation(op('contour2d', { tool: { diameterMm: null } }), CHOICES);
   assert(diameter.reason.includes('(flute count 2)'), diameter.reason);
+});
+
+test('FM30', 'a drill with a missing fact is unreadable and names what it read', () => {
+  const noDiameter = mapOperation(drillOp({ tool: { diameterMm: null } }), CHOICES);
+  assert(noDiameter.status === 'unreadable', `expected unreadable, got ${noDiameter.status}`);
+  assert(noDiameter.reason.includes('drill diameter') && noDiameter.reason.includes('(top 18 mm, bottom 5 mm)'), noDiameter.reason);
+  // A null height in a geometry mode names the mode: the value was never
+  // in the dialog, Fusion takes it from the selection.
+  const noTop = mapOperation(drillOp({ heights: { top: geometry('from hole top', null) } }), CHOICES);
+  assert(noTop.status === 'unreadable', `expected unreadable, got ${noTop.status}`);
+  assert(noTop.reason.includes('hole top') && noTop.reason.includes('(bottom 5 mm, drill 5 mm)'), noTop.reason);
+  assert(noTop.reason.includes('from hole top') && noTop.reason.includes('selected geometry'), noTop.reason);
+  const noBottom = mapOperation(drillOp({ heights: { bottom: geometry('from hole bottom', null) } }), CHOICES);
+  assert(noBottom.status === 'unreadable', `expected unreadable, got ${noBottom.status}`);
+  assert(noBottom.reason.includes('hole bottom') && noBottom.reason.includes('(top 18 mm, drill 5 mm)'), noBottom.reason);
+  const upsideDown = mapOperation(drillOp({ heights: { top: geometry('from hole top', 5), bottom: geometry('from hole bottom', 18) } }), CHOICES);
+  assert(upsideDown.status === 'unreadable', `expected unreadable, got ${upsideDown.status}`);
+  assert(upsideDown.reason === 'The add-in read a hole top of 5 mm and a hole bottom of 18 mm, so the hole has no positive depth.', upsideDown.reason);
+});
+
+test('FM31', 'a spread of levels in the selection adds the deepest-serves note, and nothing else does', () => {
+  const note = 'The selection is not all at one depth, so the deepest serves.';
+  const holes = mapOperation(drillOp({ heights: { bottom: geometry('from hole bottom', 5, 3) } }), CHOICES);
+  assert(holes.status === 'mapped', `expected mapped, got ${holes.status}: ${holes.reason}`);
+  assert(holes.reading === `5 mm drill, hole 13 mm deep. ${note}`, holes.reading);
+  const pocket = mapOperation(op('pocket2d', {
+    params: { doMultipleDepths: false },
+    heights: { bottom: geometry('from contour', 6, 2) },
+  }), CHOICES);
+  assert(pocket.status === 'mapped', `expected mapped, got ${pocket.status}: ${pocket.reason}`);
+  approx(pocket.calc.apMm, 12, { abs: 1e-9 });
+  assert(pocket.reading.endsWith(note), pocket.reading);
+  const flat = mapOperation(op('pocket2d', { params: { doMultipleDepths: false }, heights: { bottom: geometry('from contour', 6) } }), CHOICES);
+  assert(!flat.reading.includes(note), `a spread of zero adds no note: ${flat.reading}`);
+  // An older add-in sends no spread at all, and the reading stays as it was.
+  const older = mapOperation(op('pocket2d', { params: { doMultipleDepths: false } }), CHOICES);
+  assert(!older.reading.includes(note), `a null spread adds no note: ${older.reading}`);
+});
+
+test('FM32', 'a mapped drill feeds calculateDrilling() and the field names line up', () => {
+  const m = mapOperation(drillOp(), CHOICES);
+  assert(m.status === 'mapped', `expected mapped, got ${m.status}: ${m.reason}`);
+  // The panel supplies the drill type, the material, the profile, the
+  // drill-bank tick and the machine. The mapped calc spreads in as-is, so
+  // a renamed field fails here, not in Fusion.
+  const r = calculateDrilling({
+    drillType: 'dowel_drill_hw_tipped',
+    material: 'mdf',
+    profile: 'standard',
+    drillBank: false,
+    machine: { spindleKw: 10, breakpointRpm: 12000, rpmMax: 24000, rpmMin: 1000, feedMaxMmMin: 30000 },
+    ...m.calc,
+  }, data);
+  assert(r.status === 'ok', `expected ok, got ${r.status}: ${JSON.stringify(r.refusal ?? r.block ?? null)}`);
+  approx(r.meta.dMm, 5, { abs: 1e-9 });
+  approx(r.meta.holeDepthMm, 13, { abs: 1e-9 });
+  assert(r.outputs.plungeFeedMmMin > 0 && r.outputs.spindleRpm > 0, 'no plunge feed or speed served');
+});
+
+test('FM33', 'a routing calc names its mode, and an unresolved geometry-mode height names the mode in its refusal', () => {
+  const plain = mapOperation(op('contour2d'), CHOICES);
+  assert(plain.status === 'mapped' && plain.calc.mode === 'rout', `expected mode rout, got ${plain.calc?.mode}`);
+  // The live-run case of 2026-09-02: a slot on a selected floor face, box
+  // off. The first add-in build shipped 0 for that bottom; a build that
+  // cannot resolve the geometry ships null, and the refusal must say the
+  // height lives in the selection, not in the dialog.
+  const slot = mapOperation(op('slot', { heights: { bottom: geometry('from contour', null) } }), CHOICES);
+  assert(slot.status === 'unreadable', `expected unreadable, got ${slot.status}`);
+  assert(slot.reason.includes('bottom height') && slot.reason.includes('(top 18 mm)'), slot.reason);
+  assert(slot.reason.includes('from contour') && slot.reason.includes('selected geometry'), slot.reason);
+  // A resolved geometry bottom serves the depth like any other.
+  const served = mapOperation(op('slot', { heights: { bottom: geometry('from contour', -7) } }), CHOICES);
+  assert(served.status === 'mapped', `expected mapped, got ${served.status}: ${served.reason}`);
+  approx(served.calc.apMm, 25, { abs: 1e-9 });
 });

@@ -64,6 +64,20 @@ function makeHeights(topZMm, bottomZMm, bottomOffsetMm = bottomZMm) {
   };
 }
 
+// One height Fusion takes from the selected geometry, resolved by the
+// add-in in the setup frame and marked as such (protocol.md heights,
+// 2026-09-02). A null Z with a geometry mode is the unresolved case: the
+// panel must name the mode in its refusal.
+function geometryHeight(mode, zMm, spreadMm = 0) {
+  return {
+    mode,
+    offsetMm: 0,
+    zMm,
+    zSource: zMm == null ? null : 'geometry',
+    zSpreadMm: zMm == null ? null : spreadMm,
+  };
+}
+
 function makeFeeds() {
   return {
     rpm: 18000, cuttingMmMin: 5000, plungeMmMin: 1000,
@@ -99,9 +113,16 @@ const TOOL_PLAIN = makeTool({
   description: 'Harness tool: 6 mm cutter, nothing to guess from',
 });
 
+// A drill with no family word: the panel must ask for the drill type.
 const TOOL_DRILL = makeTool({
   typeString: 'drill', diameterMm: 5, flutes: 2, fluteLengthMm: 40, shoulderLengthMm: 45,
-  description: 'Harness tool: 5 mm drill',
+  description: 'Harness tool: 5 mm drill, nothing to guess from',
+});
+
+// A drill whose description names its family: the guess prefills hinge.
+const TOOL_HINGE = makeTool({
+  typeString: 'drill', diameterMm: 35, flutes: 2, fluteLengthMm: 20, shoulderLengthMm: 30,
+  description: 'Harness tool: 35 mm hinge drill',
 });
 
 const TOOL_BALL = makeTool({
@@ -150,7 +171,9 @@ function makeJob() {
             strategy: 'pocket2d', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DOWNCUT,
             params: makeParams({ stepdownMm: 6, doMultipleDepths: true, stepoverMm: 6, rampAngleDeg: 2 }),
-            heights: makeHeights(18, 6, 6),
+            // The pocket floor is a selected face: Fusion leaves the bottom
+            // height to the geometry and the add-in resolves it there.
+            heights: { top: makeHeights(18, 0).top, bottom: geometryHeight('from contour', 6) },
             currentFeeds: makeFeeds(),
           },
           {
@@ -179,9 +202,30 @@ function makeJob() {
           {
             opId: 'harness-op-6', name: 'Hinge holes',
             strategy: 'drill', suppressed: false, isValid: true, hasToolpath: true,
+            tool: TOOL_HINGE,
+            params: makeParams({}),
+            // A 13 mm cup from the top face, both heights from the hole faces.
+            heights: { top: geometryHeight('from hole top', 18), bottom: geometryHeight('from hole bottom', 5) },
+            currentFeeds: makeFeeds(),
+          },
+          {
+            opId: 'harness-op-9', name: 'Shelf pin holes',
+            strategy: 'drill', suppressed: false, isValid: true, hasToolpath: true,
             tool: TOOL_DRILL,
             params: makeParams({}),
-            heights: makeHeights(18, -1, -1),
+            // The holes are not all one depth: the bottom carries a spread
+            // and the reading says the deepest serves.
+            heights: { top: geometryHeight('from hole top', 18), bottom: geometryHeight('from hole bottom', 8, 2) },
+            currentFeeds: makeFeeds(),
+          },
+          {
+            opId: 'harness-op-10', name: 'Rebate, contour not read',
+            strategy: 'slot', suppressed: false, isValid: true, hasToolpath: true,
+            tool: TOOL_DOWNCUT,
+            params: makeParams({ doMultipleDepths: false }),
+            // The unresolved case: a geometry-mode bottom the add-in could
+            // not read. The card must refuse and name the mode.
+            heights: { top: makeHeights(18, 0).top, bottom: geometryHeight('from contour', null) },
             currentFeeds: makeFeeds(),
           },
           {

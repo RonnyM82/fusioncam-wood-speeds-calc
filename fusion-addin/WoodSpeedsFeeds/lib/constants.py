@@ -21,7 +21,7 @@ PROTOCOL_VERSION = 1
 # palette's browser serves a stale copy of the page after an update
 # (spike-results-windows.md section 11, wait-code item 6). Bump the
 # date on every add-in change that ships.
-ADDIN_BUILD = ADDIN_VERSION + "-2026-09-01"
+ADDIN_BUILD = ADDIN_VERSION + "-2026-09-02"
 
 PANEL_ID = "wsfPanel"
 PANEL_NAME = "Wood speeds and feeds"
@@ -179,6 +179,45 @@ PARAM_TOP_VALUE = "topHeight_value"
 PARAM_BOTTOM_MODE = "bottomHeight_mode"
 PARAM_BOTTOM_OFFSET = "bottomHeight_offset"
 PARAM_BOTTOM_VALUE = "bottomHeight_value"
+
+# Fusion resolves a height into its _value parameter only when the mode
+# rests on a plane it knows: a stock or model face, another height, the
+# origin. The _absolute flag says so. For the geometry modes below the
+# flag reads false, the _value stays 0.0, and Fusion resolves the height
+# from the selected geometry at generation time. snapshot.read_heights
+# does the same from the selection parameters (confirmed 2026-09-02,
+# spike-results-windows.md section 12).
+PARAM_TOP_ABSOLUTE = "topHeight_absolute"
+PARAM_BOTTOM_ABSOLUTE = "bottomHeight_absolute"
+# The selection a "from point" height refers to.
+PARAM_TOP_REF = "topHeight_ref"
+PARAM_BOTTOM_REF = "bottomHeight_ref"
+# The geometry selections: contours on contour2d, pockets on pocket2d,
+# adaptive2d and slot, holeFaces on drill (section 12).
+PARAM_CONTOURS = "contours"
+PARAM_POCKETS = "pockets"
+PARAM_HOLE_FACES = "holeFaces"
+
+HEIGHT_MODE_CONTOUR = "from contour"
+HEIGHT_MODE_HOLE_TOP = "from hole top"
+HEIGHT_MODE_HOLE_BOTTOM = "from hole bottom"
+HEIGHT_MODE_POINT = "from point"
+GEOMETRY_HEIGHT_MODES = (
+    HEIGHT_MODE_CONTOUR,
+    HEIGHT_MODE_HOLE_TOP,
+    HEIGHT_MODE_HOLE_BOTTOM,
+    HEIGHT_MODE_POINT,
+)
+
+# Setup.workCoordinateSystem is a Matrix3D. Its translation read in
+# millimetres on the millimetre test document while every bounding box
+# reads in centimetres (section 12). snapshot.read_frame trusts the
+# frame only after it reproduces the setup's own Z extents, and these
+# are the translation factors to centimetres it tries, in order:
+# millimetres, centimetres, inches. An inch document is untested.
+FRAME_TRANSLATION_FACTORS = (0.1, 1.0, 2.54)
+# The check tolerance, in centimetres: a hundredth of a millimetre.
+FRAME_CHECK_TOLERANCE_CM = 0.001
 
 # ---------------------------------------------------------------------------
 # Setup parameters: stock.

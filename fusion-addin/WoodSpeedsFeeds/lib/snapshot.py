@@ -8,7 +8,10 @@ govern every reader here:
    that operation with a plain sentence.
 2. Python ships raw facts only. It never decides machining policy
    (decision A2, 2026-09-01). The depth arithmetic, the mapping and
-   the tool matching all live in js/fusion/ on the page.
+   the tool matching all live in js/fusion/ on the page. Resolving a
+   height from the selected geometry (read_frame, _read_height,
+   2026-09-02) is a reading, not a policy: it is the number Fusion
+   itself uses and never writes into the parameter.
 3. Unit conversion happens in units.py alone.
 """
 
@@ -415,26 +418,309 @@ def read_params(operation):
     }
 
 
-def read_heights(operation):
-    """Return the heights shape: mode, offset and resolved value.
+# ---------------------------------------------------------------------------
+# The setup frame. A height whose mode rests on selected geometry never
+# reaches the _value parameter (constants.GEOMETRY_HEIGHT_MODES), so the
+# add-in resolves it from the selection itself. The API hands selections
+# out in model space, and the setup frame takes them to the space every
+# other height is in (spike-results-windows.md section 12, 2026-09-02).
+# ---------------------------------------------------------------------------
 
-    Fusion resolves each height into a computed value, so the page
-    does the depth arithmetic and Python does none (plan, part 3,
-    2026-09-01).
+
+def _box_corners(box):
+    """Yield the eight corners of a BoundingBox3D."""
+    low = box.minPoint
+    high = box.maxPoint
+    for x in (low.x, high.x):
+        for y in (low.y, high.y):
+            for z in (low.z, high.z):
+                yield adsk.core.Point3D.create(x, y, z)
+
+
+def _frame_z(frame, point):
+    """Return the setup-frame Z of a model-space point, in centimetres."""
+    ox, oy, oz = frame["origin"]
+    zx, zy, zz = frame["z"]
+    return (point.x - ox) * zx + (point.y - oy) * zy + (point.z - oz) * zz
+
+
+def _items(collection):
+    """Return the members of an API collection or vector as a list."""
+    if collection is None:
+        return []
+    try:
+        return [collection.item(i) for i in range(collection.count)]
+    except Exception:
+        pass
+    try:
+        return list(collection)
+    except Exception:
+        return []
+
+
+def _sketch_points(entity):
+    """Return model-space points along a sketch entity, or None.
+
+    A sketch curve's boundingBox read as an empty box on every circle
+    of the test document (section 12), so the box is no use there. Its
+    worldGeometry is the curve in model space, and the curve evaluator
+    strokes it to within a hundredth of a millimetre. A sketch point's
+    worldGeometry is the point itself.
+    """
+    try:
+        geometry = entity.worldGeometry
+    except Exception:
+        return None
+    if geometry is None:
+        return None
+    if isinstance(geometry, adsk.core.Point3D):
+        return [geometry]
+    try:
+        evaluator = geometry.evaluator
+        ok, start, end = evaluator.getParameterExtents()
+        if not ok:
+            return None
+        ok, points = evaluator.getStrokes(start, end, 0.001)
+        if not ok or not points:
+            return None
+        return list(points)
+    except Exception:
+        return None
+
+
+def _entity_z_range(entity, frame):
+    """Return (low, high) setup-frame Z in centimetres of one entity, or None.
+
+    A B-Rep face, edge, vertex or body carries a model-space bounding
+    box, and its eight corners go through the frame. A sketch entity
+    goes through its world geometry instead (_sketch_points), and one
+    whose geometry does not read is None rather than a box in the wrong
+    space. The extremes come back equal for a planar contour, apart for
+    a chain that climbs.
+    """
+    if _read_attribute(entity, "parentSketch") is not None:
+        points = _sketch_points(entity)
+        if points is None:
+            return None
+    else:
+        try:
+            box = entity.boundingBox
+        except Exception:
+            return None
+        if box is None:
+            return None
+        points = list(_box_corners(box))
+    values = [_frame_z(frame, point) for point in points]
+    if not values:
+        return None
+    return (min(values), max(values))
+
+
+def _entities_z_range(entities, frame):
+    """Return the combined (low, high) of several entities, or None."""
+    low = None
+    high = None
+    for entity in entities:
+        found = _entity_z_range(entity, frame)
+        if found is None:
+            continue
+        low = found[0] if low is None else min(low, found[0])
+        high = found[1] if high is None else max(high, found[1])
+    if low is None:
+        return None
+    return (low, high)
+
+
+def read_frame(setup):
+    """Return the setup frame for height resolution, or None.
+
+    Confirmed 2026-09-02, spike-results-windows.md section 12:
+    Setup.workCoordinateSystem is a Matrix3D, and its translation read
+    in millimetres while every bounding box reads in centimetres. The
+    frame is trusted only after a check: the setup models, taken
+    through it, must reproduce surfaceZLow and surfaceZHigh. Without
+    models the stock solids stand in against stockZLow and stockZHigh.
+    Each translation unit factor is tried in turn. A frame that passes
+    no check is None, and every geometry height then ships null: a
+    refusal, never a guess.
+
+    The frame is {"origin": (x, y, z) in centimetres, "z": unit vector}.
+    """
+    try:
+        matrix = setup.workCoordinateSystem
+        origin, _x_axis, _y_axis, z_axis = matrix.getAsCoordinateSystem()
+    except Exception:
+        log.log_exception("snapshot.read_frame")
+        return None
+    z = (z_axis.x, z_axis.y, z_axis.z)
+    checks = (
+        ("models", constants.PARAM_MODEL_Z_LOW, constants.PARAM_MODEL_Z_HIGH),
+        (
+            "stockSolids",
+            constants.PARAM_STOCK_Z_LOW,
+            constants.PARAM_STOCK_Z_HIGH,
+        ),
+    )
+    tolerance = constants.FRAME_CHECK_TOLERANCE_CM
+    checked = False
+    for factor in constants.FRAME_TRANSLATION_FACTORS:
+        frame = {
+            "origin": (origin.x * factor, origin.y * factor, origin.z * factor),
+            "z": z,
+        }
+        for attribute, low_name, high_name in checks:
+            expected_low = read_raw(setup, low_name)
+            expected_high = read_raw(setup, high_name)
+            if expected_low is None or expected_high is None:
+                continue
+            bodies = _items(_read_attribute(setup, attribute))
+            found = _entities_z_range(bodies, frame)
+            if found is None:
+                continue
+            checked = True
+            if (
+                abs(found[0] - float(expected_low)) <= tolerance
+                and abs(found[1] - float(expected_high)) <= tolerance
+            ):
+                return frame
+    log.log(
+        "setup frame not verified"
+        + ("" if checked else " (nothing to check it against)")
+        + ": geometry heights ship null"
+    )
+    return None
+
+
+def _selection_entities(parameter):
+    """Return the entities a selection parameter holds, or an empty list.
+
+    A 2D contour selection (contours, pockets) is a
+    CadContours2dParameterValue whose curve selections each carry their
+    input geometry: B-Rep edges, sketch curves or a face. A cad object
+    selection (holeFaces, the height _ref parameters) is a
+    CadObjectParameterValue whose value is the entity list.
+    """
+    try:
+        value = parameter.value
+    except Exception:
+        return []
+    entities = []
+    try:
+        if isinstance(value, adsk.cam.CadContours2dParameterValue):
+            for selection in _items(value.getCurveSelections()):
+                entities.extend(_items(selection.inputGeometry))
+        elif isinstance(value, adsk.cam.CadObjectParameterValue):
+            entities.extend(_items(value.value))
+    except Exception:
+        log.log_exception("snapshot._selection_entities")
+    return entities
+
+
+def _height_geometry(operation, side, mode):
+    """Return the entities a geometry height mode refers to."""
+    if mode == constants.HEIGHT_MODE_CONTOUR:
+        names = (constants.PARAM_CONTOURS, constants.PARAM_POCKETS)
+    elif mode in (
+        constants.HEIGHT_MODE_HOLE_TOP,
+        constants.HEIGHT_MODE_HOLE_BOTTOM,
+    ):
+        names = (constants.PARAM_HOLE_FACES,)
+    elif mode == constants.HEIGHT_MODE_POINT:
+        names = (
+            constants.PARAM_TOP_REF if side == "top" else constants.PARAM_BOTTOM_REF,
+        )
+    else:
+        return []
+    for name in names:
+        parameter = get_parameter(operation, name)
+        if parameter is None:
+            continue
+        entities = _selection_entities(parameter)
+        if entities:
+            return entities
+    return []
+
+
+def _read_height(operation, side, frame):
+    """Return one height shape: mode, offset, resolved Z and its source.
+
+    zSource is "parameter" when Fusion resolved the height into its
+    _value parameter, "geometry" when this reader resolved it from the
+    selection, and null when neither could. zSpreadMm is the distance
+    between the highest and the lowest level the selection offered:
+    0 for one level, null unless the source is geometry. The page reads
+    both (protocol.md, heights).
+    """
+    if side == "top":
+        mode_name = constants.PARAM_TOP_MODE
+        offset_name = constants.PARAM_TOP_OFFSET
+        value_name = constants.PARAM_TOP_VALUE
+        absolute_name = constants.PARAM_TOP_ABSOLUTE
+    else:
+        mode_name = constants.PARAM_BOTTOM_MODE
+        offset_name = constants.PARAM_BOTTOM_OFFSET
+        value_name = constants.PARAM_BOTTOM_VALUE
+        absolute_name = constants.PARAM_BOTTOM_ABSOLUTE
+    mode = read_string(operation, mode_name)
+    offset = read_length_mm(operation, offset_name)
+    absolute = read_bool(operation, absolute_name)
+    shape = {
+        "mode": mode,
+        "offsetMm": offset,
+        "zMm": None,
+        "zSource": None,
+        "zSpreadMm": None,
+    }
+    geometry_mode = mode in constants.GEOMETRY_HEIGHT_MODES
+    if absolute is True or (absolute is None and not geometry_mode):
+        value = read_length_mm(operation, value_name)
+        shape["zMm"] = value
+        shape["zSource"] = None if value is None else "parameter"
+        return shape
+    if not geometry_mode or frame is None or offset is None:
+        return shape
+    ranges = []
+    for entity in _height_geometry(operation, side, mode):
+        found = _entity_z_range(entity, frame)
+        if found is not None:
+            ranges.append(found)
+    if not ranges:
+        return shape
+    lows = [found[0] for found in ranges]
+    highs = [found[1] for found in ranges]
+    # A hole top is the high end of each hole face and a hole bottom the
+    # low end, whichever side asks. A contour or a point takes the
+    # extreme its side means: the highest for the top, the lowest for
+    # the bottom. The spread covers the levels the mode compares: the
+    # hole tops among themselves, the hole bottoms among themselves,
+    # and for a contour the whole Z extent of the selection, so a chain
+    # that climbs reports it.
+    if mode == constants.HEIGHT_MODE_HOLE_TOP:
+        level = max(highs)
+        spread = max(highs) - min(highs)
+    elif mode == constants.HEIGHT_MODE_HOLE_BOTTOM:
+        level = min(lows)
+        spread = max(lows) - min(lows)
+    else:
+        level = max(highs) if side == "top" else min(lows)
+        spread = max(highs) - min(lows)
+    shape["zMm"] = round(units.internal_length_to_mm(level) + offset, 6)
+    shape["zSource"] = "geometry"
+    shape["zSpreadMm"] = units.internal_length_to_mm(spread)
+    return shape
+
+
+def read_heights(operation, frame=None):
+    """Return the heights shape: mode, offset, resolved value and source.
+
+    Fusion resolves a plane-mode height into a computed value and the
+    add-in resolves a geometry-mode height through the setup frame
+    (2026-09-02). The page does the depth arithmetic and Python does
+    none (plan, part 3, 2026-09-01).
     """
     return {
-        "top": {
-            "mode": read_string(operation, constants.PARAM_TOP_MODE),
-            "offsetMm": read_length_mm(operation, constants.PARAM_TOP_OFFSET),
-            "zMm": read_length_mm(operation, constants.PARAM_TOP_VALUE),
-        },
-        "bottom": {
-            "mode": read_string(operation, constants.PARAM_BOTTOM_MODE),
-            "offsetMm": read_length_mm(
-                operation, constants.PARAM_BOTTOM_OFFSET
-            ),
-            "zMm": read_length_mm(operation, constants.PARAM_BOTTOM_VALUE),
-        },
+        "top": _read_height(operation, "top", frame),
+        "bottom": _read_height(operation, "bottom", frame),
     }
 
 
@@ -452,8 +738,18 @@ def read_current_feeds(operation):
     }
 
 
-def read_operation(operation):
-    """Return one full operation shape from protocol.md."""
+def read_operation(operation, frame=None):
+    """Return one full operation shape from protocol.md.
+
+    frame is the setup frame from read_frame. read_document passes it
+    once per setup. A caller without one, apply.py re-reading a single
+    operation for its change check, gets it from the operation's own
+    setup, so both reads resolve the same heights and the hashes agree.
+    """
+    if frame is None:
+        setup = _read_attribute(operation, "parentSetup")
+        if setup is not None:
+            frame = read_frame(setup)
     name = None
     try:
         name = operation.name
@@ -471,7 +767,7 @@ def read_operation(operation):
         "hasToolpath": _read_flag(operation, ("hasToolpath",)),
         "tool": read_tool(operation),
         "params": read_params(operation),
-        "heights": read_heights(operation),
+        "heights": read_heights(operation, frame),
         "currentFeeds": read_current_feeds(operation),
     }
 
@@ -664,8 +960,9 @@ def read_document(app):
                 except Exception:
                     pass
                 operations = []
+                frame = read_frame(setup)
                 for operation in setup.allOperations:
-                    op_dict = read_operation(operation)
+                    op_dict = read_operation(operation, frame)
                     if op_dict.get("opId") is None:
                         # opId must never ship null (protocol.md, job,
                         # 2026-09-01): drop the operation and log its

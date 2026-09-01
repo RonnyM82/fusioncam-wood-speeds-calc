@@ -12,6 +12,7 @@ unit. Both sides pin these shapes with tests.
 | 2026-09-01 | 1 | First draft. |
 | 2026-09-01 | 1 | Corrections from the adversarial review, before any release, so no bump: the depth rule gates on `doMultipleDepths` for every levelled 2D strategy, an ambiguous cut direction serves the climb force model, `pageError` added, `opId` may never be null, regenReport rows carry `failed` with a reason, dumps ship null memory blobs. |
 | 2026-09-01 | 1 | The Windows spike folded in, no bump: identity is `operationId`; feeds and angles are raw mm/min and degrees; the pocket reads `compensation`; the setup Z extents are `stockZHigh`, `stockZLow`, `surfaceZHigh`, `surfaceZLow`; pocket width is `maximumStepover`; the finishing names corrected; the write order is spindle then cutting feed with the feed per tooth never written; drill rows write the plunge feed; `params.useStockToLeave` and `setup.machine` added as optional fields; the panel address carries `build` and `theme`. |
+| 2026-09-02 | 1 | Heights corrected, no bump: a `from contour`, `from hole top`, `from hole bottom` or `from point` height never reaches Fusion's `_value` parameter, so the add-in resolves it from the selected geometry through the setup frame and ships `zSource` and `zSpreadMm` beside `zMm` (additive). Drilling serves: the `drill` row of the mapping table maps to the drilling core, the tool identity guesses a drill family, and a drill apply row carries `rpm` and `plungeMmMin` only. |
 
 ## Versioning rules
 
@@ -167,8 +168,8 @@ Operation shape (the raw facts; the page decides everything from these):
     "rampAngleDeg": 4
   },
   "heights": {
-    "top":    { "mode": "from stock top",    "offsetMm": 0,    "zMm": 18 },
-    "bottom": { "mode": "from stock bottom", "offsetMm": -0.5, "zMm": -0.5 }
+    "top":    { "mode": "from stock top",    "offsetMm": 0,    "zMm": 18,   "zSource": "parameter", "zSpreadMm": null },
+    "bottom": { "mode": "from stock bottom", "offsetMm": -0.5, "zMm": -0.5, "zSource": "parameter", "zSpreadMm": null }
   },
   "currentFeeds": {
     "rpm": 18000, "cuttingMmMin": 5000, "plungeMmMin": 1000,
@@ -186,6 +187,27 @@ row without an `opId`, because Apply could not address it (recorded
 2026-09-01). It is the string form of Fusion's `operationId`, which is
 stable across saves (spike, section 8). `setupId` is the setup's
 `operationId` the same way.
+
+Heights (corrected 2026-09-02, spike-results-windows.md section 12). Fusion
+resolves a height into its `_value` parameter only when the mode rests on a
+plane it knows: a stock or model face, another height, the origin. For the
+geometry modes, `from contour`, `from hole top`, `from hole bottom` and
+`from point`, the `_absolute` flag reads false, `_value` stays 0.0, and
+Fusion resolves the height from the selected geometry when it generates. The
+first build shipped that 0.0 as a reading, and every 2D operation whose
+bottom sat on a selected face refused with "no positive depth". The add-in
+now resolves those heights itself. It takes the selected geometry through
+the setup frame (`Setup.workCoordinateSystem`, trusted only after it
+reproduces the setup's own Z extents) and ships the extreme, the highest
+level for a top and the lowest for a bottom, plus the mode's offset.
+`zSource` says which happened: `"parameter"` when Fusion resolved it,
+`"geometry"` when the add-in did, `null` when neither could and `zMm` is
+`null`. `zSpreadMm` is the distance between the highest and the lowest level
+the selection offered, 0 for one level, `null` unless the source is
+geometry. Both fields are additive: an older add-in sends neither and the
+page reads `null`. The page's mapping notes a spread above a hundredth of a
+millimetre in the reading line, and a `null` height in a geometry mode names
+the mode in its refusal.
 
 ### persist (page to add-in)
 
@@ -226,7 +248,8 @@ feed-per-tooth write would rewrite the cutting feed instead (corrected
 2026-09-01 from the spike, section 6; the first draft had this backwards).
 `feedPerToothMm` stays in the row for the record. A drill row writes the
 spindle speed and the plunge feed only, because a drill's cutting feed is
-not editable.
+not editable, and so a drill row carries `opId`, `rpm` and `plungeMmMin`
+alone (2026-09-02).
 
 ```json
 {
@@ -343,7 +366,10 @@ export function makeApply(jobId, rows) {}
 //   kind:   "router" | "drill" | "ball" | "chamfer", from Fusion's tool type
 //           string (added 2026-09-01). Only a router bit takes the geometry
 //           question; the other kinds carry no guess.
-//   guess:  "upcut" | "downcut" | "compression" | "straight" | null.
+//   guess:  the prefill for the one question the tool takes. A router bit:
+//           "upcut" | "downcut" | "compression" | "straight" | null. A drill
+//           (2026-09-02): "dowel" | "through" | "hinge" | "twist" | null,
+//           the family ids of js/ui/drill-tables.js. Other kinds: null.
 //   guessSource: "product_id" | "description" | null.
 //   seriesMatches: [{ vendor, series }] from chiploads.json entries.
 // The guess prefills the pick. Only the user's confirmation makes it real.
@@ -359,8 +385,11 @@ export function identifyTool(rawTool, chiploads) {}
 //   toolType: the user-confirmed geometry for this op's tool.
 //   finishing: true when the user marked this row a finish pass.
 // Returns one of:
-//   { status: "mapped", calc: { toolType, diameterMm, flutesTotal, apMm,
-//     aeMm, direction, upcutLengthMm, profileOverride }, reading: "..." }
+//   { status: "mapped", calc: { mode: "rout", toolType, diameterMm,
+//     flutesTotal, apMm, aeMm, direction, upcutLengthMm, profileOverride },
+//     reading: "..." }
+//   { status: "mapped", calc: { mode: "drill", diameterMm, holeDepthMm },
+//     reading: "..." }                          // a drill (2026-09-02)
 //   { status: "unsupported", reason: "..." }   // strategy has no data
 //   { status: "unreadable", reason: "..." }    // a needed raw fact was null
 // It never invents a value and never touches material, machine, rpm or
@@ -388,7 +417,7 @@ stepdown is always active: the pass depth is `stepdownMm`, and a null
 `stepdownMm` is unreadable. The first draft read `stepdownMm` whenever it was
 set, which served a shallow-pass feed for a cut that runs the full depth in
 one pass, with no refusal.
-| `drill` | unsupported: drilling data is pending research | |
+| `drill` | none: the drilling chart is a feed per revolution with every cutting edge counted | the hole, resolved hole top minus resolved hole bottom, from the hole faces (2026-09-02) |
 | `parallel`, `scallop`, `contour`, `pocket_clearing`, and the other 3D strategies | unsupported: no published chart covers 3D surfacing yet | |
 | anything else | unsupported, named in the reason | |
 
@@ -435,6 +464,10 @@ Nothing in this table rests on documentation alone any more.
 | `direction` | `climb` or `conventional` | `adaptive2d` (`parallel` carries `one way`, `other way`, `both ways`) | 2 |
 | `topHeight_value`, `bottomHeight_value` | resolved heights, raw cm, relative to the setup origin | all | 2 |
 | `topHeight_mode`, `topHeight_offset` (and bottom) | raw height settings; mode strings listed in section 2 | all | 2 |
+| `topHeight_absolute`, `bottomHeight_absolute` | true when `_value` holds the resolved height; false for the geometry modes, whose `_value` stays 0.0 | all | 12 |
+| `topHeight_ref`, `bottomHeight_ref` | the selection a `from point` height refers to | all | 12 |
+| `contours`, `pockets`, `holeFaces` | the geometry selections a `from contour` or `from hole` height resolves from | `contour2d`; `pocket2d`, `adaptive2d`, `slot`; `drill` | 12 |
+| `Setup.workCoordinateSystem` | the setup frame as a Matrix3D; translation in millimetres against centimetre bounding boxes | property on the setup | 12 |
 | `job_stockFixedX/Y/Z` | fixed stock size | setup | 2 |
 | `stockZHigh`, `stockZLow`, `surfaceZHigh`, `surfaceZLow` | stock and model top and bottom, raw cm, relative to the setup origin | setup | 2 |
 | `OperationBase.strategy` | the strategy id string on an existing operation | property, not a parameter | 1 |
@@ -489,6 +522,14 @@ and the reading wins. Feeds in an inch document are untested.
   its two entry scripts. The modules those scripts import carry no tag,
   so a stale copy of one can outlive a site update by the host's cache
   window (ten minutes on the current host).
+- Heights in the geometry modes (section 12, 2026-09-02): `_absolute` is
+  false, `_value` is 0.0, and the height lives in the selection. The
+  add-in resolves it through `Setup.workCoordinateSystem`, whose
+  translation read in millimetres against centimetre bounding boxes, and
+  trusts the frame only after it reproduces `surfaceZLow` and
+  `surfaceZHigh` from the setup models. A frame that fails the check
+  ships every geometry height as null. A sketch curve's bounding box
+  reads empty, so a sketch selection goes through its world geometry.
 - `getChoices()` returns a three-tuple: a flag, the titles, then the value
   strings with their quotes. `Tool.description` is a formatted string;
   match tools on the `tool_description` parameter or the tool JSON.
@@ -504,3 +545,6 @@ and the reading wins. Feeds in an inch document are untested.
    the page is deployed, and the ten-second offline timeout works.
 3. The Mac pass of everything above.
 4. Feeds in an inch document, and identity on an unsaved document.
+5. The unit of the `workCoordinateSystem` translation in an inch document
+   (the frame check refuses rather than guesses if it differs), and a
+   sketch-selected contour's height on a real operation (2026-09-02).

@@ -31,6 +31,18 @@ const TYPE_PATTERNS = [
   { type: 'straight', re: /\bstraight\b|\bo[\s-]flute\b/ },
 ];
 
+// The drill families for a drill's prefill, by the ids js/ui/drill-tables.js
+// DRILL_TOOLS uses (2026-09-02). A brad point is the cabinetmaker's dowel
+// drill: a centre point and two spurs, the geometry the dowel-drill pages
+// draw, so the word prefills that family. Two families in one description
+// cancel to no guess, as with the router words.
+const DRILL_PATTERNS = [
+  { type: 'hinge', re: /\bhinge\b|\bcup\b/ },
+  { type: 'through', re: /\bthrough\b|\bthru\b/ },
+  { type: 'dowel', re: /\bdowel\b|\bbrad\b/ },
+  { type: 'twist', re: /\btwist\b|\bjobber\b/ },
+];
+
 // A family prefix is everything up to and including the first digit after
 // the first dash. "60-104" gives "60-1", so it matches "60-100MW" and
 // "60-100C". "52-240B" gives "52-2", so it matches "52-200". An id with no
@@ -137,10 +149,10 @@ function matchSeries(rawTool, chiploads) {
 // The description fallback reads the free text only when the product id
 // gave nothing. Two distinct types in the text cancel each other: a
 // "compression up-cut" description guesses nothing.
-function guessFromText(rawTool) {
+function guessFromText(rawTool, patterns) {
   const text = `${collapse(rawTool.description)} ${collapse(rawTool.comment)}`.toLowerCase();
   const hits = new Set();
-  for (const p of TYPE_PATTERNS) {
+  for (const p of patterns) {
     if (p.re.test(text)) hits.add(p.type);
   }
   return hits.size === 1 ? [...hits][0] : null;
@@ -169,14 +181,16 @@ export function toolKind(typeString) {
 }
 
 // rawTool is the job message tool shape in fusion-addin/protocol.md.
-// Returns { key, kind, guess, guessSource, seriesMatches }.
+// Returns { key, kind, guess, guessSource, seriesMatches }. The guess
+// prefills the one question the tool takes: a geometry for a router bit
+// (upcut, downcut, compression, straight), a family for a drill (dowel,
+// through, hinge, twist; 2026-09-02), nothing for the other kinds.
 export function identifyTool(rawTool, chiploads) {
   const kind = toolKind(rawTool?.typeString);
   const { matches, idGuess } = matchSeries(rawTool, chiploads);
 
-  // Only a router bit takes a geometry guess. The series matches still
-  // return for every kind, because a drill's chart is a later concern and
-  // the match is a fact about the tool, not a pick.
+  // The series matches return for every kind: the match is a fact about
+  // the tool, not a pick.
   let guess = null;
   let guessSource = null;
   if (kind === 'router') {
@@ -184,11 +198,19 @@ export function identifyTool(rawTool, chiploads) {
       guess = idGuess;
       guessSource = 'product_id';
     } else {
-      const textGuess = guessFromText(rawTool);
+      const textGuess = guessFromText(rawTool, TYPE_PATTERNS);
       if (textGuess) {
         guess = textGuess;
         guessSource = 'description';
       }
+    }
+  } else if (kind === 'drill') {
+    // No chart row names a drill by product id yet, so the description is
+    // the one source for a drill's family.
+    const textGuess = guessFromText(rawTool, DRILL_PATTERNS);
+    if (textGuess) {
+      guess = textGuess;
+      guessSource = 'description';
     }
   }
 

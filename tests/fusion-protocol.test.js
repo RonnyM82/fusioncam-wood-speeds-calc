@@ -341,3 +341,19 @@ test('FP15', 'every cache-bust ?v= in fusion.html equals PAGE_BUILD in fusion-pa
     assert(v[1] === build[1], `${href} carries ?v=${v[1]} but PAGE_BUILD is ${build[1]}`);
   }
 });
+
+test('FP16', 'a height carries its source and spread when the add-in sends them, and null when it does not', () => {
+  // Additive fields inside version 1 (2026-09-02): zSource and zSpreadMm.
+  const msg = JSON.parse(JSON.stringify(PINNED_V1_JOB));
+  const op = msg.setups[0].operations[0];
+  op.heights.bottom = { mode: 'from contour', offsetMm: 0, zMm: -7, zSource: 'geometry', zSpreadMm: 0 };
+  const { ok, job } = readJob(msg);
+  assert(ok, 'additive fields never make a job fail');
+  const heights = job.setups[0].operations[0].heights;
+  assert(heights.bottom.zSource === 'geometry' && heights.bottom.zSpreadMm === 0, 'source and spread carry through');
+  assert(heights.top.zSource === null && heights.top.zSpreadMm === null, 'an older add-in leaves both null');
+  op.heights.bottom.zSource = 7;
+  const bad = readJob(msg);
+  assert(!bad.ok && bad.job.setups[0].operations[0].heights.bottom.zSource === null, 'a wrong type reads null and is named');
+  assert(bad.errors.some((e) => e.includes('zSource')), 'the error names the field');
+});

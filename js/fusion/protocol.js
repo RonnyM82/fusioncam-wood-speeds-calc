@@ -154,12 +154,18 @@ function readParams(raw, path, errors) {
   };
 }
 
+// zSource and zSpreadMm joined on 2026-09-02, inside version 1 (additive):
+// the add-in resolves a from-contour or from-hole height from the selected
+// geometry itself, names the source, and reports the spread of levels it
+// saw. An older add-in sends neither and both read null.
 function readHeight(raw, path, errors) {
   const part = readPart(raw, path, errors);
   return {
     mode: readString(part.mode, `${path}.mode`, errors),
     offsetMm: readNumber(part.offsetMm, `${path}.offsetMm`, errors),
     zMm: readNumber(part.zMm, `${path}.zMm`, errors),
+    zSource: readString(part.zSource, `${path}.zSource`, errors),
+    zSpreadMm: readNumber(part.zSpreadMm, `${path}.zSpreadMm`, errors),
   };
 }
 

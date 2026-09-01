@@ -34,8 +34,23 @@ const SURFACING_3D = new Set([
   'project', 'swarf', 'blend', 'morphed_spiral',
 ]);
 
-const DRILL_REASON = 'Drilling charts are pending research. The add-in leaves drills untouched until that data lands.';
 const SURFACING_REASON = 'No published chart covers 3D surfacing yet. The data arrives from research.';
+
+// The height modes Fusion resolves from the selected geometry and never
+// into its own resolved-value parameter (spike-results-windows.md section
+// 12, 2026-09-02). The add-in resolves them itself and marks the source.
+// When one of these arrives null, the refusal says where the value should
+// have come from, so the reader knows the selection did not read, not the
+// dialog.
+const GEOMETRY_HEIGHT_MODES = new Set(['from contour', 'from hole top', 'from hole bottom', 'from point']);
+
+// Fusion resolves a from-contour or from-hole height per contour or per
+// hole. The add-in ships the extreme, the highest top and the lowest bottom,
+// with the spread between the levels it saw (protocol.md, heights). A spread
+// above a hundredth of a millimetre means the cut is not one depth, and the
+// reading says the deepest serves, because that is the number the mapping
+// took.
+const SPREAD_NOTE = 'The selection is not all at one depth, so the deepest serves.';
 
 // op is the job message operation shape in fusion-addin/protocol.md.
 // choices is { toolType, upcutLengthMm, finishing }: the user-confirmed tool
@@ -46,7 +61,7 @@ export function mapOperation(op, choices = {}) {
     return { status: 'unreadable', reason: 'The add-in could not read the strategy.' };
   }
   if (strategy === 'drill') {
-    return { status: 'unsupported', reason: DRILL_REASON };
+    return mapDrill(op);
   }
   if (SURFACING_3D.has(strategy)) {
     return { status: 'unsupported', reason: SURFACING_REASON };
@@ -93,11 +108,14 @@ export function mapOperation(op, choices = {}) {
   if (!dir.ok) {
     return { status: 'unreadable', reason: dir.reason };
   }
-  const reading = buildReading(strategy, depth, aeMm, finishing, dir.note);
+  const reading = withSpreadNote(buildReading(strategy, depth, aeMm, finishing, dir.note), op);
 
+  // mode names the calculator this calc feeds: rout for calculate(), drill
+  // for calculateDrilling() (2026-09-02). The panel switches on it.
   return {
     status: 'mapped',
     calc: {
+      mode: 'rout',
       toolType: choices.toolType ?? null,
       diameterMm: tool.diameterMm,
       flutesTotal: tool.flutes,
@@ -148,16 +166,62 @@ function readDepth(op) {
     return { ok: false, reason: `The add-in could not read doMultipleDepths (stepdown ${mmRead(p.stepdownMm)}, ${heightsRead}). The stepdown in the dialog can be stale, so the mapping does not guess the pass depth.` };
   }
   if (top == null) {
-    return { ok: false, reason: `The add-in could not read the top height (bottom ${mmRead(bottom)}). The multiple-depths box is off.` };
+    return { ok: false, reason: `The add-in could not read the top height (bottom ${mmRead(bottom)}). The multiple-depths box is off.${heightHint(op.heights?.top)}` };
   }
   if (bottom == null) {
-    return { ok: false, reason: `The add-in could not read the bottom height (top ${mmRead(top)}). The multiple-depths box is off.` };
+    return { ok: false, reason: `The add-in could not read the bottom height (top ${mmRead(top)}). The multiple-depths box is off.${heightHint(op.heights?.bottom)}` };
   }
   const d = top - bottom;
   if (!(d > 0)) {
     return { ok: false, reason: `The add-in read a top height of ${mm(top)} mm and a bottom height of ${mm(bottom)} mm, so the cut has no positive depth. The multiple-depths box is off.` };
   }
   return { ok: true, apMm: d, totalMm: d, perPass: false };
+}
+
+// A drill (2026-09-02). The drilling chart serves from the drill diameter
+// and the hole depth alone: the published band is a feed per revolution
+// against speed with every cutting edge already counted (data/schema.md),
+// so no flute count and no width of cut enter. The depth is the resolved
+// hole top minus the resolved hole bottom, the two heights Fusion takes
+// from the hole faces and the add-in resolves from them (spike section 12).
+// Material, machine, profile and the drill family stay panel state.
+function mapDrill(op) {
+  const tool = op.tool ?? {};
+  const top = op.heights?.top?.zMm ?? null;
+  const bottom = op.heights?.bottom?.zMm ?? null;
+  const heightsRead = `top ${mmRead(top)}, bottom ${mmRead(bottom)}`;
+  if (tool.diameterMm == null) {
+    return { status: 'unreadable', reason: `The add-in could not read the drill diameter (${heightsRead}).` };
+  }
+  const d = tool.diameterMm;
+  if (top == null) {
+    return { status: 'unreadable', reason: `The add-in could not read the hole top (bottom ${mmRead(bottom)}, drill ${mm(d)} mm).${heightHint(op.heights?.top)}` };
+  }
+  if (bottom == null) {
+    return { status: 'unreadable', reason: `The add-in could not read the hole bottom (top ${mm(top)} mm, drill ${mm(d)} mm).${heightHint(op.heights?.bottom)}` };
+  }
+  const depth = top - bottom;
+  if (!(depth > 0)) {
+    return { status: 'unreadable', reason: `The add-in read a hole top of ${mm(top)} mm and a hole bottom of ${mm(bottom)} mm, so the hole has no positive depth.` };
+  }
+  return {
+    status: 'mapped',
+    calc: { mode: 'drill', diameterMm: d, holeDepthMm: depth },
+    reading: withSpreadNote(`${mm(d)} mm drill, hole ${mm(depth)} mm deep.`, op),
+  };
+}
+
+// The sentence a null height carries when Fusion takes that height from
+// the selected geometry: the value was never in the dialog to read.
+function heightHint(height) {
+  const mode = height?.mode;
+  if (height?.zMm != null || mode == null || !GEOMETRY_HEIGHT_MODES.has(mode)) return '';
+  return ` Fusion takes this height from the selected geometry (${mode}), and the add-in could not read that geometry in the setup frame.`;
+}
+
+function withSpreadNote(line, op) {
+  const spread = Math.max(op.heights?.top?.zSpreadMm ?? 0, op.heights?.bottom?.zSpreadMm ?? 0);
+  return spread > 0.01 ? `${line} ${SPREAD_NOTE}` : line;
 }
 
 // The full depth, for the pass count in the reading line only. Null when

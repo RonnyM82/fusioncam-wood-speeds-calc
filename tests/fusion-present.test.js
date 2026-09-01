@@ -5,7 +5,9 @@
 // here hides a fault behind a toggle.
 
 import { test, assert } from './helpers.js';
-import { strategyLabel, pickChips, readFacts, STRATEGY_LABELS } from '../js/fusion/present.js';
+import { loadData } from './load-node.js';
+import { calculateDrilling } from '../js/core/drilling.js';
+import { strategyLabel, pickChips, readFacts, drillChips, STRATEGY_LABELS } from '../js/fusion/present.js';
 
 test('FR1', 'strategy labels: known ids get words, unknown ids pass through, null says not read', () => {
   assert(strategyLabel('contour2d') === '2D contour', `got ${strategyLabel('contour2d')}`);
@@ -61,4 +63,40 @@ test('FR4', 'the facts clause names every value read and says not read for a nul
   assert(nulls === 'Read: top not read, bottom not read, multiple depths not read, diameter not read, flutes not read.', `got: ${nulls}`);
   const stepped = readFacts({ strategy: 'slot', tool: { diameterMm: 3.175, flutes: 1 }, params: { doMultipleDepths: true, stepdownMm: 2.5 }, heights: { top: { zMm: 18 }, bottom: { zMm: -0.5 } } });
   assert(stepped === 'Read: top 18 mm, bottom -0.5 mm, stepdown 2.5 mm, diameter 3.175 mm, 1 flute.', `got: ${stepped}`);
+  // A height the add-in resolved from the selected geometry says where it
+  // came from, and a null in a geometry mode names the mode (2026-09-02).
+  const resolved = readFacts({ strategy: 'slot', tool: { diameterMm: 9.5, flutes: 2 }, params: { doMultipleDepths: false }, heights: { top: { mode: 'from stock top', zMm: 0, zSource: 'parameter' }, bottom: { mode: 'from contour', zMm: -7, zSource: 'geometry', zSpreadMm: 0 } } });
+  assert(resolved === 'Read: top 0 mm, bottom -7 mm from the contour, stepdown off, diameter 9.5 mm, 2 flutes.', `got: ${resolved}`);
+  const unresolved = readFacts({ strategy: 'slot', tool: { diameterMm: 9.5, flutes: 2 }, params: { doMultipleDepths: false }, heights: { top: { mode: 'from stock top', zMm: 0, zSource: 'parameter' }, bottom: { mode: 'from contour', zMm: null, zSource: null } } });
+  assert(unresolved === 'Read: top 0 mm, bottom not read (from contour), stepdown off, diameter 9.5 mm, 2 flutes.', `got: ${unresolved}`);
+  // A drill names the hole and the drill, and nothing about stepdowns or flutes.
+  const drill = readFacts({ strategy: 'drill', tool: { diameterMm: 3, flutes: 2 }, params: {}, heights: { top: { mode: 'from hole top', zMm: -2, zSource: 'geometry', zSpreadMm: 0 }, bottom: { mode: 'from hole bottom', zMm: -8, zSource: 'geometry', zSpreadMm: 0 } } });
+  assert(drill === 'Read: top -2 mm from the hole, bottom -8 mm from the hole, diameter 3 mm.', `got: ${drill}`);
+});
+
+test('FR5', 'drill chips: short badge text with the core sentence as detail, hot per danger, no vendor name', () => {
+  const data = loadData();
+  const machine = { spindleKw: 10, breakpointRpm: 12000, rpmMax: 24000, rpmMin: 1000, feedMaxMmMin: 30000 };
+  const input = { drillType: 'hinge_drill', material: 'laminated_pb', diameterMm: 35, holeDepthMm: 13, profile: 'standard', drillBank: false, machine };
+  const ok = calculateDrilling(input, data);
+  assert(ok.status === 'ok', `the fixture cut must serve, got ${ok.status}`);
+  const chips = drillChips(ok);
+  assert(chips.some((c) => c.key === 'rev' && c.level === 'cool'), 'a clean cut gets a cool feed-per-rev chip');
+  assert(chips.some((c) => c.key === 'speed' && c.level === 'info'), 'the published speed range is an info chip');
+  assert(chips.some((c) => c.key === 'factor' && c.level === 'info'), 'the material factor is an info chip');
+  for (const c of chips) {
+    assert(c.text.length <= 72, `chip text too long for a badge: ${c.text}`);
+    assert(typeof c.detail === 'string', `every drill chip carries a detail for the check list: ${c.key}`);
+    assert(!/leitz/i.test(`${c.text} ${c.detail}`), `no vendor name in a drilling chip: ${c.text} ${c.detail}`);
+  }
+  // A machine feed cap under the band: the core's danger warning becomes a
+  // hot chip with the full sentence as detail, and the cool chip stays away.
+  const capped = calculateDrilling({ ...input, machine: { ...machine, feedMaxMmMin: 100 } }, data);
+  assert(capped.status === 'ok', `the capped cut must still serve, got ${capped.status}`);
+  const hot = drillChips(capped);
+  const below = hot.find((c) => c.key === 'drill_feed_below_band');
+  assert(below && below.level === 'hot', 'the below-band warning must be a hot chip');
+  assert(below.text === 'Feed below the slowest published' && below.detail.includes('rubs'), `short text and full detail: ${below.text} / ${below.detail}`);
+  assert(!hot.some((c) => c.key === 'rev'), 'no cool feed chip beside a below-band warning');
+  assert(drillChips({ status: 'refused' }).length === 0, 'a refused result has no chips');
 });
