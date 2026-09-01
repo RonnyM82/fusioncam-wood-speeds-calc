@@ -1,6 +1,8 @@
 // Data-integrity sweep. Runs in node on every test run and in the browser at
 // page load. An entry without provenance is rejected — it must never render.
 
+import { bandAtRpm } from '../core/drilling.js';
+
 // Vocabulary mirrors data/schema.md. A typo in any of these fields silently
 // changes or deletes safety output, so the gate rejects unknown values.
 const MATERIALS = new Set(['mdf', 'particleboard', 'laminated_pb', 'laminated_chipboard', 'hardwood', 'softwood', 'plywood', 'softwood_ply', 'hpl']);
@@ -9,7 +11,23 @@ const DIRECTIONS = new Set(['upcut', 'downcut']);
 const TOOL_TYPES = new Set(['upcut', 'downcut', 'compression', 'straight']);
 const MACHINE_CLASSES = new Set(['big_iron_10hp_plus']);
 
-export function validateData({ chiploads, kc, machines, rules }) {
+// Drilling vocabulary. FACTOR_MATERIALS is deliberately its own namespace and does
+// not extend MATERIALS: Leitz names factor rows the calculator has no pick for
+// (veneered chipboard, glulam), and adding those to MATERIALS would offer routing
+// picks that every chip-load chart refuses. drills.material_factor_map is the only
+// join between the two.
+const DRILL_FAMILIES = new Set(['dowel_drill', 'through_hole_drill', 'boring_pin', 'hinge_drill', 'turnblade_hinge_drill', 'twist_drill', 'levin_drill', 'cylinder_head_drill']);
+const DRILL_EDGE_MATERIALS = new Set(['HW_tipped', 'HW_solid', 'HS_solid', 'DP_tipped']);
+const DRILL_MACHINE_CLASSES = new Set(['cnc_machining_centre', 'point_to_point', 'through_feed', 'drill_bank', 'multi_spindle', 'hinge_boring', 'column_drill', 'portable_drill', 'special_purpose_drill']);
+// Decision 1 (2026-09-01): the scope is CNC machining centres and drill banks. An
+// entry aimed only at drill presses may be recorded but must never serve, so the
+// gate enforces the scope rather than a comment doing it.
+const SERVED_MACHINE_CLASSES = new Set(['cnc_machining_centre', 'point_to_point', 'through_feed', 'drill_bank', 'multi_spindle', 'hinge_boring']);
+const FACTOR_MATERIALS = new Set(['chipboard_plastic_coated', 'chipboard_uncoated', 'chipboard_veneered_or_paper_coated', 'mdf', 'mdf_plastic_coated', 'solid_wood', 'softwood', 'hardwood', 'glulam', 'plywood', 'laminated_veneer_lumber', 'hpl']);
+const CLEARING_KINDS = new Set(['max_infeed_ratio_of_d', 'clearing_stroke_required', 'clearing_stroke_recommended_past', 'no_clearing_stroke_to_ratio', 'no_clearing_stroke_to_depth_mm', 'feed_factor_past_ratio']);
+const BAND_BASES = new Set(['mm_per_rev']);
+
+export function validateData({ chiploads, kc, machines, rules, drills }) {
   const errors = [];
   const warnings = [];
 
@@ -67,5 +85,175 @@ export function validateData({ chiploads, kc, machines, rules }) {
     if (!rule.data_class) errors.push(`rules.${key}: missing data_class`);
   }
 
+  validateDrills(drills, rules, errors);
+
   return { errors, warnings };
+}
+
+// A wrong drilling number goes to someone's spindle exactly as a wrong routing one
+// does, so this gate is as hard as the chip-load gate. Two checks here are the whole
+// reason the drilling data can be trusted: a band must span its own published speed
+// range at both ends, because a misread diagram picks up a neighbouring chart and
+// stops short; and where a diagram prints a worked example, that example must land
+// inside the band read off it. Both turn the research's per-page validation into
+// something that runs on every test run and every page load.
+function validateDrills(drills, rules, errors) {
+  if (!drills || !Array.isArray(drills.entries)) {
+    errors.push('drills: the drilling data file must exist and carry an entries array');
+    return;
+  }
+
+  const ratioRange = rules.drilling?.band_ratio_sanity ?? [1.4, 3.2];
+  const map = drills.material_factor_map;
+  if (!map || !map.map) errors.push('drills.material_factor_map: missing');
+  else {
+    if (!map.source) errors.push('drills.material_factor_map: missing source');
+    else if (!drills.sources[map.source]) errors.push(`drills.material_factor_map: source key "${map.source}" not in sources map`);
+    if (!map.data_class) errors.push('drills.material_factor_map: missing data_class');
+    for (const [pick, candidates] of Object.entries(map.map)) {
+      if (!MATERIALS.has(pick)) errors.push(`drills.material_factor_map: unknown material "${pick}"`);
+      if (!Array.isArray(candidates) || candidates.length === 0) {
+        errors.push(`drills.material_factor_map.${pick}: needs at least one candidate factor row`);
+        continue;
+      }
+      for (const c of candidates) {
+        if (!FACTOR_MATERIALS.has(c)) errors.push(`drills.material_factor_map.${pick}: unknown factor row "${c}"`);
+      }
+    }
+  }
+
+  const seenIds = new Set();
+  drills.entries.forEach((e, i) => {
+    const id = `drills entry ${i} (${e.subfamily_id ?? '?'})`;
+    if (!e.source) errors.push(`${id}: missing source`);
+    else if (!drills.sources[e.source]) errors.push(`${id}: source key "${e.source}" not in sources map`);
+    if (!e.data_class) errors.push(`${id}: missing data_class`);
+    if (!e.subfamily_id) errors.push(`${id}: missing subfamily_id`);
+    else if (seenIds.has(e.subfamily_id)) errors.push(`${id}: duplicate subfamily_id`);
+    else seenIds.add(e.subfamily_id);
+    if (!e.label) errors.push(`${id}: missing label`);
+    if (!DRILL_FAMILIES.has(e.family)) errors.push(`${id}: unknown family "${e.family}"`);
+    if (!DRILL_EDGE_MATERIALS.has(e.edge_material)) errors.push(`${id}: unknown edge_material "${e.edge_material}"`);
+    if (!Number.isInteger(e.teeth) || !(e.teeth > 0)) errors.push(`${id}: teeth must be a positive integer`);
+    if (typeof e.serves !== 'boolean') errors.push(`${id}: serves must be true or false`);
+
+    const classes = e.machine_classes;
+    if (!Array.isArray(classes) || classes.length === 0) errors.push(`${id}: machine_classes must list at least one machine class`);
+    else {
+      for (const c of classes) {
+        if (!DRILL_MACHINE_CLASSES.has(c)) errors.push(`${id}: unknown machine class "${c}"`);
+      }
+      if (e.serves === true && !classes.some((c) => SERVED_MACHINE_CLASSES.has(c))) {
+        errors.push(`${id}: serves is true but no machine class is in scope (decision 1: CNC machining centres and drill banks only)`);
+      }
+    }
+
+    const rpmOk = typeof e.rpm_min === 'number' && typeof e.rpm_max === 'number' && e.rpm_min > 0 && e.rpm_max > e.rpm_min;
+    if (!rpmOk) errors.push(`${id}: the published speed range must be two positive numbers, low below high`);
+    if (e.rpm_recommended_min != null && rpmOk && (e.rpm_recommended_min < e.rpm_min || e.rpm_recommended_min > e.rpm_max)) {
+      errors.push(`${id}: rpm_recommended_min sits outside the published speed range`);
+    }
+    if (!(e.diameter_min_mm > 0) || !(e.diameter_max_mm >= e.diameter_min_mm)) {
+      errors.push(`${id}: the diameter range must be positive, low at or below high`);
+    }
+
+    const band = e.feed_band;
+    if (!band) {
+      errors.push(`${id}: missing feed_band`);
+    } else {
+      if (!band.source) errors.push(`${id}: feed_band missing source`);
+      else if (!drills.sources[band.source]) errors.push(`${id}: feed_band source key "${band.source}" not in sources map`);
+      if (band.data_class !== 'measured_chart_read') errors.push(`${id}: a feed band read off a diagram must carry data_class measured_chart_read`);
+      if (!BAND_BASES.has(band.basis)) errors.push(`${id}: unknown feed band basis "${band.basis}"`);
+      if (!FACTOR_MATERIALS.has(band.baseline_material)) errors.push(`${id}: unknown feed band baseline_material "${band.baseline_material}"`);
+
+      const pts = band.points;
+      if (!Array.isArray(pts) || pts.length < 2) {
+        errors.push(`${id}: a feed band needs at least two read points`);
+      } else {
+        let shapeOk = true;
+        pts.forEach((p, j) => {
+          if (typeof p.rpm !== 'number' || typeof p.fn_min_mm_rev !== 'number' || typeof p.fn_max_mm_rev !== 'number') {
+            errors.push(`${id}: feed band point ${j} must carry numbers, not strings`);
+            shapeOk = false;
+            return;
+          }
+          if (!(p.fn_min_mm_rev > 0) || !(p.fn_max_mm_rev > p.fn_min_mm_rev)) {
+            errors.push(`${id}: feed band point ${j} must be a positive band, low below high`);
+            shapeOk = false;
+            return;
+          }
+          if (j > 0 && p.rpm <= pts[j - 1].rpm) {
+            errors.push(`${id}: feed band point ${j} does not rise in spindle speed`);
+            shapeOk = false;
+            return;
+          }
+          const ratio = p.fn_max_mm_rev / p.fn_min_mm_rev;
+          if (ratio < ratioRange[0] || ratio > ratioRange[1]) {
+            errors.push(`${id}: feed band point ${j} spans ${ratio.toFixed(2)}x, outside the ${ratioRange[0]}-${ratioRange[1]}x the diagrams publish. That is a bad read, not a wide band.`);
+          }
+        });
+
+        if (shapeOk && rpmOk) {
+          if (pts[0].rpm !== e.rpm_min || pts[pts.length - 1].rpm !== e.rpm_max) {
+            errors.push(`${id}: the feed band runs ${pts[0].rpm}-${pts[pts.length - 1].rpm} rpm but the tool publishes ${e.rpm_min}-${e.rpm_max}. A band that stops short of its own speed range is a misread diagram.`);
+          }
+        }
+
+        const ex = band.worked_example;
+        if (ex != null && shapeOk) {
+          if (rpmOk && (ex.rpm < e.rpm_min || ex.rpm > e.rpm_max)) {
+            errors.push(`${id}: the worked example sits outside the published speed range`);
+          }
+          const converted = (ex.vf_m_min * 1000) / ex.rpm;
+          if (Math.abs(converted - ex.fn_mm_rev) > 1e-3) {
+            errors.push(`${id}: the worked example does not convert: ${ex.vf_m_min} m/min at ${ex.rpm} rpm is ${converted.toFixed(4)} mm/rev, not ${ex.fn_mm_rev}`);
+          }
+          const at = bandAtRpm(band, ex.rpm);
+          if (!at || ex.fn_mm_rev < at.fnMin - 1e-6 || ex.fn_mm_rev > at.fnMax + 1e-6) {
+            errors.push(`${id}: the diagram's own worked example (${ex.fn_mm_rev} mm/rev at ${ex.rpm} rpm) falls outside the band read off that diagram. The read is wrong.`);
+          }
+        }
+      }
+    }
+
+    const factors = e.material_factors;
+    if (!Array.isArray(factors) || factors.length === 0) {
+      errors.push(`${id}: missing material_factors`);
+    } else {
+      const seenMaterials = new Set();
+      let baselineRows = 0;
+      for (const f of factors) {
+        if (!FACTOR_MATERIALS.has(f.material)) errors.push(`${id}: unknown factor row "${f.material}"`);
+        if (seenMaterials.has(f.material)) errors.push(`${id}: duplicate factor row "${f.material}"`);
+        seenMaterials.add(f.material);
+        if (typeof f.factor !== 'number' || !(f.factor > 0)) errors.push(`${id}: factor for "${f.material}" must be a positive number`);
+        if (band && f.material === band.baseline_material && f.factor === 1) baselineRows += 1;
+      }
+      if (band && baselineRows !== 1) {
+        errors.push(`${id}: the factor table must carry exactly one row at 1.0 for its baseline material "${band.baseline_material}"`);
+      }
+    }
+
+    if (!('chip_clearing' in e)) {
+      errors.push(`${id}: chip_clearing must be present, and null where the source publishes no rule. Silence is a value here (decision 5).`);
+    } else if (e.chip_clearing != null) {
+      const cc = e.chip_clearing;
+      if (!cc.source) errors.push(`${id}: chip_clearing missing source`);
+      else if (!drills.sources[cc.source]) errors.push(`${id}: chip_clearing source key "${cc.source}" not in sources map`);
+      if (!cc.data_class) errors.push(`${id}: chip_clearing missing data_class`);
+      if (!Array.isArray(cc.rules) || cc.rules.length === 0) errors.push(`${id}: chip_clearing carries no rules`);
+      else {
+        for (const r of cc.rules) {
+          if (!CLEARING_KINDS.has(r.kind)) errors.push(`${id}: unknown chip-clearing rule "${r.kind}"`);
+          if (r.ratio_of_d != null && !(r.ratio_of_d > 0)) errors.push(`${id}: chip-clearing ratio_of_d must be positive`);
+          if (r.depth_mm != null && !(r.depth_mm > 0)) errors.push(`${id}: chip-clearing depth_mm must be positive`);
+          if (r.factor != null && !(r.factor > 0)) errors.push(`${id}: chip-clearing factor must be positive`);
+          for (const m of r.materials ?? []) {
+            if (!FACTOR_MATERIALS.has(m)) errors.push(`${id}: unknown chip-clearing material "${m}"`);
+          }
+        }
+      }
+    }
+  });
 }

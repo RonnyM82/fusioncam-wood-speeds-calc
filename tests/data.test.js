@@ -267,6 +267,79 @@ test('FIN', 'the finishing skim is pinned, sourced, and quoted by the UI hint', 
     'the width-of-cut hint must quote the rules.json skim value');
 });
 
+// A valid drilling entry, built here rather than read from the file, so the gate is
+// provable before any chart read lands and stays provable if the real entries change.
+// The numbers are the validated hinge-drill read: the band spans the published
+// 2800-7000 speed range and the diagram's own worked example (1.5 m/min at 4000 rpm,
+// which is 0.375 mm/rev) falls inside it.
+function drillFixture() {
+  return {
+    subfamily_id: 'fixture_hinge_drill',
+    family: 'hinge_drill',
+    label: 'Hinge drill, tipped, centre point',
+    edge_material: 'HW_tipped',
+    teeth: 2,
+    serves: true,
+    diameter_min_mm: 15,
+    diameter_max_mm: 40,
+    rpm_min: 2800,
+    rpm_max: 7000,
+    rpm_recommended_min: null,
+    machine_classes: ['cnc_machining_centre', 'point_to_point', 'hinge_boring'],
+    feed_band: {
+      basis: 'mm_per_rev',
+      baseline_material: 'chipboard_plastic_coated',
+      points: [
+        { rpm: 2800, fn_min_mm_rev: 0.192, fn_max_mm_rev: 0.56 },
+        { rpm: 4900, fn_min_mm_rev: 0.205, fn_max_mm_rev: 0.416 },
+        { rpm: 7000, fn_min_mm_rev: 0.194, fn_max_mm_rev: 0.343 },
+      ],
+      worked_example: { rpm: 4000, vf_m_min: 1.5, fn_mm_rev: 0.375 },
+      source: 'leitz-lexicon-7-drilling-chart-read',
+      data_class: 'measured_chart_read',
+    },
+    material_factors: [
+      { material: 'chipboard_plastic_coated', factor: 1.0 },
+      { material: 'chipboard_veneered_or_paper_coated', factor: 0.8 },
+      { material: 'solid_wood', factor: 0.7 },
+    ],
+    chip_clearing: null,
+    source: 'leitz-lexicon-7-drilling',
+    data_class: 'vendor',
+  };
+}
+
+function withDrill(entry) {
+  const clone = JSON.parse(JSON.stringify(data));
+  clone.drills.entries = [entry];
+  return clone;
+}
+
+test('DRILLFENCE', 'a sound drilling entry passes, and each way of breaking one is caught', () => {
+  const clean = validateData(withDrill(drillFixture())).errors;
+  assert(clean.length === 0, `the fixture entry must validate clean, got:\n${clean.join('\n')}`);
+
+  const breaks = {
+    'stripped source': (e) => { delete e.source; },
+    'stripped data_class': (e) => { delete e.data_class; },
+    'unknown family': (e) => { e.family = 'forstner'; },
+    'stringified band value': (e) => { e.feed_band.points[0].fn_min_mm_rev = '0.19'; },
+    'band stops short of the speed range': (e) => { e.feed_band.points.pop(); },
+    'worked example outside its own band': (e) => { e.feed_band.worked_example = { rpm: 4000, vf_m_min: 3.0, fn_mm_rev: 0.75 }; },
+    'a read that spans far too wide': (e) => { e.feed_band.points[1].fn_max_mm_rev = 3.0; },
+    'a drill-press tool flipped to serving': (e) => { e.machine_classes = ['column_drill', 'portable_drill']; },
+    'no baseline row at 1.0': (e) => { e.material_factors[0].factor = 0.9; },
+    'chip_clearing absent rather than null': (e) => { delete e.chip_clearing; },
+  };
+
+  for (const [name, breakIt] of Object.entries(breaks)) {
+    const entry = drillFixture();
+    breakIt(entry);
+    const { errors } = validateData(withDrill(entry));
+    assert(errors.length > 0, `the gate let "${name}" through`);
+  }
+});
+
 test('CORRUPT', 'the validator rejects stripped provenance, bad vocabulary, and stringified numbers', () => {
   const corrupted = JSON.parse(JSON.stringify(data));
   delete corrupted.chiploads.entries[0].source;

@@ -16,6 +16,10 @@
   "session-4-finishing": {
    "document": "research/research-session-4-finishing.md (manufacturer, practitioner and physics sweeps for finish passes)",
    "retrieved": "2026-08-29"
+  },
+  "session-5-drilling": {
+   "document": "research/research-session-5-drilling.md (drilling and boring sweep, 1-35 mm, and Scott's decisions 1-11)",
+   "retrieved": "2026-09-02"
   }
  },
  "plunge_ramp": {
@@ -102,6 +106,31 @@
   "disagreement_ratio": 2.0,
   "note": "a diameter-resolved chart contributes only within +/-25% of its published diameter range; when the charts eligible to set a band disagree by more than 2x in midpoint, the most conservative chart serves and the rest become context (decision D11)",
   "source": "project-decision",
+  "data_class": "project_decision"
+ },
+ "drilling": {
+  "profiles_offered": ["gentle", "standard", "aggressive"],
+  "standard_band_position": 0.5,
+  "diameter_coverage_tolerance": 0,
+  "out_of_range_feed": "hold_at_nearest_edge",
+  "first_cut_applies": false,
+  "missing_material_factor": "most_conservative_published",
+  "band_ratio_sanity": [1.4, 3.2],
+  "note": "the published speed range is the served value (decision 2, 2026-09-01): surface speed and feed per revolution are derived display and no speed is ever back-derived from a surface speed. standard_band_position is 0.5, the midpoint, so the profile words mean the same thing as in routing (Scott, 2026-09-02, decision 8). diameter_coverage_tolerance is 0, not the routing 0.25, because a drill's diameter range is a range of tools with nothing to interpolate between: +/-25% on a 15-40 mm hinge drill would serve 11 mm and 50 mm cutters that do not exist. Outside the published speed range the feed per revolution holds flat at the nearest edge and a warning says so, which is conservative because the band's upper edge falls as speed rises. first_cut_applies is false (Scott, 2026-09-02, decision 10): the band's lower edge is already the rubbing floor, and 65% of a published plunge feed drives the cut under it, which in a blind hole burns. missing_material_factor serves the lowest published factor in the tool's own table when the table has no row for the picked material (Scott, 2026-09-02, decision 9), with a rendered note. band_ratio_sanity is a read gate, not a served value: the research found the band close to 2:1 on every diagram that read cleanly, so a read outside this range is a bad read and must not reach a spindle.",
+  "source": "session-5-drilling",
+  "data_class": "project_decision"
+ },
+ "drilling_attribution": {
+  "render_vendor_name": false,
+  "note": "no vendor name renders anywhere in the drilling output (Scott, 2026-09-01, decision 7), a deliberate departure from routing, where the limit line and the chart ladder both name the serving chart. Provenance stays complete in data/drills.json, and only the rendering changes. The core enforces this by what it omits: a drilling result carries no contributors and no servingBands key, so the routing chart ladder cannot be pointed at one. Decision 4 (on irreconcilable disagreement the most conservative source serves alone) is recorded and dormant, because only one source serves drilling and nothing can yet disagree with it.",
+  "source": "session-5-drilling",
+  "data_class": "project_decision"
+ },
+ "drill_bank": {
+  "suppresses_spindle_floor": true,
+  "reports_power": false,
+  "note": "a drill bank is a fixed-speed geared head on the same machining centre, with its own drive. When the user says the drills run on a bank (a check box in the advanced panel, Scott's call 2026-09-02, decision 11), the router spindle's rated minimum speed no longer applies and the low-speed warning is suppressed, because the bank is not the spindle being warned about. No power figure is reported either: no source in session 5 publishes a drill-bank drive power, and reporting the router spindle's power for a cut the spindle is not making would be a number with nothing behind it. This replaced a drill-bank machine preset, which would have had to be appended rather than inserted, because the share link writes the machine preset as a positional index.",
+  "source": "session-5-drilling",
   "data_class": "project_decision"
  }
 }

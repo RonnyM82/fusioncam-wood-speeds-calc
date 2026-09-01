@@ -1,0 +1,47 @@
+{
+ "schema_version": "1.0",
+ "units": {
+  "feed_band": "mm/rev",
+  "rpm": "rev/min",
+  "diameter": "mm"
+ },
+ "sources": {
+  "leitz-lexicon-7-drilling": {
+   "document": "Leitz Lexicon Edition 7, chapter 6 Drilling (research/sources/Leitz_Lexicon_Edition_7_-_06_Drilling.pdf; https://www.leitz.org/fileadmin/Downloads/Lexicon/EN/Leitz_Lexicon_Edition_7_-_06_Drilling.pdf)",
+   "retrieved": "2026-09-01",
+   "notes": "the printed tool tables: speed range, diameter range, material list, machine list, chip-clearing rules and the feed correction factor tables"
+  },
+  "leitz-lexicon-7-drilling-chart-read": {
+   "document": "vector-path read of the feed-speed diagrams printed beside the tool tables in Leitz Lexicon Edition 7 chapter 6",
+   "retrieved": "2026-09-02",
+   "method": "polygon vertex coordinates taken from the PDF vector art. Each diagram is accepted only when its band spans the tool table's own printed speed range at both ends and, where the diagram prints a worked example, that example converts (fn = vf * 1000 / n) and lands inside the read band at its own speed. A diagram that fails either check goes back to the read rather than into this file.",
+   "notes": "the diagrams plot feed speed against spindle speed for one baseline material. The band is an operating range, not a diameter spread: the single-diameter 35 mm turnblade tool carries the same 2:1 ratio as the 15-40 mm hinge drill at the same speed."
+  },
+  "session-5-drilling": {
+   "document": "research/research-session-5-drilling.md, including Scott's decisions 1-7 (2026-09-01) and 8-11 (2026-09-02)",
+   "retrieved": "2026-09-02"
+  }
+ },
+ "material_factor_map": {
+  "note": "which calculator material reads as which printed factor row. The printed factor vocabulary is its own namespace and deliberately does not extend the routing material list, because Leitz names rows the calculator has no pick for (veneered chipboard, glulam). Candidates are ordered: the first one an entry's own factor table publishes wins. When an entry publishes none of them, the most conservative published factor serves with a note (Scott, 2026-09-02, decision 9), because refusing a pick the tool's own material list covers would be a refusal the source does not make.",
+  "source": "session-5-drilling",
+  "data_class": "project_decision",
+  "map": {
+   "mdf": ["mdf", "mdf_plastic_coated"],
+   "particleboard": ["chipboard_uncoated"],
+   "laminated_pb": ["chipboard_plastic_coated"],
+   "laminated_chipboard": ["chipboard_plastic_coated"],
+   "hardwood": ["solid_wood", "hardwood"],
+   "softwood": ["solid_wood", "softwood"],
+   "plywood": ["plywood", "laminated_veneer_lumber"],
+   "softwood_ply": ["plywood", "laminated_veneer_lumber"],
+   "hpl": ["hpl"]
+  }
+ },
+ "profiles": {
+  "note": "gentle = the low edge of the published feed band at the served speed, standard = its midpoint, aggressive = its high edge. The midpoint is Scott's call (2026-09-02, decision 8), taken so that the three words mean the same thing in drilling as in routing. The cost is recorded: on the hinge-drill diagram the vendor's own marked operating point sits about two thirds up the band, so Standard runs about 11% under it and Aggressive reaches past it. The marked point renders as a marker on the feed chart so the user can see where the source itself sits. Finishing is not offered, because a hole has no finish pass and no source publishes a finishing drill feed.",
+  "source": "session-5-drilling",
+  "data_class": "project_decision"
+ },
+ "entries": []
+}

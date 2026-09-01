@@ -16,5 +16,6 @@ export function loadData() {
     kc: readJson('kc.json'),
     machines: readJson('machines.json'),
     rules: readJson('rules.json'),
+    drills: readJson('drills.json'),
   };
 }
