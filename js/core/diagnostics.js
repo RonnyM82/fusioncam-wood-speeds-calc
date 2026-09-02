@@ -25,12 +25,34 @@ export function buildChips(result) {
   else if (isPanelMaterial(m.material)) chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm, above the minimum` });
   else chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm` });
 
+  // The depth chip follows the regime (Scott, 2026-09-02). A slot-width cut
+  // derates and blocks past 3xD, so its chip keeps the derate percentage. A
+  // light-radial cut clears its chips sideways and never derates: its chip
+  // says so, and past two diameters it flags deflection instead, because
+  // "gives 100% chip load" beside an amber badge read as a contradiction.
   const r = m.docRatio;
-  chips.push({
-    key: 'depth',
-    level: r > 3 ? 'hot' : r > 1 ? 'warm' : 'cool',
-    text: `Depth ${r.toFixed(1)}×D gives ${Math.round(m.derate * 100)}% chip load`,
-  });
+  if (m.lightRadial) {
+    chips.push({
+      key: 'depth',
+      level: r > 2 ? 'warm' : 'cool',
+      text: r > 2
+        ? `Depth ${r.toFixed(1)}×D at ${Math.round((m.aeMm / m.dMm) * 100)}% radial, watch deflection`
+        : `Depth ${r.toFixed(1)}×D at ${Math.round((m.aeMm / m.dMm) * 100)}% radial, full chip load`,
+    });
+  } else {
+    chips.push({
+      key: 'depth',
+      level: r > 3 ? 'hot' : r > 1 ? 'warm' : 'cool',
+      text: `Depth ${r.toFixed(1)}×D gives ${Math.round(m.derate * 100)}% chip load`,
+    });
+  }
+  if (codes.has('past_flutes') && m.fluteLengthMm > 0) {
+    chips.push({
+      key: 'flutes',
+      level: 'hot',
+      text: `Pass ${m.apMm.toFixed(1)} mm, flutes ${m.fluteLengthMm.toFixed(1)} mm: the shank rubs`,
+    });
+  }
 
   if (m.chipThinningFactor > 1.001) {
     chips.push({

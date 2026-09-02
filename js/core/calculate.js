@@ -78,14 +78,22 @@ export function calculate(input, data) {
     }
   }
 
-  // No chart publishes a cut deeper than three diameters: the vendor depth
+  // No chart publishes a SLOT deeper than three diameters: the vendor depth
   // rule ends at its 3xD anchor. Past it the old hyperbolic extension shrank
   // the chip until the floor warning fired against the served number and
   // told the user to raise a feed the calculator had just lowered (review
-  // sweep, 2026-08-29). So it blocks, like the compression minimum pass,
-  // and says what to do instead.
+  // sweep, 2026-08-29). So a slot-width cut blocks, like the compression
+  // minimum pass, and says what to do instead.
+  //
+  // The block covers slot-width cuts only (Scott, 2026-09-02). The depth
+  // hazard is engagement, not flute immersion: a cut under half the
+  // diameter wide clears its chips sideways, and running the flute length
+  // at a light optimal load is standard adaptive practice. Light-radial
+  // cuts therefore never block on depth. A pass deeper than the flutes
+  // draws a hot chip below, never a block (Scott's call, same date).
+  const lightRadial = ae < D / 2;
   const maxRatio = rules.depth_limit?.max_ratio_of_d ?? 3;
-  if (ap / D > maxRatio + 1e-9) {
+  if (!lightRadial && ap / D > maxRatio + 1e-9) {
     return {
       status: 'blocked',
       block: {
@@ -121,14 +129,22 @@ export function calculate(input, data) {
   const fzBase = profileFz(env, input.profile ?? 'standard');
   const docRatio = ap / D;
   // The depth derate is the vendors' deep-slot rule: chip evacuation and
-  // deflection at 2x and 3x diameter in a full-width cut. A finish skim has
-  // neither, and derating it drove the served chip under the floor the
-  // profile exists to respect (review, 2026-08-29). So Finishing skips the
-  // derate in the light-radial regime, below half the diameter, the same
-  // boundary where chip thinning starts. A full-width cut in Finishing
-  // still derates like every other profile.
-  const skimRegime = finishing && ae < D / 2;
-  const derate = skimRegime ? 1 : depthDerate(docRatio, chiploads.depth_derating);
+  // deflection at 2x and 3x diameter in a full-width cut. A light-radial
+  // cut, below half the diameter, has neither: the chips escape sideways
+  // and the chip-thinning compensation below already lifts the programmed
+  // feed to hold the effective chip on target. Finishing learnt this first
+  // (review, 2026-08-29: derating a skim drove the chip under the floor
+  // the profile exists to respect), and on 2026-09-02 Scott extended it to
+  // every light-radial cut: adaptive clearing runs the flute length at a
+  // light optimal load as standard practice, and the derate was punishing
+  // the one cut type that handles depth best. The boundary is the same
+  // half-diameter line where chip thinning starts. A slot-width cut in any
+  // profile still derates.
+  const skimRegime = finishing && lightRadial;
+  const derate = lightRadial ? 1 : depthDerate(docRatio, chiploads.depth_derating);
+  if (lightRadial && docRatio > 1 && !finishing) {
+    chartNotes.push('The deep-slot derate does not apply below half the diameter of width. Chip thinning compensates the programmed feed instead.');
+  }
   // A finish pass follows a proven cut, and the first-cut reduction guards
   // heavy engagement. On a skim it would drive the chip under the rubbing
   // floor, so the Finishing profile ignores it (research session 4).
@@ -256,6 +272,13 @@ export function calculate(input, data) {
   if (env.allBigIron && rules.big_iron_caveat) {
     warnings.push({ code: 'big_iron_only', message: rules.big_iron_caveat.message });
   }
+  // A pass deeper than the flutes runs the shank against the wall. Where
+  // the flute length is known (the Fusion panel always sends it, the site
+  // has an optional advanced field) this warns hot and never blocks: the
+  // machinist owns the call (Scott, 2026-09-02).
+  if (input.fluteLengthMm > 0 && ap > input.fluteLengthMm + 1e-9) {
+    warnings.push({ code: 'past_flutes', message: `The pass is ${round1(ap)} mm deep and the flutes are ${round1(input.fluteLengthMm)} mm long. The shank rubs the wall above the flutes. Use a longer tool or a shallower pass.` });
+  }
   if (env.hasSwitchableBasis) {
     chartNotes.push('An ITA chart contributes here. ITA per-tooth values apply to the total flute count by default. The flute-basis switch in Advanced changes that reading.');
   }
@@ -311,6 +334,8 @@ export function calculate(input, data) {
       fzBase, fzTarget, fzProg, fzDeliv, fzEff,
       docRatio, derate, chipThinningFactor: ctfPhysical, thinningCompensated: !finishing,
       finishing,
+      lightRadial,
+      fluteLengthMm: input.fluteLengthMm > 0 ? input.fluteLengthMm : undefined,
       fzPhysical: fzDeliv / ctfPhysical,
       firstCut: { applied: fcFactor !== 1, factor: fcFactor },
       kcModel: { Ks: kcModel.Ks, Int: kcModel.Int, source: kcModel.source, data_class: kcModel.data_class },

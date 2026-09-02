@@ -351,9 +351,40 @@ test('SC33', 'a cut deeper than three diameters blocks and names the maximum pas
   // Exactly three diameters still serves; a hair past it does not.
   assert(run({ apMm: 36 }).status === 'ok', '3.0xD must serve');
   assert(run({ apMm: 37 }).status === 'blocked', '3.1xD must block');
-  // Every profile blocks, Finishing included: no chart goes deeper.
-  assert(run({ diameterMm: 3.175, thicknessMm: 18, profile: 'finishing' }).status === 'blocked', 'finishing must block too');
+  // A finish skim is light-radial, so it no longer blocks on depth
+  // (Scott, 2026-09-02): the block is the deep-slot rule and a 1 mm skim
+  // is not a slot. The diameter must sit inside the finisher charts'
+  // coverage (5 to 19.05 mm), or Finishing refuses on the chart, not the
+  // depth. SC36 pins the light-radial policy in full.
+  assert(run({ diameterMm: 6, thicknessMm: 24, profile: 'finishing' }).status === 'ok', 'a deep finish skim must serve');
   assert(data.rules.depth_limit.max_ratio_of_d === 3, 'the depth limit must stay at the vendors 3xD anchor');
+});
+
+test('SC36', 'light-radial cuts lose the derate and the block; slots keep both; past the flutes warns hot', () => {
+  // Adaptive-shaped cut: 25% radial on a 12 mm tool, 3.5xD deep. Under the
+  // 2026-09-02 policy it serves, underated, with thinning compensated.
+  const adaptive = run({ aeMm: 3, apMm: 42 });
+  assert(adaptive.status === 'ok', `a deep light-radial cut must serve, got ${adaptive.status}`);
+  assert(adaptive.meta.derate === 1, 'no deep-slot derate below half the diameter of width');
+  assert(adaptive.meta.lightRadial === true, 'the regime must report light radial');
+  assert(adaptive.meta.chipThinningFactor > 1.1, 'thinning must still compensate the light-radial chip');
+  const depthChip = buildChips(adaptive).find((c) => c.key === 'depth');
+  assert(depthChip.level === 'warm' && /watch deflection/.test(depthChip.text), `deep light-radial depth chip must watch deflection: ${depthChip.text}`);
+  // A shallower light-radial cut stays cool and says full chip load.
+  const shallow = buildChips(run({ aeMm: 3, apMm: 18 })).find((c) => c.key === 'depth');
+  assert(shallow.level === 'cool' && /full chip load/.test(shallow.text), shallow.text);
+  // The same depth at slot width still blocks: the hazard is engagement.
+  assert(run({ apMm: 42 }).status === 'blocked', 'a 3.5xD slot must still block');
+  // Half the diameter exactly is slot territory (the boundary is ae < D/2).
+  assert(run({ aeMm: 6, apMm: 42 }).status === 'blocked', 'the half-diameter boundary belongs to the slot side');
+  // Past a known flute length: served, one hot warning, one hot chip.
+  const past = run({ aeMm: 3, apMm: 30, fluteLengthMm: 25 });
+  assert(past.status === 'ok', 'past the flutes serves, never blocks');
+  assert(past.warnings.some((w) => w.code === 'past_flutes' && /shank rubs/.test(w.message)), 'the past-flutes warning must fire');
+  const fluteChip = buildChips(past).find((c) => c.key === 'flutes');
+  assert(fluteChip && fluteChip.level === 'hot', 'the past-flutes chip must be hot');
+  // Under the flute length nothing fires.
+  assert(!run({ aeMm: 3, apMm: 20, fluteLengthMm: 25 }).warnings.some((w) => w.code === 'past_flutes'), 'no warning under the flute length');
 });
 
 test('SC34', 'the ITA chart contributes only near its 12 mm nesting tools', () => {

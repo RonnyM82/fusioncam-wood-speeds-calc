@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-02c';
+const PAGE_BUILD = '2026-09-02d';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -1304,7 +1304,7 @@ function opCard(op, setup, si, oi) {
     return stateCard(op, ids, 'blocked', RPM_ERROR_REASON, finishToggle, { reading: mapped.reading });
   }
 
-  const result = calculate(rowInput(setup, mapped.calc), state.data);
+  const result = calculate(rowInput(setup, mapped.calc, op), state.data);
   if (result.status === 'refused') {
     return stateCard(op, ids, 'refused', result.refusal.reason, finishToggle, { reading: mapped.reading });
   }
@@ -1481,9 +1481,12 @@ function stateCard(op, ids, stateKey, reason, finishToggle, { reading = null, fa
 // The calculate() input: the mapped calc fields plus panel state. The mapping
 // module owns the cut geometry and the direction. The panel owns material,
 // machine, rpm, profile and first cut (protocol.md module interfaces).
-function rowInput(setup, calc) {
+function rowInput(setup, calc, op) {
   const mat = MATERIALS.find((m) => m.id === materialFor(setup.setupId));
   return {
+    // Fusion knows the flute length, so the panel always sends it and the
+    // core checks the pass depth against it (hot chip, never a block).
+    fluteLengthMm: op?.tool?.fluteLengthMm ?? undefined,
     material: mat.kcMaterial,
     materials: mat.data,
     materialsFallback: mat.fallback,

@@ -382,6 +382,7 @@ const ADV_FIELDS = [
   { id: 'fluteBasis', label: 'Flute count convention', select: [['total', 'Count total flutes (default)'], ['upcut_only', 'Count up-cut flutes only']], hint: 'The vendor charts give per-tooth values for the total flute count. Some engineers count only the up-cut flutes on up/down spirals. If that is your convention, the served feed runs conservative.' },
   { id: 'direction', label: 'Cut direction', select: [['climb', 'Climb (default, the safe higher-force assumption)'], ['conventional', 'Conventional (lower force, modelled for MDF, melamine and plywood only)']] },
   { id: 'upcutLengthMm', label: 'Compression up-cut length', measure: 'length', decimals: 1, step: 0.5, hint: 'Defaults to one tool diameter.' },
+  { id: 'fluteLengthMm', label: 'Flute length', measure: 'length', decimals: 1, step: 1, hint: 'Enter a value to check the pass depth against the flutes. A pass deeper than the flutes draws a red chip.' },
   { id: 'spindleKw', label: 'Spindle power', unit: 'kW', decimals: 1, step: 0.5, hint: 'Filled from the machine preset. Edit it to override.' },
   { id: 'breakpointRpm', label: 'Spindle breakpoint', measure: 'rotation', step: 500, hint: 'The rpm where constant torque becomes constant power. Typically 12000.' },
   { id: 'feedMaxMMin', label: 'Machine max feed', measure: 'speed', hint: 'Filled from the machine preset. Edit it to override.' },
@@ -495,6 +496,7 @@ function currentInput() {
     aeMm: state.aeMm ?? undefined,
     upcutLengthMm: adv.upcutLengthMm,
     footprintCm2: adv.footprintCm2,
+    fluteLengthMm: adv.fluteLengthMm,
     featureMm: adv.featureMm,
     densityKgM3: adv.densityKgM3,
   };

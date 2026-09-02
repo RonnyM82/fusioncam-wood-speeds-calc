@@ -227,3 +227,22 @@ invented number: a band edge that read plausibly and was not what the diagram sa
 
 ## Update discipline
 New data lands as new entries with a new `source` key + retrieval date; superseded entries stay with a `superseded_by` field rather than being deleted. Chart-read values get `data_class: measured_chart_read`. Nothing enters without a source.
+
+## rules.json amendment 2026-09-02: the depth block follows the engagement
+
+The 3xD block and the depth derate now apply to slot-width cuts only, at or
+above half the tool diameter of width (Scott, 2026-09-02, from the first live
+runs of the Fusion panel). The depth hazard is engagement, not flute
+immersion: a full-width slot past three diameters packs chips and breaks
+tools, and it still blocks. A light-radial cut clears its chips sideways and
+runs the flute length at a light optimal load as standard adaptive practice,
+so it loses both the derate and the block, and the chip-thinning compensation
+keeps lifting its programmed feed, exactly as before. The half-diameter
+boundary is the one chip thinning and the finish skim already use, so the
+core has one regime line, not three. Two new pieces beside it: an optional
+`fluteLengthMm` input (the Fusion panel always sends it, the site has an
+advanced field), and a `past_flutes` hot warning when the pass runs deeper
+than the flutes, which never blocks: the machinist owns that call. The depth
+chip now speaks per regime, because "Depth 2.2xD gives 100% chip load" in
+amber read as a contradiction on a finish skim. Pinned by SC36, and SC33's
+finishing case flipped from blocked to served with the reason in the test.
