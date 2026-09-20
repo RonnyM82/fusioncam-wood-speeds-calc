@@ -1532,6 +1532,42 @@
   color: var(--lt-text-primary);
 }
 
+/* The panel is light in both schemes, but not the SAME light: white by
+   default, grey-5 #DEDEDE under the operational dark theme's muted-panel
+   knob. --lt-border-subtle and --lt-table-border above were chosen against
+   white and never retuned for that, so on an operational dark panel
+   --lt-table-border (grey-5) painted the same hex as the panel it sat on --
+   every table lost its frame and its row rules, 1.00:1, not faint but
+   absent. --lt-border-subtle (grey-6) was one step short of the same fate,
+   at 1.12:1: still there in theory, not in practice.
+
+   Neither token can reach the 3:1 graphical floor against grey-5 -- the
+   ramp doesn't have the headroom that close to white, the same wall the
+   danger/warning accents hit on this panel. So this keeps the light
+   scheme's intent, a whisper rather than a rule, at the strongest whisper
+   the ramp allows: grey-7 for the table hairline (1.32:1, matching the
+   1.35:1 white-panel original), grey-8 for the card/fieldset edge one step
+   up (1.77:1), preserving border-subtle reading slightly stronger than
+   table-border as it does in the light scheme. Reported 2026-09-21 against
+   the reference tables; verify-tokens.py's same-scheme-value check is what
+   should have caught the exact collision and didn't, because it only knows
+   to compare a token against ITSELF across schemes, not against the other
+   token it happens to share a value with. Duplicated for the same reason as
+   the block above: a media query cannot contribute a selector to a rule
+   outside itself. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-lt-scheme="light"]) .lt-panel,
+  :root:not([data-lt-scheme="light"]) [data-lt-surface="panel"] {
+    --lt-border-subtle: var(--lt-grey-8);
+    --lt-table-border:  var(--lt-grey-7);
+  }
+}
+:root[data-lt-scheme="dark"] .lt-panel,
+:root[data-lt-scheme="dark"] [data-lt-surface="panel"] {
+  --lt-border-subtle: var(--lt-grey-8);
+  --lt-table-border:  var(--lt-grey-7);
+}
+
 .lt-shell,
 [data-lt-surface="shell"] {
   background: var(--lt-surface-shell);
