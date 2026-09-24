@@ -51,6 +51,9 @@ These are Scott's, from 2026-09-24, unless marked as Claude's.
 | How the charts are drawn (settled in step 4) | Claude's, 2026-09-24, carrying out Scott's chart ruling: `src/chart-view.js` is `ladderHtml()`, `drillFeedChart()`, `drillSpeedChart()` and the cascade from `js/ui/app.js` as plain data, the arithmetic unchanged, and `src/Charts.tsx` draws it. Each ladder track is a one-cell grid holding two lanes laid over each other; in each lane an empty spacer sized with `inline-size` to the start percentage pushes the bar (sized with `inline-size`) or the dotted marker along. The cascade fill keeps its absolute placement and takes its length as `inline-size`. The highlight is the app's `chart-emphasis` class, painted from `--wood-chart-mark-emphasis` in `src/app-tokens.css`, which reads `--lt-chart-mark-emphasis`, with `forced-color-adjust: none; background-color: Highlight` re-declared on the app's class. Every bar, fill and marker also carries its percentage as `data-at`, the exact string the code computed, because the browser rounds an `inline-size` to six figures when it writes the attribute back. Checked 2026-09-24: all 96 charts in the baseline match the old page's highlight, positions, names and tables (`tests/charts.test.js` CH1 in Node, `tools/baseline.mjs` in the browser, which also measures each mark where it is painted); the 1280 px screenshots match the old page pixel for pixel in the light scheme, and under forced colours; the design system's paint probe passes on four states at two widths. |
 | Which rows the highlight goes on (seen in step 4) | Claude's, 2026-09-24: on every row that serves, as the old page did. That is one row in the cascade and in both drilling charts, but the ladder highlights every published chart the engine serves from, and in two baseline states that is more than one: two Onsrud charts for a 12.7 mm straight tool in softwood, three for the same tool in MDF. CH2 holds it to the engine's own list of serving charts. |
 | The floating tip, the table fold's gap, and the drill speed chart's heading (settled in step 4) | Claude's, 2026-09-24: the tip is gone, as ruled; each chart is still one Tab stop with the arrow keys, Home and End moving between its rows, and each row keeps its accessible name (checked key for key against the old page). The space between a table fold's summary and its table was a margin on the design system's table wrapper, and is now on the open fold's own summary, the same size. The drill speed chart's heading keeps the extra space above it that the old page gave it by accident of its CSS (the section heading rule outranked the chart heading rule on its id), so the chart draws where it did. The "Something looks wrong" folds and the footer are word for word the old page's, the list and the footer in the `Prose` part, the link the `Link` part; both match the old page pixel for pixel in the light scheme. |
+| The differences the baseline accepts (settled in step 5) | The orchestrator's ruling, 2026-09-24: four differences between the old page and the React page are deliberate, and `tests/baseline/accepted-differences.json` lists them, each with its field, its states, its old and new form and its ruling: the chart tables' first column in its own case (the Table part's row-header rule, D58 there; Claude's ruling of 2026-09-24), each chart table named by an accessible label so the section's read text has one line fewer per table (the Table part, D58), the 15 drilling states showing 3 advanced fields (step 2's ruling), and the banners' role in the two click states (step 3's ruling). `tools/baseline.mjs --compare` applies them only to the React page, recognised by its `#root` element, never to `legacy.html`. Each is a named rewrite in the tool that first checks the old form is there and fails the state if it is not, so the comparison stays exact about everything else. Result on 2026-09-24 against `vite preview`, charts included: 52 identical, zero unaccepted differences. |
+| The pre-commit hook (settled in step 5) | Claude's, 2026-09-24: the hook is tracked at `.githooks/pre-commit` and runs `npm run check`, which is, in order and once each, `python conformance.py .`, `node tests/run.js`, the lint, the type check, the build and `node tools/paint.mjs` (17 seconds). `npm install` points `core.hooksPath` at `.githooks/` through the `prepare` script (`tools/install-hooks.mjs`), as the design system does, and the hook uppercases a lowercase drive letter before running npm, copied from the design system's hook. `.gitattributes` keeps the hook's line endings LF. The untracked `.git/hooks/pre-commit`, which ran conformance alone, is no longer used. Proven on 2026-09-24: a commit goes through, and a deliberate `lt-` class in a TSX file under `src/` fails it at the lint. |
+| The paint measurement (settled in step 5) | Claude's, 2026-09-24: `smoke-measure.py` is retired, because it drove the old page through the old page's own markup and could not drive the React page. `tools/paint.mjs` replaces it: step 4's scratch script kept, which serves `dist/` with `vite preview` and runs the design system's paint probe (compiled from `packages/ui/.storybook/paint-probe.ts` in the checkout, never copied) over four states at 1280 px and 390 px in six variants, plus smoke-measure.py's chart checks (one track height, one mark height, a mark never fills its track) and its check that the page does not scroll sideways with every fold open, at 1280 px only because a long badge widens the page at 390 px on the old page and the new alike. It takes about 10 seconds, so `npm run check` runs it. It needs the design-system checkout for the probe and for Playwright, which step 6 does not remove (the probe is not published; `docs/CONVERSION_FINDINGS.md`, finding 9). |
 
 ## How the work is run
 
@@ -81,21 +84,17 @@ its current behaviour is recorded separately and marked as not a target.
 
 ## What is not settled yet
 
-- The table part's row-header release does NOT let a long chart name wrap (checked in step
-  4, 2026-09-24; survey, section 2, row 26). The release rule
-  (`.lt-table tbody .lt-table__rowheader`) writes `white-space: nowrap`, so the chart
-  names stay on one line and the table under the chart ladder is 765 px wide in a 602 px
-  box at every page width: it scrolls sideways, and the part makes its box a Tab stop
-  while it does. The old page wrapped the names and never scrolled at 900 px or wider.
-  Nothing is lost, but reading a row now means scrolling. It is an upstream request to
-  the design system (a way for a table to let its row headers wrap), not an app rule
-  reaching into the part, so the app does nothing about it.
-- Two things the Table part changes in the tables under the charts, both seen in step 4's
-  full comparison and both waiting for Scott before any re-capture of the baseline: the
-  chart and limit names in the first column are in their own case where the old page
-  uppercased them (the part does it on purpose, its D58), and the hidden caption is gone
-  (the part names the table with `aria-label` instead), so the caption's line is no
-  longer in the section's read text. `tests/baseline/README.md` has the whole result.
+- The table part's row headers now wrap (settled 2026-09-24). Step 4 found that the chart
+  names in the table under the chart ladder stayed on one line, so the table was 765 px wide
+  in a 602 px box and scrolled sideways. The design system fixed it the same day (commit
+  5c757e7, its D58 amended). Step 5 rebuilt the linked package and measured: at 1280 px and
+  900 px the table is 602 px in its 602 px box and does not scroll sideways. At 400 px it
+  still does, because the column headers do not wrap, exactly as on the old page; that is
+  finding 3 in `docs/CONVERSION_FINDINGS.md`.
+- The two things the Table part changes in the tables under the charts (the first column in
+  its own case, and no hidden caption line) are ruled deliberate and accepted by the
+  baseline comparison in step 5 (the rulings above). The baseline itself was not
+  re-captured.
 - Holding each banner's re-mount to the same one-second settle as "Numbers updated."
   cannot be done with the `Alert` part as it is (step 4, 2026-09-24, so not attempted). A
   banner mounted after load is a live region (Chromium's accessibility tree reports
@@ -115,5 +114,11 @@ its current behaviour is recorded separately and marked as not a target.
   build, and while the design-system repo is rebuilding its package, this repo's lint and
   build fail for the seconds its `dist/` is missing (seen once in step 1; a rerun passed).
   Swapping to the published version in step 6 ends both.
+- `tools/paint.mjs` (step 5) reads the paint probe's source and Playwright from the
+  design-system checkout, so `npm run check`, and with it the pre-commit hook, still needs
+  that checkout after step 6 swaps in the published package, because the package does not
+  ship the probe. Either the design system ships it (finding 9 in
+  `docs/CONVERSION_FINDINGS.md`) or the Pages workflow in step 6 runs the gate without it.
+  To decide at step 6.
 - The three 3D surfacing decisions Scott deferred on 2026-09-24 are not part of this work;
   they are in `CLAUDE.md`'s TODO list.

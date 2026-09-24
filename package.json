@@ -11,7 +11,9 @@
     "lint": "eslint . && stylelint \"src/**/*.css\" --allow-empty-input",
     "test": "node tests/run.js",
     "conformance": "python conformance.py .",
-    "check": "npm run lint && npm run typecheck && npm run build && npm run test && npm run conformance"
+    "paint": "node tools/paint.mjs",
+    "check": "npm run conformance && npm run test && npm run lint && npm run typecheck && npm run build && npm run paint",
+    "prepare": "node tools/install-hooks.mjs"
   },
   "dependencies": {
     "@livetools/ui": "file:../livetools-design-system/packages/ui",

@@ -1,0 +1,84 @@
+{
+  "about": "The differences between the page before the conversion and the React page that have been ruled deliberate. tools/baseline.mjs --compare applies them only when the page it loaded is the React page (it has the #root element), never when it is legacy.html or any other copy of the old page. Each entry names the field it touches, the states it applies to, the old form and the new form, and the ruling with its date. Each is carried out by the rewrite named in 'rewrite', written in tools/baseline.mjs (applyAccepted), which first checks that the old form is really there and fails the state if it is not, so an entry can never absorb a difference it does not describe. Everything an entry does not name is compared exactly as before. Written 2026-09-24, step 5 of docs/CONVERSION_PLAN.md. Add an entry only on a ruling, and say in the commit which ruling.",
+  "differences": [
+    {
+      "id": "row-header-case",
+      "field": "The first column of every table under a chart (the chart name in the ladder's and the feed range chart's tables, the limit in the cascade's table, the speed band in the drill speed chart's table): the cell in results and diagnostics blocks, and the same cell's text in the section's whole text.",
+      "states": "all",
+      "statesNote": "Every state that shows a chart table: 48 of the 52 on 2026-09-24. The four without one (the two refusals and the two blocks) have nothing for it to touch.",
+      "was": "In capitals, from the old table's header styling: \"ONSRUD 60-100MW (COMPRESSION)\", \"CHIP LOAD TARGET\".",
+      "now": "In its own case: \"Onsrud 60-100MW (compression)\", \"Chip load target\".",
+      "rewrite": "The React page's row-header text is put in capitals before comparing (toLocaleUpperCase, as the old page's CSS did), in the cells and in those lines of the section's text, so the words must still be the same letters in the same order. The old side is not touched.",
+      "ruling": "Claude's ruling, 2026-09-24, on the orchestrator's instruction in step 5: the design system's Table part keeps a row header in its own case on purpose, because capitals destroy unit symbols (\"Ra 0.8 µm\" painted as \"RA 0.8 ΜM\"); livetools-design-system docs/DECISIONS.md D58, the row-header clause."
+    },
+    {
+      "id": "table-name-line",
+      "field": "The whole text of the results and diagnostics sections: the line under each chart table's fold summary.",
+      "states": "all",
+      "statesNote": "The same 48 states as row-header-case.",
+      "was": "A line holding the table's name (\"Every published chart for this cut\"), read from the old table's visually hidden caption.",
+      "now": "No line. The table is named by an accessible label (aria-label) instead, which is not part of the read text. The name itself is unchanged: the table block's caption field is still compared exactly, read from that label.",
+      "rewrite": "On the old side, the line directly under each table's summary is removed after checking it equals that table's name.",
+      "ruling": "The design system's Table part names its table with a label and takes no caption (livetools-design-system docs/DECISIONS.md D58, the name clause), accepted by the orchestrator on 2026-09-24 in step 5."
+    },
+    {
+      "id": "drilling-advanced-fields",
+      "field": "form.fields: the Advanced fold's fields in drilling.",
+      "states": [
+        "drill-hinge-35-published-speed",
+        "drill-hinge-26",
+        "drill-dowel-5",
+        "drill-dowel-8-hole-30",
+        "drill-through-5",
+        "drill-through-8",
+        "drill-twist-3",
+        "drill-twist-8-hardwood-hole-40-peck",
+        "drill-bank-on-hinge-35",
+        "drill-speed-given-dowel-8-4000rpm",
+        "drill-gentle-melamine-dowel-5",
+        "drill-machine-feed-cap-0.5-m-min",
+        "fallback-finishing-link-opened-in-drilling",
+        "fallback-drill-family-link-snaps-diameter",
+        "fallback-drill-family-change-snaps-diameter"
+      ],
+      "was": "Thirteen advanced fields on a page opened from a drilling link: the three drilling reads and ten it never reads.",
+      "now": "The three drilling reads: SPINDLE POWER, SPINDLE BREAKPOINT, MACHINE MAX FEED.",
+      "remove": [
+        "FLUTE COUNT CONVENTION",
+        "CUT DIRECTION",
+        "COMPRESSION UP-CUT LENGTH",
+        "FLUTE LENGTH",
+        "AXIS ACCELERATION",
+        "PART FOOTPRINT ON VACUUM",
+        "SMALLEST FEATURE LENGTH",
+        "VACUUM ΔP ACHIEVED",
+        "GRIP FACTOR",
+        "TIMBER DENSITY"
+      ],
+      "rewrite": "On the old side, the ten fields named in 'remove' are taken out of form.fields after checking each is there exactly once. The three that stay are compared exactly.",
+      "ruling": "Claude's, 2026-09-24, step 2 (docs/CONVERSION_PLAN.md, \"The advanced fields on a drilling link\"): a bug in the old page, whose app.js hid the routing-only fields before it had built them, so they showed on a drilling link and not after a switch to drilling."
+    },
+    {
+      "id": "click-banner-roles",
+      "field": "results.blocks[n].ariaRole: the role of a banner that appears after the page has loaded.",
+      "states": [
+        "fallback-drill-family-change-snaps-diameter",
+        "fallback-mode-switch-parks-finishing"
+      ],
+      "blocks": {
+        "fallback-drill-family-change-snaps-diameter": [
+          { "section": "results", "block": 2, "now": "alert" },
+          { "section": "results", "block": 3, "now": "alert" }
+        ],
+        "fallback-mode-switch-parks-finishing": [
+          { "section": "results", "block": 0, "now": "status" },
+          { "section": "results", "block": 2, "now": "alert" }
+        ]
+      },
+      "was": "No role: the old results section announced itself as a whole (aria-live), so its banners carried none.",
+      "now": "role=\"alert\" on a warning or danger banner and role=\"status\" on a success or info banner, given by the Alert part to a banner mounted after load. Only these two states have clicks, so only here are banners mounted after load.",
+      "rewrite": "On the old side, each banner named in 'blocks' has its ariaRole changed from null to the role given, after checking it is a banner and its role was null.",
+      "ruling": "The plan's ruling on the double announcement (Claude's, 2026-09-24), carried out in step 3 (docs/CONVERSION_PLAN.md, \"How the results announce themselves to a screen reader\")."
+    }
+  ]
+}

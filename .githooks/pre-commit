@@ -1,0 +1,46 @@
+#!/bin/sh
+# The pre-commit hook (step 5 of docs/CONVERSION_PLAN.md, 2026-09-24): a
+# commit runs the whole gate, `npm run check`, and is refused if any step
+# fails. In order, once each:
+#   1. python conformance.py .   the vanilla files: the Fusion panel, its CSS,
+#                                the app's CSS and tokens
+#   2. node tests/run.js         the engine, the data, the form state, the
+#                                results and the charts, in Node
+#   3. the lint                  the React page: the Livetools app rules,
+#                                including "no lt- class in the app"
+#   4. the type check
+#   5. the build                 which also fails if a Fusion panel file is
+#                                missing from the published folder
+#   6. node tools/paint.mjs      the design system's paint probe and the
+#                                charts' shared geometry over the built page
+# npm run check is the one list; this hook calls it rather than repeating it,
+# so nothing runs twice. It took 17 seconds on 2026-09-24.
+#
+# Installed by `npm install`, whose `prepare` script points git's
+# core.hooksPath at this folder (tools/install-hooks.mjs). A clone made before
+# that script existed runs, once:  git config core.hooksPath .githooks
+#
+# If it fails, fix the cause. Do not add a file to EXEMPT in conformance.py,
+# and do not loosen a lint rule, to make it pass.
+# Skip once:  git commit --no-verify
+#
+# Plain POSIX sh, so Git for Windows' own shell runs it as well as any other.
+# Git runs hooks from the top of the working tree, but say so anyway.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# A lowercase drive letter here (Git Bash's /c/... mapping produces one) makes
+# npm ls misresolve linked packages, and this repo links @livetools/ui from
+# the design-system checkout. Copied from the design system's hook
+# (livetools-design-system, .githooks/pre-commit, 2026-09-24): give node an
+# uppercase-drive working folder from the start. Portable sh: case on the
+# first character rather than relying on non-POSIX ${var^^}.
+case "$(pwd)" in
+  /[a-z]/*)
+    drive=$(pwd | cut -c2 | tr '[:lower:]' '[:upper:]')
+    rest=$(pwd | cut -c3-)
+    cd "/$drive$rest" || exit 1
+    ;;
+esac
+
+echo "pre-commit: running npm run check (conformance, tests, lint, types, build, paint)"
+exec npm run check

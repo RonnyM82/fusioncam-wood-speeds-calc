@@ -8,6 +8,12 @@
 //   node tools/baseline.mjs --compare --sections url,form   compare only these parts
 //   node tools/baseline.mjs --compare --url-only    the same as --sections url
 //   node tools/baseline.mjs --compare --no-charts   leave the charts out of both sides
+//   node tools/baseline.mjs --compare --no-accepted apply none of the accepted differences
+//
+// Against the React page, --compare applies the ruled differences listed in
+// tests/baseline/accepted-differences.json (step 5 of the conversion,
+// 2026-09-24; see applyAccepted below), and nothing else is relaxed. Against
+// legacy.html, or any other copy of the old page, it applies none.
 //
 // Written 2026-09-24 as step 0 of the React conversion (docs/CONVERSION_SURVEY.md,
 // sections 8 and 9). The conversion is judged by reproducing these files at zero
@@ -107,6 +113,17 @@ if (sections) {
 const noCharts = args.includes('--no-charts');
 if (noCharts && !compare) {
   console.error('baseline: --no-charts narrows a comparison, so it needs --compare. Nothing was captured.');
+  process.exit(2);
+}
+// THE ACCEPTED DIFFERENCES (step 5 of the conversion, 2026-09-24). When the
+// page loaded is the React page, --compare applies the ruled differences in
+// tests/baseline/accepted-differences.json before comparing (applyAccepted
+// below); against legacy.html, or any other copy of the old page, it applies
+// none. --no-accepted turns them off for the React page too, to see every
+// difference the rulings cover.
+const noAccepted = args.includes('--no-accepted');
+if (noAccepted && !compare) {
+  console.error('baseline: --no-accepted changes a comparison, so it needs --compare. Nothing was captured.');
   process.exit(2);
 }
 const baselineDir = join(repo, 'tests', 'baseline');
@@ -504,18 +521,24 @@ async function capture(browser, base, st) {
     await act(page, a);
     snap = await settle(page);
   }
+  // Which page this is, for the accepted differences: the React page mounts
+  // into #root, which the old page never had. Kept out of the JSON.
+  const react = await page.evaluate(() => document.getElementById('root') !== null);
   await ctx.close();
   if (errors.length) throw new Error(`page errors in ${st.name}: ${errors.join(' | ')}`);
 
   const head = { state: st.name, shows: st.shows, query: st.query, actions: st.actions ?? [] };
   if (st.kind === 'today-unreadable') {
     return {
-      WARNING: 'TODAY\'S BEHAVIOUR, RULED TO CHANGE. Scott has ruled that the converted page shows no numbers while a box holds something it cannot read. This file records what the vanilla page did on 2026-09-24 so the change can be seen. It is NOT a target, and the comparison skips it.',
-      ...head,
-      steps: [...steps, { after: 'the end of the actions', ...snap }],
+      react,
+      json: {
+        WARNING: 'TODAY\'S BEHAVIOUR, RULED TO CHANGE. Scott has ruled that the converted page shows no numbers while a box holds something it cannot read. This file records what the vanilla page did on 2026-09-24 so the change can be seen. It is NOT a target, and the comparison skips it.',
+        ...head,
+        steps: [...steps, { after: 'the end of the actions', ...snap }],
+      },
     };
   }
-  return { ...head, ...snap };
+  return { react, json: { ...head, ...snap } };
 }
 
 // ---------------------------------------------------------------------------
@@ -579,6 +602,127 @@ const chartsLeftOut = (json, name) => {
 };
 
 // ---------------------------------------------------------------------------
+// The accepted differences (step 5 of the conversion, 2026-09-24)
+//
+// tests/baseline/accepted-differences.json lists the differences between the
+// old page and the React page that have been ruled deliberate, each with its
+// field, its states, its old and new form and its ruling. Each entry's
+// rewrite is below, keyed by its id. A rewrite first checks that the form it
+// expects is really there, and throws if it is not, which fails the state: an
+// entry must never absorb a difference it does not describe. Everything an
+// entry does not name is compared exactly as before. An id with no rewrite
+// here stops the run, so an entry cannot be added to the list alone.
+//
+// Applied to the parsed baseline (`was`) and the parsed capture (`now`) of
+// one state, before --sections and --no-charts narrow them.
+// ---------------------------------------------------------------------------
+const accepted = JSON.parse(readFileSync(join(baselineDir, 'accepted-differences.json'), 'utf8')).differences;
+
+// Every table under a chart in one section, in reading order: a table block
+// of its own (the cascade's) or the table inside a chart block.
+const tablesIn = (section) => (section && section.present ? section.blocks : [])
+  .map((b) => (b.role === 'table' ? b : b.table ?? null)).filter(Boolean);
+
+const REWRITES = {
+  // The React page's row headers are put in capitals, as the old page's CSS
+  // painted them, in the cells and in their lines of the section's text. On
+  // the React page a table's text is its summary line, its header line, then
+  // one line per row starting with the row header and a tab.
+  'row-header-case'(entry, was, now, where) {
+    let n = 0;
+    for (const k of ['results', 'diagnostics']) {
+      const section = now[k];
+      const tables = tablesIn(section);
+      if (!tables.length) continue;
+      const lines = section.text.split('\n');
+      let at = 0;
+      for (const t of tables) {
+        const s = lines.indexOf(t.summary, at);
+        if (s < 0) throw new Error(`${where}: ${entry.id}: the table "${t.summary}" is not in the ${k} text`);
+        if (lines[s + 1] !== t.headers.join('\t')) throw new Error(`${where}: ${entry.id}: the line under "${t.summary}" in ${k} is not its header row`);
+        t.rows.forEach((row, i) => {
+          const cell = row[0];
+          if (!cell || !cell.header) throw new Error(`${where}: ${entry.id}: row ${i} of "${t.summary}" has no row header`);
+          const line = lines[s + 2 + i];
+          if (!line || !line.startsWith(`${cell.text}\t`)) throw new Error(`${where}: ${entry.id}: row ${i} of "${t.summary}" is not where its text should be in ${k}`);
+          const upper = cell.text.toLocaleUpperCase('en-NZ');
+          lines[s + 2 + i] = upper + line.slice(cell.text.length);
+          cell.text = upper;
+          n++;
+        });
+        at = s + 2 + t.rows.length;
+      }
+      section.text = lines.join('\n');
+    }
+    return n;
+  },
+  // The line under each table's summary on the old side is its hidden
+  // caption: removed after checking it is that table's name.
+  'table-name-line'(entry, was, now, where) {
+    let n = 0;
+    for (const k of ['results', 'diagnostics']) {
+      const section = was[k];
+      const tables = tablesIn(section);
+      if (!tables.length) continue;
+      const lines = section.text.split('\n');
+      let at = 0;
+      for (const t of tables) {
+        const s = lines.indexOf(t.summary, at);
+        if (s < 0) throw new Error(`${where}: ${entry.id}: the table "${t.summary}" is not in the baseline's ${k} text`);
+        if (lines[s + 1] !== t.caption) throw new Error(`${where}: ${entry.id}: the line under "${t.summary}" in the baseline's ${k} is not the table's name`);
+        lines.splice(s + 1, 1);
+        at = s + 1;
+        n++;
+      }
+      section.text = lines.join('\n');
+    }
+    return n;
+  },
+  // The ten advanced fields drilling never reads leave the old side's form.
+  'drilling-advanced-fields'(entry, was, now, where) {
+    for (const label of entry.remove) {
+      const hits = was.form.fields.filter((f) => f.label === label);
+      if (hits.length !== 1) throw new Error(`${where}: ${entry.id}: the baseline's form has ${hits.length} fields labelled "${label}", not 1`);
+    }
+    was.form.fields = was.form.fields.filter((f) => !entry.remove.includes(f.label));
+    return entry.remove.length;
+  },
+  // A banner mounted after load has the role its variant gives it.
+  'click-banner-roles'(entry, was, now, where) {
+    const named = entry.blocks[was.state] ?? [];
+    if (!named.length) throw new Error(`${where}: ${entry.id}: the entry names this state but no banner in it`);
+    for (const b of named) {
+      const block = was[b.section]?.blocks?.[b.block];
+      if (!block || block.role !== 'banner') throw new Error(`${where}: ${entry.id}: ${b.section} block ${b.block} in the baseline is not a banner`);
+      if (block.ariaRole !== null) throw new Error(`${where}: ${entry.id}: ${b.section} block ${b.block} in the baseline already has the role ${block.ariaRole}`);
+      block.ariaRole = b.now;
+    }
+    return named.length;
+  },
+};
+for (const e of accepted) {
+  if (!REWRITES[e.id]) {
+    console.error(`baseline: accepted-differences.json lists "${e.id}", which has no rewrite in tools/baseline.mjs`);
+    process.exit(2);
+  }
+}
+
+// The entries that apply to one state, applied to both sides. Returns the
+// rewritten JSON text of each and the ids of the entries that found
+// something to rewrite (an entry for "all" states finds no table in a
+// refusal, which has none, and rewrites nothing there).
+function applyAccepted(wantJson, bodyJson, name) {
+  const was = JSON.parse(wantJson);
+  const now = JSON.parse(bodyJson);
+  const applied = [];
+  for (const e of accepted) {
+    if (e.states !== 'all' && !e.states.includes(name)) continue;
+    if (REWRITES[e.id](e, was, now, name) > 0) applied.push(e.id);
+  }
+  return { want: serialise(was), body: serialise(now), applied };
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 const list = JSON.parse(readFileSync(join(baselineDir, 'states.json'), 'utf8'));
@@ -604,21 +748,44 @@ if (noCharts) console.log('baseline: the charts and their tables are left out of
 
 const browser = await playwright.chromium.launch();
 let failed = 0;
+let pageKind = null;
+let acceptedStates = 0;
 try {
   if (!compare) mkdirSync(outDir, { recursive: true });
   for (const st of states) {
     const file = `${st.kind === 'today-unreadable' ? 'today-unreadable-' : ''}${st.name}.json`;
     let body;
+    let react;
     try {
-      body = serialise(await capture(browser, base, st));
+      const got = await capture(browser, base, st);
+      body = serialise(got.json);
+      react = got.react;
     } catch (err) {
       failed++;
       console.log(`  ERROR  ${st.name}: ${err.message}`);
       continue;
     }
+    if (pageKind === null) {
+      pageKind = react ? 'react' : 'old';
+      console.log(pageKind === 'react'
+        ? `baseline: this is the React page; ${noAccepted ? 'NO accepted differences applied (--no-accepted)' : `the ${accepted.length} accepted differences in tests/baseline/accepted-differences.json are applied`}`
+        : 'baseline: this is the page before the conversion; no accepted differences apply');
+    } else if ((pageKind === 'react') !== react) {
+      throw new Error(`${st.name} loaded a different page from the states before it`);
+    }
+    let applied = [];
     if (compare) {
       const path = join(baselineDir, file);
       let want = existsSync(path) ? readFileSync(path, 'utf8') : null;
+      if (react && !noAccepted && want !== null) {
+        try {
+          ({ want, body, applied } = applyAccepted(want, body, st.name));
+        } catch (err) {
+          failed++;
+          console.log(`  ERROR  ${err.message}`);
+          continue;
+        }
+      }
       if (sections && want !== null) {
         const pick = (json) => serialise(Object.fromEntries(sections.map((k) => [k, JSON.parse(json)[k]])));
         want = pick(want);
@@ -635,7 +802,8 @@ try {
         }
       }
       if (want === body) {
-        console.log(`  same   ${st.name}`);
+        if (applied.length) acceptedStates++;
+        console.log(`  same   ${st.name}${applied.length ? `  (accepted: ${applied.join(', ')})` : ''}`);
       } else {
         failed++;
         console.log(`  DIFF   ${st.name}`);
@@ -669,9 +837,10 @@ try {
 }
 
 const leftovers = compare ? [] : readdirSync(outDir)
-  .filter((f) => f.endsWith('.json') && f !== 'states.json' && f !== '_manifest.json')
+  .filter((f) => f.endsWith('.json') && !['states.json', '_manifest.json', 'accepted-differences.json'].includes(f))
   .filter((f) => !states.some((s) => f === `${s.kind === 'today-unreadable' ? 'today-unreadable-' : ''}${s.name}.json`));
 if (leftovers.length && !only) console.log(`\nfiles for states no longer in the list: ${leftovers.join(', ')}`);
 
 console.log(failed ? `\nbaseline: ${failed} ${compare ? 'differ' : 'failed'}` : `\nbaseline: ${states.length} ${compare ? 'identical' : 'captured'}`);
+if (compare && acceptedStates) console.log(`baseline: ${acceptedStates} of them match only once the accepted differences are applied`);
 process.exitCode = failed ? 1 : 0;

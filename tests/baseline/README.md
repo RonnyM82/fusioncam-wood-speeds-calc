@@ -68,6 +68,7 @@ node tools/baseline.mjs --compare --only drill-bank-on-hinge-35     # one state
 node tools/baseline.mjs --compare --base http://localhost:4173/ --sections url,form  # some parts only
 node tools/baseline.mjs --compare --base http://localhost:4173/ --url-only           # the address only
 node tools/baseline.mjs --compare --base http://localhost:4173/ --no-charts          # all but the charts
+node tools/baseline.mjs --compare --base http://localhost:4173/ --no-accepted        # none of the ruled differences applied
 node tools/baseline.mjs --out some/dir               # capture somewhere else
 node tools/baseline.mjs                              # RE-CAPTURE into this folder
 ```
@@ -127,12 +128,45 @@ difference, not the first twelve the tool prints per state):
 1. In the tables under the charts, the first column (the chart name, the limit) is in its
    own case, where the old page uppercased it: `Onsrud 60-100MW`, was `ONSRUD 60-100MW`.
    The design system's Table part does this on purpose (its D58: uppercasing is lossy on
-   a symbol, and "Ra 0.8 µm" painted as "RA 0.8 ΜM"). 48 states. Needs Scott's ruling
-   before any re-capture.
+   a symbol, and "Ra 0.8 µm" painted as "RA 0.8 ΜM"). 48 states. Accepted in step 5
+   (below).
 2. The section's whole text no longer has the hidden caption's line under each table's
-   summary, for the same reason as the caption field above. 48 states, same ruling.
+   summary, for the same reason as the caption field above. 48 states. Accepted in step 5.
 3. The advanced fields on a drilling link, the ruled difference from step 2. 15 states.
 4. The banners' `role` in the two states with clicks, the ruled difference from step 3.
+
+**The accepted differences (step 5 of the conversion, 2026-09-24).** The four kinds above
+are ruled deliberate, and `tests/baseline/accepted-differences.json` lists them: each entry
+names the field, the states it applies to, the old form and the new form, and the ruling
+with its date. `--compare` applies them only when the page it loaded is the React page (it
+has the `#root` element the old page never had), and never against `legacy.html` or any
+other copy of the old page; it says which page it found on its first line. Each entry is
+carried out by a rewrite of that name in `tools/baseline.mjs` (`applyAccepted`), applied to
+both sides before `--sections` and `--no-charts` narrow them:
+
+- `row-header-case`: the React page's row-header text is put in capitals, as the old page's
+  CSS painted it, in the cells and in their lines of the section's text. The words must
+  still be the same letters in the same order.
+- `table-name-line`: on the baseline side, the line under each table's summary is removed
+  after checking it is that table's name. The `caption` field is still compared exactly.
+- `drilling-advanced-fields`: in the 15 drilling states, the ten advanced fields drilling
+  never reads leave the baseline's form, after checking each is there once. The three that
+  stay are compared exactly.
+- `click-banner-roles`: in the two states with clicks, each named banner's role on the
+  baseline side goes from none to the role the React page gives it, after checking it had
+  none.
+
+A rewrite that does not find the old form it expects fails the state, so an entry cannot
+absorb a difference it does not describe, and an entry with no rewrite in the tool stops the
+run. A state that matched only through an entry says which, as `same  (accepted: ...)`.
+`--no-accepted` compares the React page with none of them applied.
+
+What the full comparison against `vite preview` showed on 2026-09-24, step 5, after the
+design system's row-header fix was rebuilt into the linked package: **52 identical, zero
+unaccepted differences**, charts included; 48 matched through the accepted differences
+(the 4 refusals and blocks needed none). With `--no-accepted` the same page differs in 48
+states, in those four kinds only. Against `legacy.html` all 52 still match with no accepted
+difference applied, so reading which page is loaded changed nothing in the files.
 
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts

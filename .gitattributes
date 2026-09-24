@@ -1,0 +1,5 @@
+# The tracked git hooks keep LF endings on every checkout, including Windows
+# with core.autocrlf on: a CRLF after "#!/bin/sh" breaks the hook. Copied
+# from the design system's .gitattributes (2026-09-24, step 5 of
+# docs/CONVERSION_PLAN.md).
+.githooks/* text eol=lf
