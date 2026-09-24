@@ -731,6 +731,28 @@ const REWRITES = {
     }
     return 1;
   },
+  // The plastics (Scott's ruling, 2026-09-24) join the material list only
+  // while the "Show beta tools" box is ticked. On a ticked React page the
+  // fourteen plastic picks leave MATERIAL's options, after checking they are
+  // there exactly once each, last, in the entry's order, and not the material
+  // shown. Reads the box, so it runs before beta-checkbox removes it.
+  'beta-adds-plastics'(entry, was, now, where) {
+    const box = now.form.fields.find((f) => f.checkLabel === 'Show beta tools');
+    if (!box || !box.checked) return 0;
+    const mat = now.form.fields.filter((f) => f.label === 'MATERIAL');
+    if (mat.length !== 1) throw new Error(`${where}: ${entry.id}: the page has ${mat.length} MATERIAL fields, not 1`);
+    const opts = mat[0].options;
+    const tail = opts.slice(opts.length - entry.options.length);
+    if (JSON.stringify(tail) !== JSON.stringify(entry.options)) {
+      throw new Error(`${where}: ${entry.id}: MATERIAL's options do not end in the fourteen plastics: ${JSON.stringify(tail)}`);
+    }
+    for (const o of entry.options) {
+      if (opts.filter((x) => x === o).length !== 1) throw new Error(`${where}: ${entry.id}: "${o}" is listed more than once`);
+      if (mat[0].shows === o) throw new Error(`${where}: ${entry.id}: a baseline state shows the plastic "${o}"`);
+    }
+    mat[0].options = opts.slice(0, opts.length - entry.options.length);
+    return 1;
+  },
   // The "Show beta tools" box leaves the React side's form, after checking it
   // is where and what the ruling says: once in routing, never in drilling,
   // right after MATERIAL, ticked exactly when the ball nose is chosen.

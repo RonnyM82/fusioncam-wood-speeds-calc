@@ -46,6 +46,13 @@
 // page's default tool, and a diameter only the ball chart needed goes to the
 // nearest one left, as a drill diameter does when its family changes.
 //
+// THE PLASTICS (Scott, 2026-09-24) are behind the same tick. The fourteen
+// plastic picks join the material list only while it is on, and a link naming
+// one opens with it on, as a ball-nose link does. Unticking with a plastic
+// chosen falls back to MDF, the page's default material. The 3 mm size is
+// offered only while a plastic is chosen, because only the plastics chart is
+// interpolated at it. Wood keeps the list it had.
+//
 // THE BOX AND THE STATE ARE KEPT APART. `boxes` holds what each number field
 // holds (its metric base, or null for empty or unreadable), which is what the
 // field part is handed back as its value. The calculation state holds what
@@ -70,6 +77,13 @@ import { DRILL_TOOLS, DRILL_DIAMETERS, drillSubfamilyFor } from '../js/ui/drill-
 // physical board (documented in data/schema.md); kcMaterial is the canonical
 // key for the cutting-force model. OSB is deliberately absent (D12): the core
 // still refuses it with the reason if ever asked.
+/**
+ * @typedef {{
+ *   id: string, label: string, hint: string, data: string[], kcMaterial: string,
+ *   fallback?: string[], beta?: boolean,
+ * }} MaterialPick
+ */
+/** @type {MaterialPick[]} */
 export const MATERIALS = [
   { id: 'mdf', label: 'MDF', hint: 'Fibreboard, plain or veneered', data: ['mdf'], kcMaterial: 'mdf' },
   { id: 'melamine', label: 'Melamine / chipboard', hint: 'Melamine-faced or laminated particleboard', data: ['laminated_pb', 'laminated_chipboard'], kcMaterial: 'laminated_pb' },
@@ -78,7 +92,50 @@ export const MATERIALS = [
   { id: 'hpl', label: 'HPL-faced panel', hint: 'High-pressure laminate over a board core. If the edge chips, change the tool geometry before the feed.', data: ['hpl'], kcMaterial: 'hpl' },
   { id: 'hardwood', label: 'Hardwood', hint: 'Oak, beech, maple, ash and similar', data: ['hardwood'], kcMaterial: 'hardwood' },
   { id: 'softwood', label: 'Softwood', hint: 'Pine, radiata, spruce', data: ['softwood'], kcMaterial: 'softwood' },
+  // The plastics, beta only (Scott, 2026-09-24). Each pick serves its
+  // family's Onsrud chart. data/plastics.json records the same assignment, and
+  // test PL-PICKS holds the two equal. Acrylic is two picks, because cast and
+  // extruded acrylic sit in different families.
+  ...[
+    ['abs', 'ABS'], ['polycarbonate', 'Polycarbonate'], ['polyethylene', 'Polyethylene'], ['hdpe', 'HDPE'],
+    ['uhmw', 'UHMW'], ['polypropylene', 'Polypropylene'], ['polystyrene', 'Polystyrene / HIPS'], ['petg', 'PETG'],
+    ['acrylic_extruded', 'Acrylic, extruded'],
+  ].map(([id, name]) => plasticPick(id, name, 'soft_plastic')),
+  ...[
+    ['acrylic_cast', 'Acrylic, cast'], ['nylon', 'Nylon'], ['pvc_rigid', 'Rigid PVC'], ['acetal', 'Acetal / Delrin'],
+    ['phenolic', 'Phenolic'],
+  ].map(([id, name]) => plasticPick(id, name, 'hard_plastic')),
 ];
+
+/**
+ * One plastic material pick. The label names the family, so a beginner sees
+ * which chart serves the plastic they chose.
+ * @param {string} id @param {string} name @param {'soft_plastic' | 'hard_plastic'} family
+ * @returns {MaterialPick}
+ */
+function plasticPick(id, name, family) {
+  const words = family === 'soft_plastic' ? 'soft plastic' : 'hard plastic';
+  return {
+    id,
+    label: `${name} (${words})`,
+    hint: `Served from Onsrud's ${words} chart.`,
+    data: [family],
+    kcMaterial: family,
+    beta: true,
+  };
+}
+
+/** The material picks offered only while the beta tick is on: the plastics. */
+export const BETA_MATERIALS = new Set(MATERIALS.filter((m) => m.beta).map((m) => m.id));
+
+/** The material the page opens on, and falls back to when a beta pick goes. */
+export const DEFAULT_MATERIAL = 'mdf';
+
+/** The material picks the picker offers. @param {boolean} beta */
+export const materialsFor = (beta) => (beta ? MATERIALS : MATERIALS.filter((m) => !m.beta));
+
+/** Whether a material pick is a plastic. @param {string} id */
+export const isPlasticPick = (id) => BETA_MATERIALS.has(id);
 
 // Every routing tool type the page knows, beta ones included. What the picker
 // offers is toolTypesFor(state.beta).
@@ -103,14 +160,23 @@ export const toolTypesFor = (beta) => (beta ? TOOL_TYPES : TOOL_TYPES.filter((t)
 // The ball nose ladder is the chart's own: 1/16 through 3/4 inch. 15.875 is
 // there for that chart alone and sits between two metric sizes nothing else
 // publishes (2026-09-02).
-export const DIAMETERS = [1.5875, 3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 15.875, 16, 19.05, 25.4];
+export const DIAMETERS = [1.5875, 3, 3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 15.875, 16, 19.05, 25.4];
 
 // The two sizes added for the ball chart, offered only with the beta tick on.
 // With it off the list is the live site's at commit 1e6c265.
 export const BETA_DIAMETERS = new Set([1.5875, 15.875]);
 
-/** The routing diameters the picker offers. @param {boolean} beta */
-export const diametersFor = (beta) => (beta ? DIAMETERS : DIAMETERS.filter((d) => !BETA_DIAMETERS.has(d)));
+// The size offered only while a plastic is chosen (2026-09-24). The plastics
+// chart is interpolated at 3 mm, and no wood chart prints it.
+export const PLASTIC_DIAMETERS = new Set([3]);
+
+/**
+ * The routing diameters the picker offers. With no material given, or a wood
+ * one, the list is what it was before the plastics.
+ * @param {boolean} beta @param {string} [material]
+ */
+export const diametersFor = (beta, material) => DIAMETERS.filter((d) => (beta || !BETA_DIAMETERS.has(d))
+  && (!PLASTIC_DIAMETERS.has(d) || (material !== undefined && isPlasticPick(material))));
 
 export const PROFILES = [
   { id: 'gentle', label: 'Gentle' },
@@ -403,12 +469,12 @@ export function readUrlState(s, search, presets) {
   if (q.get('db') != null) s.drillBank = q.get('db') === '1';
   if (q.get('m') && MATERIALS.some((x) => x.id === q.get('m'))) s.material = /** @type {string} */ (q.get('m'));
   if (q.get('t') && TOOL_TYPES.some((x) => x.id === q.get('t'))) s.toolType = /** @type {string} */ (q.get('t'));
-  // A link naming a beta tool ticks beta first, so the sizes its chart needs
-  // stay valid. With beta off a size outside the live list is ignored and the
-  // diameter stays as it was, as the live site's page did with any size not in
-  // its list.
-  if (BETA_TOOL_TYPES.has(s.toolType)) s.beta = true;
-  if (q.get('d') && diametersFor(s.beta).includes(num('d'))) s.diameterMm = num('d');
+  // A link naming a beta tool or a plastic ticks beta first, so the sizes its
+  // chart needs stay valid. With beta off a size outside the live list is
+  // ignored and the diameter stays as it was, as the live site's page did with
+  // any size not in its list.
+  if (BETA_TOOL_TYPES.has(s.toolType) || BETA_MATERIALS.has(s.material)) s.beta = true;
+  if (q.get('d') && diametersFor(s.beta, s.material).includes(num('d'))) s.diameterMm = num('d');
   if (q.get('th') && num('th') > 0) s.thicknessMm = num('th');
   if (q.get('f') && num('f') >= 1) s.flutes = Math.round(num('f'));
   if (q.get('r') && num('r') > 0) s.rpm = num('r');
@@ -633,6 +699,13 @@ export function update(prev, action, presets) {
     }
     case 'material':
       s.material = action.value;
+      // A plastic is only on offer with the tick on, so the two must agree.
+      if (BETA_MATERIALS.has(action.value)) s.beta = true;
+      // The 3 mm size is the plastics' alone. Leaving the plastics moves it to
+      // the nearest size left, the rule a drill diameter follows.
+      if (!diametersFor(s.beta, s.material).includes(s.diameterMm)) {
+        s.diameterMm = nearest(diametersFor(s.beta, s.material), s.diameterMm);
+      }
       return s;
     case 'tool':
       if (s.mode === 'drill') {
@@ -669,10 +742,15 @@ export function update(prev, action, presets) {
       // Unticked with a beta tool chosen: the page's default tool, and the
       // results follow as for any other tool change.
       if (!s.beta && BETA_TOOL_TYPES.has(s.toolType)) s.toolType = DEFAULT_TOOL_TYPE;
+      // Unticked with a plastic chosen: the page's default material.
+      if (!s.beta && BETA_MATERIALS.has(s.material)) s.material = DEFAULT_MATERIAL;
       // A size only the beta list has goes to the nearest one left, the
       // earlier on a tie, the rule a drill diameter follows when its family
-      // no longer offers it: 1/16 in to 1/8 in, 5/8 in to 16 mm.
-      if (!s.beta && BETA_DIAMETERS.has(s.diameterMm)) s.diameterMm = nearest(diametersFor(false), s.diameterMm);
+      // no longer offers it: 1/16 in to 1/8 in, 5/8 in to 16 mm, and the
+      // plastics' 3 mm to 1/8 in.
+      if (!s.beta && !diametersFor(false, s.material).includes(s.diameterMm)) {
+        s.diameterMm = nearest(diametersFor(false, s.material), s.diameterMm);
+      }
       return s;
     case 'advSelect':
       s.adv[action.id] = action.value;

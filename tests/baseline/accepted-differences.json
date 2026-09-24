@@ -108,6 +108,32 @@
       "ruling": "Scott's ruling, 2026-09-24: the ball nose, the bull nose and 3D surfacing go live behind a beta switch, off by default, and with it off the page offers what the live site offers. The diameters and the hints joined this entry the same day, under the same ruling, on the coordinator's instruction."
     },
     {
+      "id": "beta-adds-plastics",
+      "field": "form.fields: the MATERIAL field's options.",
+      "states": "all",
+      "statesNote": "Every state whose \"Show beta tools\" box is ticked: the seven that name the ball nose (the four ball-* states, tool-ball-12.7-mdf-depth-empty and the two ball-nose refusals). Every other state opens with the box unticked and its material list is the live site's, so this rewrites nothing there.",
+      "was": "The seven wood materials.",
+      "now": "While the box is ticked, the seven wood materials and then the fourteen plastics, each label naming its family.",
+      "options": [
+        "ABS (soft plastic)",
+        "Polycarbonate (soft plastic)",
+        "Polyethylene (soft plastic)",
+        "HDPE (soft plastic)",
+        "UHMW (soft plastic)",
+        "Polypropylene (soft plastic)",
+        "Polystyrene / HIPS (soft plastic)",
+        "PETG (soft plastic)",
+        "Acrylic, extruded (soft plastic)",
+        "Acrylic, cast (hard plastic)",
+        "Nylon (hard plastic)",
+        "Rigid PVC (hard plastic)",
+        "Acetal / Delrin (hard plastic)",
+        "Phenolic (hard plastic)"
+      ],
+      "rewrite": "Only where the React page's \"Show beta tools\" box is there and ticked: on the React side, the fourteen options in 'options' are taken out of MATERIAL's options after checking they are its last fourteen, in this order, each once, and none of them the material shown. Listed before beta-checkbox, which removes the box this one reads.",
+      "ruling": "Scott's ruling, 2026-09-24: soft and hard plastic go live behind the beta tick, and with it off the page offers what the live site offers."
+    },
+    {
       "id": "beta-checkbox",
       "field": "form.fields: a checkbox under the tool list.",
       "states": "all",
@@ -115,9 +141,9 @@
       "was": "No such field.",
       "now": "A \"Show beta tools\" checkbox directly after the material, where the tool list sits, with its hint; ticked exactly when the chosen tool is the ball nose (the baseline runs in a fresh browser, so nothing is remembered).",
       "checkLabel": "Show beta tools",
-      "hint": "Adds the ball nose, for 3D surfacing and carving. Its numbers are new and less proven than the rest; start conservatively.",
+      "hint": "Adds the ball nose, for 3D surfacing and carving, and soft and hard plastics to the material list. Their numbers are new and less proven than the rest; start conservatively.",
       "rewrite": "On the React side, the one field whose checkbox reads \"Show beta tools\" is taken out after checking it is there exactly once in a routing state (and not at all in drilling), directly after MATERIAL, with no label of its own, this hint, no message, and ticked exactly when the chosen tool is the ball nose.",
-      "ruling": "Scott's ruling, 2026-09-24: the beta switch is a checkbox beside the tool type, off by default and remembered in the browser; a link naming the ball nose opens with it ticked."
+      "ruling": "Scott's ruling, 2026-09-24: the beta switch is a checkbox beside the tool type, off by default and remembered in the browser; a link naming the ball nose opens with it ticked. The hint gained the plastics the same day, when Scott ruled that soft and hard plastic go live behind the same tick."
     }
   ]
 }

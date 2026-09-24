@@ -77,6 +77,7 @@ export function Results({ view, charts, holding }: Props) {
               ))}
             </dl>
             {keyed(view.warnings).map(([key, b]) => banner(b, key))}
+            {view.advice !== undefined && banner(view.advice, "advice")}
             {view.notes.length > 0 && (
               <div className="notes">
                 <h3 className="notes-title">Notes on this calculation</h3>

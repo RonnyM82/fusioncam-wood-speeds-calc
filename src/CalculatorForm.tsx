@@ -16,7 +16,6 @@ import {
   diametersFor,
   DRILL_ADV,
   EMPTY_WORDS,
-  MATERIALS,
   MODES,
   NUMBER_FIELDS,
   toolTypesFor,
@@ -24,6 +23,8 @@ import {
   advKey,
   fieldHint,
   firstCutLabel,
+  isPlasticPick,
+  materialsFor,
   profilesFor,
   type FormAction,
   type FormState,
@@ -83,7 +84,7 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
     );
   };
 
-  const diameters: number[] = drilling ? (DRILL_DIAMETERS as Record<string, number[]>)[state.drillTool] ?? [] : diametersFor(state.beta);
+  const diameters: number[] = drilling ? (DRILL_DIAMETERS as Record<string, number[]>)[state.drillTool] ?? [] : diametersFor(state.beta, state.material);
   const machine = presets[state.machineIdx];
 
   return (
@@ -103,9 +104,11 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
         onValueChange={(value) => dispatch({ type: "mode", value })}
       />
 
+      {/* The plastics join the list only while the beta tick is on (Scott's
+          ruling, 2026-09-24). */}
       <Select
         label="Material"
-        items={MATERIALS.map((m) => ({ value: m.id, label: m.label }))}
+        items={materialsFor(state.beta).map((m) => ({ value: m.id, label: m.label }))}
         value={state.material}
         onValueChange={(value) => value !== null && dispatch({ type: "material", value })}
       />
@@ -127,7 +130,7 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
       {!drilling && (
         <Checkbox
           label="Show beta tools"
-          hint="Adds the ball nose, for 3D surfacing and carving. Its numbers are new and less proven than the rest; start conservatively."
+          hint="Adds the ball nose, for 3D surfacing and carving, and soft and hard plastics to the material list. Their numbers are new and less proven than the rest; start conservatively."
           checked={state.beta}
           onCheckedChange={(value) => dispatch({ type: "beta", value })}
         />
@@ -170,8 +173,10 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
 
       {/* Not shown while Finishing is on: a finish pass follows a proven cut,
           and the reduction would drive a thin skim into rubbing (research
-          session 4). The choice is kept and returns with the other profiles. */}
-      {!drilling && state.profile !== "finishing" && (
+          session 4). The choice is kept and returns with the other profiles.
+          Not shown for a plastic either (Scott, 2026-09-24): the maker's cure
+          for chips that weld back is a higher feed, not a lower one. */}
+      {!drilling && state.profile !== "finishing" && !isPlasticPick(state.material) && (
         <Checkbox
           label={firstCutLabel(data)}
           checked={state.firstCut}

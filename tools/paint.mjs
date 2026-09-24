@@ -82,8 +82,8 @@ const { outputText } = ts.transpileModule(readFileSync(probeSource, 'utf8'), {
 const probe = `window.__ltPaint = {}; (function (exports) {\n${outputText}\n})(window.__ltPaint);`;
 
 // ---------------------------------------------------------------------------
-// The states: both modes, the fold of four or more warnings, and a refusal.
-// Step 4's four. The queries come from the baseline's list where it names them.
+// The states: both modes, the fold of four or more warnings, a refusal and a
+// plastic. Step 4's four, and the plastic added on 2026-09-24. The queries come from the baseline's list where it names them.
 // ---------------------------------------------------------------------------
 const listed = JSON.parse(readFileSync(join(repo, 'tests', 'baseline', 'states.json'), 'utf8')).states;
 const query = (name) => {
@@ -96,6 +96,10 @@ const STATES = [
   { name: 'drilling, an 8 mm dowel drill', query: 'k=drill&dt=dowel&dd=8&hd=30', charts: true },
   { name: 'four warnings folded into one list', query: query('four-warnings-fold-into-one-list'), charts: true },
   { name: 'a refusal', query: query('refusal-ball-nose-in-hpl'), charts: false },
+  // A plastic (2026-09-24): the maker's advice banner, the interpolation
+  // note, a down-cut chart ladder and the plastic rows in the fold. The link
+  // names a plastic, so the page opens with the beta tick on.
+  { name: 'soft plastic, a down-cut at 8 mm', query: 'm=abs&t=downcut&d=8&th=6&f=1', charts: true },
 ];
 const WIDTHS = [1280, 390];
 const WIDE = 1280;

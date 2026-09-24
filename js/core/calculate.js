@@ -16,8 +16,13 @@ import {
   cornerFeedCapMmMin, compressionMinDepthMm,
 } from './limits.js';
 import { checkDensity, radiataNote } from './timber.js';
+import { isPlastic, calculatePlastic } from './plastics.js';
 
 export function calculate(input, data) {
+  // Soft and hard plastic have their own data and their own rules
+  // (js/core/plastics.js, 2026-09-24). Nothing below this line sees a plastic
+  // pick, so no wood number can change because plastics exist.
+  if (isPlastic(input.material)) return calculatePlastic(input, data);
   const { chiploads, kc, rules } = data;
   const warnings = [];
   const notes = [];

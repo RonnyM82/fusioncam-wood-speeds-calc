@@ -4,8 +4,8 @@
 // copied into dist/ byte for byte by publishSiteFiles() below, from where it
 // lives in the repo, so nothing is kept twice: the Fusion panel and every file
 // it loads, and the archived reference article.
-import { cpSync, existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, posix, resolve } from "node:path";
+import { cpSync, existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { dirname, join, posix, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
@@ -49,6 +49,7 @@ const SITE_FILES = [
   "data/machines.json",
   "data/rules.json",
   "data/drills.json",
+  "data/plastics.json",
   "reference/cnc-router-speeds-feeds-reference_4.html",
 ];
 
@@ -90,6 +91,13 @@ function panelAddresses(outDir: string): string[] {
   return missing;
 }
 
+// Every PDF under a folder, as paths relative to it.
+function findPdfs(dir: string): string[] {
+  return (readdirSync(dir, { recursive: true }) as string[])
+    .map((f) => f.split(sep).join("/"))
+    .filter((f) => f.toLowerCase().endsWith(".pdf"));
+}
+
 function publishSiteFiles(): Plugin {
   let outDir = "dist";
   return {
@@ -105,6 +113,14 @@ function publishSiteFiles(): Plugin {
       const missing = panelAddresses(outDir);
       if (missing.length) {
         throw new Error(`The Fusion panel would lose these files in the published site: ${missing.join(", ")}`);
+      }
+      // The source PDFs are copyrighted catalogues and stay in the repository
+      // only (research/sources/, which git ignores). Only the values read from
+      // them and their attribution ship, so a PDF in the build fails it
+      // (2026-09-24, with the plastics).
+      const pdfs = findPdfs(outDir);
+      if (pdfs.length) {
+        throw new Error(`The published site must carry no PDF, and these are in it: ${pdfs.join(", ")}`);
       }
     },
   };
@@ -123,10 +139,13 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   build: {
-    // The five data files are bundled into the page, about 260 KB of the
+    // The six data files are bundled into the page, about 300 KB of the
     // script before compression, so Vite's default warning at 500 KB would
-    // fire on every build and teach everyone to ignore it.
-    chunkSizeWarningLimit: 1000,
+    // fire on every build and teach everyone to ignore it. The plastics file
+    // (2026-09-24) added about 96 KB, most of it the source, page and edition
+    // that every record carries so it can be checked against its PDF, and
+    // took the script just past 1,000 KB.
+    chunkSizeWarningLimit: 1200,
   },
   optimizeDeps: {
     // Only the React page. Without this the dev server scans every HTML file

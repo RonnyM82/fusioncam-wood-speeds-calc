@@ -17,6 +17,8 @@
 // the feed identity is feed = rpm * mm-per-rev, with no flute count in it: the
 // published band already counts both cutting edges.
 
+import { isPlastic } from './plastics.js';
+
 // Linear interpolation of the published feed band at one spindle speed.
 //
 // Outside the range the diagram draws, the FEED RATE holds flat at the edge, not
@@ -154,6 +156,11 @@ export function drillLimitMessage(binding) {
 const REFUSE = (reason) => ({ status: 'refused', refusal: { reason } });
 
 export function calculateDrilling(input, data) {
+  // The drilling data is Leitz's, for wood and wood panels. No drilling
+  // source covers plastic, so a plastic pick refuses in words (2026-09-24).
+  if (isPlastic(input.material)) {
+    return REFUSE('The drilling data covers wood and wood panels only, so the calculator gives no drilling number for plastic.');
+  }
   const { drills, rules } = data;
   const cfg = rules.drilling;
 

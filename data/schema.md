@@ -380,3 +380,79 @@ The scallop is reported while the stepover is under the corner diameter, not
 while the cut is light-radial. On a bull nose the corner is far smaller than
 the tool, so a stepover that is heavy against the corner is still light against
 the tool, and the light-radial gate hid a real and coarse ridge.
+
+## plastics.json, new 2026-09-24: soft and hard plastic
+
+A sixth data file, for the two plastic families, with Scott's approval of the plan that
+day. The only source is the LMT Onsrud Production Cutting Tools catalogue, edition PCT-19
+(2019): Soft Plastic Cutting Data Recommendations on page 120 and Hard Plastic Cutting
+Data Recommendations on page 121 (research/sources/Soft Plastic.pdf and Hard Plastic.pdf),
+with the full catalogue for each series' name, flute count and hands. The file is apart
+from `chiploads.json` for the reason drilling is: a plastic row in the wood file would
+become visible to the wood selector, which is the most-tested path in the repo.
+`js/data/load-browser.js`, `tests/load-node.js` and `src/data.ts` all list it.
+
+**Every entry is one printed cell**, 248 of them (115 soft, 133 hard), in the units the
+sheet prints: inches per tooth against an inch diameter column. The engine converts to
+millimetres at run time. Every entry carries `source`, `page` and `edition`, the printed
+text of its cell in `printed`, the printed series name with any asterisk in
+`series_printed`, and the printed depth condition in `cut_printed`. The soft sheet's
+asterisk on 37-50 and 37-60 ("* = 12,500 RPM") rides as `rpm_max` on each of their cells.
+
+**The read is reproducible and was made twice.** Text extraction loses the columns, so
+both sheets were read from page renders: once by eye at 400 dpi, placing each value under
+its header, and once from the position of every word against the column centres. The two
+agree on all 248 cells. `research/onsrud-pct19-plastics-read.json` holds the read, and
+`tools/build-plastics.mjs` turns it into the data file. The catalogue facts for each
+series (its contents-page name, flutes, hands and product page) are in the builder, each
+with its printed page.
+
+**Three printed cells are not clean numbers.** On the hard sheet, 56-000 and 56-000P at
+3/16 in print ".004-006", the upper value without its decimal point. Scott ruled them
+0.004-0.006. 56-600 at 3/8 in prints ".009- .011" with a space. Each such entry keeps the
+printed text and says what was mended in `transcription_note`. Two cells look odd and are
+exactly as printed: hard 56-000 prints its fourth value at 5/16 in and nothing at 3/8 in,
+and soft 61-400 prints ".020-.021" at 1/2 in. Neither sheet prints anything in the 1-1/8
+in to 2 in columns.
+
+**`families`** records, per sheet, the printed Good/Better/Best tables, the serving rule,
+the Finishing series, the printed depth rule, the printed formulas, the printed note, the
+defect the note names (knife marks for soft, cratering for hard) and the material picks.
+**`series`** records the catalogue facts, and its `kind` separates the flat solid carbide
+router series, which the chart ladder may draw, from the HSS, engraving, V-bottom, ball
+nose, edge profile and taper tools, which are recorded and never drawn.
+
+**The serving rule.** The sheet's Best single-pass series serves the band, never an
+envelope across series: soft 63-750 below 1/2 in and 52-700 at 1/2 in and up, hard 63-700
+below and 60-200 at and above. At exactly 1/2 in the "1/2 and up" series serves, because
+the sheets split their tables "< 1/2" and "≥ 1/2". The reason is the D11 reason: an
+envelope across the O-flute series spans more than 2x at 1/2 in soft (.010 to .022,
+because the 61-000P straight O-flute prints far above the rest), and the profile edges
+would then move with which series happen to be printed. The other router series of the
+picked hand that print at the size render as named context on the chart ladder. The hard
+curve drops at 1/2 in (.010-.012 at 3/8 in, .006-.010 at 1/2 in) because the tool
+changes from a single-edge O-flute to a three-flute finisher, and the page names the
+series that serves so a beginner can see why.
+
+**Metric sizes.** A size the serving series does not print is interpolated in a straight
+line between its two nearest printed sizes, both band edges, within that series only and
+never across the 1/2 in split. The result carries `meta.plastic.interpolated`, the chart
+row and the band badge say "interpolated", and a rendered note names the two printed sizes.
+A size outside the series' printed range gets no number. The wood charts' 25 per cent
+coverage stretch does not apply. The page offers 3 mm while a plastic is chosen.
+
+**What differs from wood** (Scott, 2026-09-24). No cutting force is published for
+plastic, so the spindle power and hold-down checks do not run, and a note and a badge say
+so. First-cut mode does not apply, because the sheet's cure for chips that weld back is a
+higher feed. The wood chip floor does not apply. The only floor warning is a machine limit
+holding the chip under the band's low edge (`chip_below_band`). Finishing serves the low
+edge of the family's own 60-200 row, which the hard sheet names for finishing and the soft
+sheet prints without naming. Compression and the ball nose refuse. Up-cut, down-cut and
+straight serve the same Best number, with a note. The depth derate is the sheet's
+printed 1xD/2xD/3xD rule, applied as for wood. The maker's printed note renders as an info
+banner, "Onsrud's advice for soft plastic" or "for hard plastic", with the spoilboard
+sentence only for a soft down-cut.
+
+The plastics are behind the beta tick on the page and in the panel. Behaviour is pinned by
+PL1 to PL21 and PL-PICKS in `tests/plastics.test.js`, and PL18 sweeps 420 wood picks to
+prove every wood result is identical with and without the plastics data.

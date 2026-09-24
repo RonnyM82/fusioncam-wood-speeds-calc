@@ -72,7 +72,7 @@ const CHIP_VARIANT = { cool: 'success', warm: 'warning', hot: 'danger', info: 'i
  * @typedef {{ variant: Severity, icon: 'success' | 'warning' | 'alert' | 'info', text: string }} Chip
  * @typedef {(
  *   | { kind: 'message', banner: Banner }
- *   | { kind: 'figures', drilling: boolean, limit: Banner, rows: Row[], warnings: Banner[], notes: string[], chips: Chip[] | null }
+ *   | { kind: 'figures', drilling: boolean, limit: Banner, rows: Row[], warnings: Banner[], notes: string[], chips: Chip[] | null, advice?: Banner }
  * )} ResultsView
  */
 
@@ -160,6 +160,12 @@ export function resultsView(result) {
     warnings,
     notes: [...result.notes],
     chips,
+    // The maker's own advice printed under its plastics table (2026-09-24).
+    // Only a plastic result carries it, so a wood result's view has no such
+    // key and draws exactly what it drew before. An info banner, not a
+    // warning: it is standing advice for the material, not a judgement on
+    // this cut, and it does not count toward the three-banner ceiling.
+    ...(result.advice ? { advice: { variant: /** @type {Severity} */ ('info'), title: result.advice.title, paragraph: null, list: [...result.advice.lines] } } : {}),
   };
 }
 

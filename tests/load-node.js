@@ -17,5 +17,6 @@ export function loadData() {
     machines: readJson('machines.json'),
     rules: readJson('rules.json'),
     drills: readJson('drills.json'),
+    plastics: readJson('plastics.json'),
   };
 }

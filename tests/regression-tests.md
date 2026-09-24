@@ -29,3 +29,19 @@ Every formula in the calculation core gets a test against a value already verifi
 18. **Species bounds**: density 250 or 1,200 kg/m³ → warning, model flagged out of validity (287–1,080).
 19. **Every entry has provenance**: no entry without `source` and `data_class`; ITA entries must carry the flute-basis switch.
 20. **Speed uplift tag**: every `iwms25` kc row must surface the +15–20% production-speed caveat in output.
+
+## Soft and hard plastic (tests/plastics.test.js, 2026-09-24)
+Source: LMT Onsrud catalogue PCT-19, Soft Plastic p.120 and Hard Plastic p.121.
+- **PL1 Transcription**: hard 63-700 at 1/4 in = .010-.012, soft 61-000P at 1/2 in = .018-.022, plus the 1/16 in and 3/4 in ends, both sides of the 1/2 in split, and the 56-000/56-000P ".004-006" cells read as 0.004-0.006.
+- **PL2 The 12,500 rpm asterisk** on every soft 37-50 and 37-60 cell and nowhere else.
+- **PL3 Provenance**: source, page and edition on all 248 entries (115 soft, 133 hard).
+- **PL4 The read**: the data holds exactly the cells of research/onsrud-pct19-plastics-read.json.
+- **PL5 The gate** catches a changed value, a missing source, a wrong page or edition, an unprinted column, a wrong mm size, a reversed band and a missing file.
+- **PL6 Serving**: 63-750/63-700 below 1/2 in, 52-700/60-200 at exactly 1/2 in and above.
+- **PL7 Formula**: hard 63-700 1/4 in, 18,000 rpm, one edge, .011 in → 5,029.2 mm/min.
+- **PL8 Depth derate**: 1xD 100%, 1.5xD 87.5%, 2xD 75%, 2.5xD 62.5%, 3xD 50%, a slot past 3xD blocks.
+- **PL9 Metric**: 3, 4, 5, 6, 8, 10, 12 and 16 mm in both families, each equal to the straight line between its named printed neighbours, and marked interpolated.
+- **PL10 No extrapolation**: 1.5, 19.1 and 25.4 mm refuse; 1/16 in and 3/4 in serve.
+- **PL11-PL17**: no power or hold-down check; no first-cut and no wood floor; the machine-cap warning names the defect; tool types; the maker's advice; Finishing on 60-200; drilling refuses.
+- **PL18 Wood unchanged**: 420 wood picks give identical results with and without the plastics data.
+- **PL-PICKS, PL19-PL21**: the page, panel and data agree on the 14 picks; the beta tick gates them and 3 mm; the advice banner and chart label; no PDF ships.

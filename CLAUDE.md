@@ -107,7 +107,7 @@ address `fusion.html` loads is missing. Every address in `fusion.html` carries
 `?v=<PAGE_BUILD>`, the same string as `PAGE_BUILD` in `js/ui/fusion-panel.js` (a date and a
 letter; test FP15 pins the two equal). Bump both whenever a file the panel loads changes,
 because Fusion's palette browser serves a stale copy of any address whose key did not
-change. Last bumped to `2026-09-24b` when the Copy snapshot button was removed.
+change. Last bumped to `2026-09-24c` when the plastics joined the panel's material lists.
 
 **The vendored design system is the panel's. Do not edit it.** `tokens/`, `components/`,
 `fonts/` and `icons/` are copies of the vanilla Livetools Design System, and
@@ -155,10 +155,44 @@ commit 1e6c265 for anything ball, bull nose or surfacing.
   is ignored and keeps 12.7 mm, as 1e6c265 ignored any size not on its list; a ball link
   ticks beta first, so its sizes read. Unticking with one chosen moves it to the nearest size
   left, the rule a drill diameter follows (1/16 in to 1/8 in, 5/8 in to 16 mm).
-- **Promoting a feature out of beta is Scott's call**, never a session's. When he makes it,
-  the stable mapping, `stableToolKind()`, `STABLE_KIND_NOTE`, `BETA_TOOL_TYPES`,
-  `BETA_DIAMETERS`, the fields' `betaHint`, the two
-  ticks and the two baseline entries for them (`beta-hides-ball-nose`, `beta-checkbox`) go.
+- **The plastics** (Scott's ruling, 2026-09-24) are behind the same tick. With it on, the
+  fourteen plastic picks join the material list on the page and in the panel, and the page
+  offers 3 mm while a plastic is chosen. A link naming a plastic (`m=abs`) opens ticked.
+  Unticking with a plastic chosen falls back to MDF (`DEFAULT_MATERIAL`), and 3 mm moves to
+  1/8 in. The panel keeps a setup's stored plastic and reads it as MDF while the tick is off.
+- **Promoting a feature out of beta is Scott's call**, never a session's. When he makes it
+  for the ball nose, the stable mapping, `stableToolKind()`, `STABLE_KIND_NOTE`,
+  `BETA_TOOL_TYPES`, `BETA_DIAMETERS`, the fields' `betaHint`, the two ticks and the two
+  baseline entries for them (`beta-hides-ball-nose`, `beta-checkbox`) go. For the plastics,
+  `BETA_MATERIALS`, the `beta` flag on the picks, `materialsOffered()` in the panel and the
+  `beta-adds-plastics` baseline entry go.
+
+## Soft and hard plastic
+
+Added 2026-09-24 with Scott's approval of the plan that day. The only source is the LMT Onsrud
+catalogue PCT-19 (2019): the Soft Plastic sheet on page 120 and the Hard Plastic sheet on page
+121, with the full catalogue for each series' name, flutes and hands. The PDFs are in
+`research/sources/`, which git ignores, and the build fails if a PDF would ship.
+
+- **The data** is `data/plastics.json`, one entry per printed cell (248), in the units printed,
+  each with its source, page and edition. It is kept apart from `chiploads.json` so the wood
+  selection code never sees a plastic row. `research/onsrud-pct19-plastics-read.json` is the
+  cell-for-cell read, made twice by different methods, and `node tools/build-plastics.mjs`
+  rebuilds the data from it. Edit the read, then rebuild; never edit the data by hand.
+- **The engine** is `js/core/plastics.js`. `calculate()` hands every plastic pick to it in its
+  first line, and `calculateDrilling()` refuses a plastic in words. Test PL18 proves every wood
+  result is identical with and without the plastics data.
+- **The rules, all Scott's (2026-09-24).** The sheet's Best single-pass series serves, split at
+  exactly 1/2 in: soft 63-750 then 52-700, hard 63-700 then 60-200. Other router series at the
+  size are chart context. A size the series does not print is interpolated in a straight line
+  between its two nearest printed sizes and says so on the page. Nothing is extrapolated, so a
+  size past 3/4 in or under 1/16 in refuses. No cutting force is published for plastic, so the
+  power and hold-down checks do not run and the page says so. First-cut mode and the wood
+  chip floor do not apply. Finishing serves the low edge of the family's own 60-200 row. The
+  soft sheet names no finishing tool, so its row serves on the hard sheet's naming. Compression
+  and the ball nose refuse. Up-cut, down-cut and straight serve the same Best number.
+- **Two cells are misprinted** on the hard sheet: 56-000 and 56-000P at 3/16 in read
+  ".004-006". They are encoded as 0.004-0.006 (Scott's ruling), and the entry says so.
 
 ## The charts are drawn by the app
 
@@ -185,7 +219,7 @@ emphasis pattern, its mark specs and its rule that every chart has a table twin.
 ```bash
 npm run check          # the whole gate, in this order:
                        #   python conformance.py .   the panel, its CSS, the app CSS
-                       #   node tests/run.js         224 tests: engine, data, form, results, charts
+                       #   node tests/run.js         246 tests: engine, data, form, results, charts, plastics
                        #   the lint                  the rules above, over src/
                        #   tsc --noEmit
                        #   vite build                fails if a panel file is missing
@@ -200,8 +234,8 @@ or loosen a rule to make it pass. It was proven to refuse a commit carrying an `
 in a TSX file on 2026-09-24.
 
 `tools/paint.mjs` serves `dist/` with `vite preview` on a free port and runs the design
-system's paint probe (its D59) over four states (routing, drilling, four warnings folded
-into one list, a refusal) at 1280 px and 390 px: as rendered, at the other two densities,
+system's paint probe (its D59) over five states (routing, drilling, four warnings folded
+into one list, a refusal, and a soft plastic down-cut at 8 mm) at 1280 px and 390 px: as rendered, at the other two densities,
 with no density attribute, under a coarse pointer and under forced colours. It also checks
 what only this page has: the charts share one track height and one mark height, a mark never
 fills its track, and with every fold open the page does not scroll sideways at 1280 px. It
@@ -229,7 +263,9 @@ Against the React page the comparison applies the differences ruled deliberate, 
 their rulings in `tests/baseline/accepted-differences.json`, and is exact about everything
 else; `--no-accepted` turns them off. On 2026-09-24 the React page matched all 52 states
 with those four differences and nothing else, and again after the beta switch with two more
-(the tick, and while it is off the ball nose, its two sizes and its hint sentences gone). Any other difference, above all any number, is
+(the tick, and while it is off the ball nose, its two sizes and its hint sentences gone), and
+again after the plastics with one more (while the tick is on, the fourteen plastics at the end
+of the material list). Any other difference, above all any number, is
 a regression until explained. Re-capture the baseline only when Scott has ruled a new
 behaviour right, and say so in the commit. `legacy.html` is the old `index.html` renamed with
 not a byte changed; it, `js/ui/app.js` and `styles.css` go when the conversion is done.

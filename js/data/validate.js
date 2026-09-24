@@ -32,7 +32,7 @@ const FACTOR_MATERIALS = new Set(['chipboard_plastic_coated', 'chipboard_uncoate
 const CLEARING_KINDS = new Set(['max_infeed_ratio_of_d', 'clearing_stroke_required', 'clearing_stroke_recommended_past', 'no_clearing_stroke_to_ratio', 'no_clearing_stroke_to_depth_mm', 'feed_factor_past_ratio']);
 const BAND_BASES = new Set(['mm_per_rev']);
 
-export function validateData({ chiploads, kc, machines, rules, drills }) {
+export function validateData({ chiploads, kc, machines, rules, drills, plastics }) {
   const errors = [];
   const warnings = [];
 
@@ -132,6 +132,7 @@ export function validateData({ chiploads, kc, machines, rules, drills }) {
   }
 
   validateDrills(drills, rules, errors);
+  validatePlastics(plastics, errors);
 
   return { errors, warnings };
 }
@@ -340,5 +341,111 @@ function validateDrills(drills, rules, errors) {
         }
       }
     }
+  });
+}
+
+// The plastics gate (2026-09-24). Every entry is one printed cell of an Onsrud
+// plastics sheet, and the check here is that the cell still says what the
+// entry claims: its printed text reads back to the same two numbers, its
+// diameter is a column the sheet prints, and it names its source, page and
+// edition, so any record can be audited against the PDF without the code.
+const PLASTIC_FAMILIES = { soft_plastic: 120, hard_plastic: 121 };
+const PLASTIC_COLUMNS = ['1/16', '3/32', '1/8', '5/32', '3/16', '7/32', '1/4', '5/16', '3/8', '7/16', '1/2', '9/16', '5/8', '3/4', '7/8', '1', '1 1/8', '1 1/4', '1 1/2', '1 3/4', '2'];
+const SERIES_KINDS = new Set(['router', 'hss', 'engraving', 'ball_nose', 'edge_profile', 'taper']);
+const SERIES_DIRECTIONS = new Set(['upcut', 'downcut', 'straight', 'both']);
+
+function columnInches(col) {
+  return col.split(' ').reduce((v, p) => {
+    const [n, d] = p.split('/');
+    return v + (d ? Number(n) / Number(d) : Number(n));
+  }, 0);
+}
+
+// The printed band read back to numbers. A value printed without its decimal
+// point reads as thousandths (the 56-000 and 56-000P cells at 3/16 in on the
+// hard sheet, Scott's ruling).
+function readPrinted(printed) {
+  const halves = String(printed).replace(/\s+/g, '').split('-');
+  if (halves.length !== 2) return null;
+  const vals = halves.map((h) => {
+    if (/^\.\d{3}$/.test(h)) return Number(`0${h}`);
+    if (/^\d{3}$/.test(h)) return Number(`0.${h}`);
+    return NaN;
+  });
+  return vals.every(Number.isFinite) ? vals : null;
+}
+
+function validatePlastics(plastics, errors) {
+  if (!plastics || !Array.isArray(plastics.entries) || !plastics.families || !plastics.series) {
+    errors.push('plastics: the plastics data file must exist and carry families, series and entries');
+    return;
+  }
+  for (const [key, page] of Object.entries(PLASTIC_FAMILIES)) {
+    const fam = plastics.families[key];
+    const id = `plastics family ${key}`;
+    if (!fam) {
+      errors.push(`${id}: missing`);
+      continue;
+    }
+    if (!fam.source || !plastics.sources?.[fam.source]) errors.push(`${id}: source missing or not in the sources map`);
+    if (fam.page !== page) errors.push(`${id}: page must be ${page}`);
+    if (fam.edition !== 'PCT-19') errors.push(`${id}: edition must be PCT-19`);
+    const d = fam.depth_derating ?? {};
+    if (d['1xD'] !== 1 || d['2xD'] !== 0.75 || d['3xD'] !== 0.5) {
+      errors.push(`${id}: the depth rule must be the printed one, 1xD 100%, 2xD 75%, 3xD 50%`);
+    }
+    for (const s of [fam.serving?.below_split, fam.serving?.at_or_above_split, fam.finishing?.series]) {
+      if (!plastics.entries.some((e) => e.family === key && e.series === s)) {
+        errors.push(`${id}: the serving series "${s}" prints no row on this sheet`);
+      }
+    }
+    if (fam.serving?.split_in !== 0.5) errors.push(`${id}: the sheet splits its tool tables at 1/2 in`);
+    if (!Array.isArray(fam.picks) || fam.picks.length === 0) errors.push(`${id}: no material picks`);
+    if (!fam.defect || !fam.note_printed) errors.push(`${id}: the sheet's printed note and the defect it names must be recorded`);
+  }
+  const pickIds = Object.values(plastics.families).flatMap((f) => (f.picks ?? []).map((p) => p.id));
+  if (new Set(pickIds).size !== pickIds.length) errors.push('plastics: a material pick belongs to two families');
+
+  for (const [name, s] of Object.entries(plastics.series)) {
+    const id = `plastics series ${name}`;
+    if (!SERIES_KINDS.has(s.kind)) errors.push(`${id}: unknown kind "${s.kind}"`);
+    if (s.kind === 'router') {
+      if (!SERIES_DIRECTIONS.has(s.direction)) errors.push(`${id}: a router series must state its cut direction`);
+      if (!Number.isInteger(s.flutes) || !(s.flutes > 0)) errors.push(`${id}: a router series must state its flutes`);
+      if (!s.words) errors.push(`${id}: a router series must carry its plain words`);
+    }
+    if (!s.source || !plastics.sources?.[s.source]) errors.push(`${id}: source missing or not in the sources map`);
+    if (!(s.page > 0)) errors.push(`${id}: missing catalogue page`);
+  }
+
+  const seen = new Set();
+  plastics.entries.forEach((e, i) => {
+    const id = `plastics entry ${i} (${e.family ?? '?'} ${e.series ?? '?'} ${e.diameter_printed ?? '?'})`;
+    if (!e.source) errors.push(`${id}: missing source`);
+    else if (!plastics.sources?.[e.source]) errors.push(`${id}: source key "${e.source}" not in sources map`);
+    if (!(e.family in PLASTIC_FAMILIES)) errors.push(`${id}: unknown family`);
+    else if (e.page !== PLASTIC_FAMILIES[e.family]) errors.push(`${id}: page must be ${PLASTIC_FAMILIES[e.family]}`);
+    if (e.edition !== 'PCT-19') errors.push(`${id}: edition must be PCT-19`);
+    if (!e.data_class) errors.push(`${id}: missing data_class`);
+    if (!plastics.series[e.series]) errors.push(`${id}: series not in the series map`);
+    if (!PLASTIC_COLUMNS.includes(e.diameter_printed)) errors.push(`${id}: not a printed column`);
+    else {
+      const dIn = columnInches(e.diameter_printed);
+      if (Math.abs(e.diameter_in - dIn) > 1e-6) errors.push(`${id}: diameter_in does not match the column`);
+      if (Math.abs(e.diameter_mm - dIn * 25.4) > 1e-4) errors.push(`${id}: diameter_mm is not diameter_in x 25.4`);
+    }
+    if (typeof e.fz_min_in !== 'number' || typeof e.fz_max_in !== 'number' || !(e.fz_min_in > 0) || !(e.fz_max_in >= e.fz_min_in)) {
+      errors.push(`${id}: the chip load band must be two positive numbers, low at or below high`);
+    } else if (e.fz_max_in > 0.05) {
+      errors.push(`${id}: ${e.fz_max_in} in/tooth is outside anything these sheets print`);
+    }
+    const back = readPrinted(e.printed);
+    if (!back) errors.push(`${id}: the printed text "${e.printed}" does not read as a band`);
+    else if (Math.abs(back[0] - e.fz_min_in) > 1e-9 || Math.abs(back[1] - e.fz_max_in) > 1e-9) {
+      errors.push(`${id}: the printed text "${e.printed}" reads ${back[0]}-${back[1]}, not ${e.fz_min_in}-${e.fz_max_in}`);
+    }
+    const key = `${e.family}|${e.series}|${e.diameter_printed}`;
+    if (seen.has(key)) errors.push(`${id}: duplicate cell`);
+    seen.add(key);
   });
 }

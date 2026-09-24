@@ -14,9 +14,15 @@ export function buildChips(result) {
 
   const x = m.fzEff.toFixed(3);
   const warnBelow = m.chipFloor?.warn_below ?? 0.1;
+  // A plastic pick has no wood chip floor. Its floor is the low edge of the
+  // Onsrud band, and only a machine limit can hold the chip under it
+  // (js/core/plastics.js, 2026-09-24).
+  if (m.plastic && codes.has('chip_below_band')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, below the Onsrud band` });
+  else if (m.plastic && m.finishing) chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm programmed, per the Onsrud ${m.plastic.series} chart` });
+  else if (m.plastic) chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm` });
   // Finishing serves the finisher chart's programmed chip and checks it
   // against that chart, not against the panel floor (see calculate.js).
-  if (m.finishing && codes.has('chip_below_chart')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm programmed, below the finisher chart` });
+  else if (m.finishing && codes.has('chip_below_chart')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm programmed, below the finisher chart` });
   else if (m.finishing) chips.push({ key: 'chip', level: 'cool', text: `Chip ${x} mm programmed, per the finisher chart` });
   else if (codes.has('chip_plough')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, the tool ploughs and burns` });
   else if (codes.has('chip_below_min')) chips.push({ key: 'chip', level: 'hot', text: `Chip ${x} mm, below the ${warnBelow.toFixed(2)} minimum` });
@@ -95,6 +101,15 @@ export function buildChips(result) {
     });
   }
 
+  if (m.plastic) {
+    // No cutting force is published for plastic, so the two checks that need
+    // one did not run. Warm, so the Fusion panel's three badges show it.
+    chips.push({ key: 'power', level: 'warm', text: 'No power or hold-down check: no cutting-force data for plastic' });
+    chips.push({ key: 'reweld', level: 'info', text: 'Chips weld back? Increase the feed or use a single-edge tool' });
+    const where = m.plastic.interpolated ? ` · interpolated at ${Number(m.dMm.toFixed(2))} mm` : '';
+    chips.push({ key: 'band', level: 'info', text: `Band ${m.band.fzMin.toFixed(3)} to ${m.band.fzMax.toFixed(3)} mm/tooth · ${m.contributors.join(', ')}${where}` });
+    return chips;
+  }
   chips.push({ key: 'kc', level: 'info', text: `kc ${Math.round(m.kcUsedNmm2)} N/mm² · ${m.material.replace(/_/g, ' ')}` });
   chips.push({ key: 'band', level: 'info', text: `Band ${m.band.fzMin.toFixed(3)} to ${m.band.fzMax.toFixed(3)} mm/tooth · ${m.contributors.join(', ')}` });
   return chips;

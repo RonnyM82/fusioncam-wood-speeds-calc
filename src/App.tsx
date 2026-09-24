@@ -5,7 +5,7 @@ import { calculateDrilling } from "../js/core/drilling.js";
 import { CalculatorForm } from "./CalculatorForm";
 import { data, dataErrors } from "./data";
 import { chartsView } from "./chart-view.js";
-import { blockingMessage } from "./form-state.js";
+import { blockingMessage, isPlasticPick, MATERIALS } from "./form-state.js";
 import { Results } from "./Results";
 import { resultsView } from "./result-view.js";
 import { useCalculatorState } from "./useCalculatorState";
@@ -80,7 +80,7 @@ function Calculator() {
     <>
       <CalculatorForm state={state} dispatch={dispatch} presets={presets} />
       <Results view={view} charts={charts} holding={holding} />
-      {state.mode === "drill" ? <DrillDefects /> : <RoutDefects />}
+      {state.mode === "drill" ? <DrillDefects /> : <RoutDefects material={state.material} />}
     </>
   );
 }
@@ -89,7 +89,12 @@ function Calculator() {
 // them, each shown in its own mode. They keep the browser's own fold (the
 // plan's rulings); the list inside takes the Prose part, where the old page
 // wrote the design system's prose class on the list itself.
-function RoutDefects() {
+function RoutDefects({ material }: { material: string }) {
+  // The plastic rows are Onsrud's own notes under its plastics tables, shown
+  // only while a plastic is chosen, so the fold reads as before for wood
+  // (2026-09-24).
+  const plastic = isPlasticPick(material);
+  const hard = MATERIALS.find((m) => m.id === material)?.kcMaterial === "hard_plastic";
   return (
     <details className="defects" id="defects-rout">
       <summary>Something looks wrong on the cut?</summary>
@@ -105,6 +110,20 @@ function RoutDefects() {
           <dd>Use an onion skin or tabs. More vacuum does not correct a small footprint.</dd>
           <dt>Torque stall at low rpm.</dt>
           <dd>Increase the rpm into the constant-power range, or reduce the depth and the feed.</dd>
+          {plastic && (
+            <>
+              <dt>Chips weld back onto the cut plastic.</dt>
+              <dd>Increase the feed, or change to a single-edge tool.</dd>
+              {!hard && (
+                <>
+                  <dt>Chips weld back under a down-cut spiral.</dt>
+                  <dd>Cut a slot in the spoilboard so the chips have room to expand.</dd>
+                </>
+              )}
+              <dt>{hard ? "Craters in the cut edge." : "Knife marks on the cut edge."}</dt>
+              <dd>Onsrud names a wrong chip load as the cause. Go back to the served feed and speed.</dd>
+            </>
+          )}
         </dl>
       </Prose>
     </details>

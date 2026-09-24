@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-24b';
+const PAGE_BUILD = '2026-09-24c';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -57,11 +57,13 @@ function adskReady(timeoutMs) {
 
 const NO_ANSWER = 'The add-in did not answer. Stop and re-run the add-in (Utilities > Add-Ins), then reopen this panel.';
 
-// Copied from js/ui/app.js, which is the source of truth for this list. The
-// panel must serve exactly the site's seven materials, with the same ids and
-// the same data mapping, because the two surfaces are one product. OSB is
-// deliberately absent (decision D12): the core still refuses it with the
-// reason if ever asked.
+// Copied from js/ui/app.js, which is the source of truth for the seven wood
+// materials, and from src/form-state.js for the fourteen plastics
+// (2026-09-24). The panel must serve exactly the site's materials, with the
+// same ids and the same data mapping, because the two surfaces are one
+// product. The plastics are offered only with the beta tick on, as on the
+// site (Scott's ruling, 2026-09-24). OSB is deliberately absent (decision
+// D12): the core still refuses it with the reason if ever asked.
 const MATERIALS = [
   { id: 'mdf', label: 'MDF', hint: 'Fibreboard, plain or veneered', data: ['mdf'], kcMaterial: 'mdf' },
   { id: 'melamine', label: 'Melamine / chipboard', hint: 'Melamine-faced or laminated particleboard', data: ['laminated_pb', 'laminated_chipboard'], kcMaterial: 'laminated_pb' },
@@ -70,7 +72,27 @@ const MATERIALS = [
   { id: 'hpl', label: 'HPL-faced panel', hint: 'High-pressure laminate over a board core. If the edge chips, change the tool geometry before the feed.', data: ['hpl'], kcMaterial: 'hpl' },
   { id: 'hardwood', label: 'Hardwood', hint: 'Oak, beech, maple, ash and similar', data: ['hardwood'], kcMaterial: 'hardwood' },
   { id: 'softwood', label: 'Softwood', hint: 'Pine, radiata, spruce', data: ['softwood'], kcMaterial: 'softwood' },
+  ...[
+    ['abs', 'ABS'], ['polycarbonate', 'Polycarbonate'], ['polyethylene', 'Polyethylene'], ['hdpe', 'HDPE'],
+    ['uhmw', 'UHMW'], ['polypropylene', 'Polypropylene'], ['polystyrene', 'Polystyrene / HIPS'], ['petg', 'PETG'],
+    ['acrylic_extruded', 'Acrylic, extruded'],
+  ].map(([id, name]) => plasticPick(id, name, 'soft_plastic')),
+  ...[
+    ['acrylic_cast', 'Acrylic, cast'], ['nylon', 'Nylon'], ['pvc_rigid', 'Rigid PVC'], ['acetal', 'Acetal / Delrin'],
+    ['phenolic', 'Phenolic'],
+  ].map(([id, name]) => plasticPick(id, name, 'hard_plastic')),
 ];
+
+// One plastic pick, as src/form-state.js builds it.
+function plasticPick(id, name, family) {
+  const words = family === 'soft_plastic' ? 'soft plastic' : 'hard plastic';
+  return { id, label: `${name} (${words})`, hint: `Served from Onsrud's ${words} chart.`, data: [family], kcMaterial: family, beta: true };
+}
+
+// The materials the setup picker offers: the plastics only with the beta tick.
+function materialsOffered() {
+  return state.beta ? MATERIALS : MATERIALS.filter((m) => !m.beta);
+}
 
 // The four geometries the user can confirm, in the site's vocabulary
 // (js/ui/app.js TOOL_TYPES ids).
@@ -741,7 +763,7 @@ function renderSettings() {
           <input type="checkbox" id="beta" aria-describedby="beta-hint">
           <span>Use beta tools</span>
         </label>
-        <span class="lt-field__hint" id="beta-hint">Serves the ball nose and the bull nose, for 3D surfacing and carving. Their numbers are new and less proven than the rest; start conservatively.</span>
+        <span class="lt-field__hint" id="beta-hint">Serves the ball nose and the bull nose, for 3D surfacing and carving, and adds soft and hard plastics to the material lists. Their numbers are new and less proven than the rest; start conservatively.</span>
       </div>
     </div>`;
 
@@ -1170,8 +1192,12 @@ function upcutHint(tool) {
 // attribute; data-op carries the real opId.
 // ---------------------------------------------------------------------------
 
+// A plastic remembered for a setup reads as MDF while the beta tick is off,
+// the site's fallback. The stored pick is kept, so ticking beta again
+// brings it back.
 function materialFor(setupId) {
-  return state.materialBySetup[setupId] ?? 'mdf';
+  const id = state.materialBySetup[setupId] ?? 'mdf';
+  return materialsOffered().some((m) => m.id === id) ? id : 'mdf';
 }
 
 function presetById() {
@@ -1183,7 +1209,7 @@ function renderSetups() {
   const sections = state.job.setups.map((setup, si) => {
     const matId = materialFor(setup.setupId);
     const mat = MATERIALS.find((m) => m.id === matId);
-    const options = MATERIALS.map((m) =>
+    const options = materialsOffered().map((m) =>
       `<option value="${m.id}" ${m.id === matId ? 'selected' : ''}>${escapeHtml(m.label)}</option>`).join('');
     const cards = setup.operations.map((op, oi) => opCard(op, setup, si, oi)).join('');
     return `<section class="setup">
