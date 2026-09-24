@@ -97,8 +97,7 @@ main {
 #report-head:empty, #report-live:empty { display: none; }
 
 /* Context row: one line, never wraps. The document name is the only thing
-   allowed to truncate; the snapshot id, the unit note and the button never
-   shrink. */
+   allowed to truncate; the snapshot id and the unit note never shrink. */
 .doc-line {
   display: flex;
   align-items: center;
@@ -121,16 +120,7 @@ main {
   text-overflow: ellipsis;
   color: var(--lt-text-primary);
 }
-.doc-line__meta, .doc-line > .lt-btn { flex: none; }
-.snapshot-fallback { margin-block-start: var(--lt-space-3); }
-
-/* The toast stack is bottom-end by default; the bottom of this page is the
-   sticky action bar, so a receipt would cover the primary action for five
-   seconds. The stack moves to the top end. */
-.lt-toast-stack {
-  inset-block-end: auto;
-  inset-block-start: var(--lt-space-5);
-}
+.doc-line__meta { flex: none; }
 
 .section-note {
   margin: 0 0 var(--lt-space-3);

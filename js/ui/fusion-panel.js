@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-24a';
+const PAGE_BUILD = '2026-09-24b';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -676,9 +676,7 @@ function renderNotices() {
 }
 
 // The context row is one line. Only the document name truncates (the full
-// name rides its title); the snapshot id, the unit note and the Copy
-// snapshot button never shrink. The clipboard fallback field sits under it,
-// hidden until the clipboard refuses.
+// name rides its title); the snapshot id and the unit note never shrink.
 function renderContext() {
   const j = state.job;
   const name = j.documentName ?? 'Unnamed document';
@@ -688,68 +686,7 @@ function renderContext() {
       <span class="doc-line__name" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
       <span class="doc-line__meta">· snapshot ${escapeHtml(j.jobId)} · ${units}</span>
     </p>
-    <button type="button" class="lt-btn lt-btn--ghost" id="copy-snapshot">Copy snapshot</button>
-  </div>
-  <div class="lt-field snapshot-fallback" id="snapshot-fallback" hidden>
-    <label class="lt-field__label" for="snapshot-json">Snapshot JSON</label>
-    <textarea class="lt-textarea" id="snapshot-json" readonly aria-describedby="snapshot-hint"></textarea>
-    <span class="lt-field__hint" id="snapshot-hint">The browser refused the clipboard. Select all the text and copy it.</span>
-    <div class="lt-form-actions"><button type="button" class="lt-btn lt-btn--ghost" id="snapshot-hide">Hide</button></div>
   </div>`;
-  $('copy-snapshot').addEventListener('click', copySnapshot);
-  $('snapshot-hide').addEventListener('click', () => {
-    $('snapshot-fallback').hidden = true;
-    $('copy-snapshot').focus();
-  });
-}
-
-// The snapshot for a bug report: the protocol.md dump format with the memory
-// blobs stripped, so a report can become a test fixture after scrubbing.
-function snapshotJson() {
-  return JSON.stringify({
-    dump: true,
-    capturedAt: new Date().toISOString(),
-    scrubbed: false,
-    pageBuild: PAGE_BUILD,
-    ...state.job,
-    memory: { docBlob: null, userBlob: null },
-  }, null, 2);
-}
-
-// One event, one visual. A successful copy gets a toast, the receipt of an
-// action with nothing on screen to show it. A refused clipboard (no
-// permission, no user activation, or no API at all in the palette browser)
-// gets the fallback field instead, with the JSON selected and focused, and
-// no toast. The two never appear together.
-async function copySnapshot() {
-  const json = snapshotJson();
-  let copied = false;
-  try {
-    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-      await navigator.clipboard.writeText(json);
-      copied = true;
-    }
-  } catch {
-    copied = false;
-  }
-  if (!copied) {
-    showSnapshotFallback(json);
-    return;
-  }
-  $('snapshot-fallback').hidden = true;
-  // The same address the page's script tag loads, query and all, so this is
-  // the module instance already on the page: its toast stack and its live
-  // region, not a second copy of each.
-  const { toast } = await import(`../../components/lt-elements.js?v=${PAGE_BUILD}`);
-  toast('Snapshot copied. Paste it into the bug report.', { variant: 'success' });
-}
-
-function showSnapshotFallback(json) {
-  const area = $('snapshot-json');
-  area.value = json;
-  $('snapshot-fallback').hidden = false;
-  area.focus();
-  area.select();
 }
 
 function renderSettings() {

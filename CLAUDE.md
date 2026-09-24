@@ -107,7 +107,7 @@ address `fusion.html` loads is missing. Every address in `fusion.html` carries
 `?v=<PAGE_BUILD>`, the same string as `PAGE_BUILD` in `js/ui/fusion-panel.js` (a date and a
 letter; test FP15 pins the two equal). Bump both whenever a file the panel loads changes,
 because Fusion's palette browser serves a stale copy of any address whose key did not
-change. Last bumped to `2026-09-24a` for the beta switch.
+change. Last bumped to `2026-09-24b` when the Copy snapshot button was removed.
 
 **The vendored design system is the panel's. Do not edit it.** `tokens/`, `components/`,
 `fonts/` and `icons/` are copies of the vanilla Livetools Design System, and
