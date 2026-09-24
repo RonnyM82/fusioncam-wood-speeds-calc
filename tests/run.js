@@ -1,4 +1,4 @@
-// Runner: node tests/run.js [core|data|scenario|drilling|fusion|form|results]. No framework, no
+// Runner: node tests/run.js [core|data|scenario|drilling|fusion|form|charts|results]. No framework, no
 // dependencies. Also enforces purity: js/core/ and js/fusion/ must never
 // reference fetch or the DOM. The fusion mapping and message modules carry
 // the same fence as the core, because the Fusion panel policy must stay
@@ -49,6 +49,11 @@ if (!which || which === 'fusion') {
 if (!which || which === 'form') {
   if (existsSync(join(here, 'form-state.test.js'))) await import('./form-state.test.js');
   else if (which === 'form') { console.log('FAIL - form-state.test.js missing'); purityErrors++; }
+}
+
+if (!which || which === 'charts') {
+  if (existsSync(join(here, 'charts.test.js'))) await import('./charts.test.js');
+  else if (which === 'charts') { console.log('FAIL - charts.test.js missing'); purityErrors++; }
 }
 
 if (!which || which === 'results') {

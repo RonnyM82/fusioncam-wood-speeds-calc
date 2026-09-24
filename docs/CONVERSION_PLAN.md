@@ -48,6 +48,9 @@ These are Scott's, from 2026-09-24, unless marked as Claude's.
 | How the results announce themselves to a screen reader (settled in step 3) | Claude's, 2026-09-24, carrying out the ruling on the double announcement: `#results` carries no `aria-live`. Each banner is the `Alert` part, which gives a banner mounted after load `role="alert"` (danger, warning) or `role="status"` (success, info), and each is keyed by its words (`src/Results.tsx`), so a banner whose words change is mounted fresh and announces, where one kept from load would change silently. The figures are carried by `announce("Numbers updated.")`, polite, said once the output card's figures have changed and then held still for one second, so typing 22000 key by key says it once; nothing is said at load or when a change leaves the figures as they were. Checked in a browser on 2026-09-24. In the baseline this shows only in the banners' `role`, and only in the two states with clicks: `fallback-drill-family-change-snaps-diameter` (the third and fourth results blocks, two warnings, now `alert`) and `fallback-mode-switch-parks-finishing` (the limit line, now `status`, and the third block, a warning, now `alert`). The states opened from a link have no role on any banner, because the part gives none to what is there at load. |
 | Where step 4 draws the charts (settled in step 3) | Claude's, 2026-09-24: `src/Results.tsx` holds each chart's place with an empty, hidden element marked `data-chart-slot`, where the old page drew it: `ladder` (routing) or `drill-feed` (drilling) as the last thing in `#results`, each with its table twin inside; `cascade` after the badges in `#diagnostics` (the cascade, then its table twin); `drill-speed` as the whole of `#diagnostics` in drilling. Step 4 replaces each slot. `tools/baseline.mjs --no-charts` reads a slot as a chart and leaves charts out of both sides of a comparison. |
 | A titled banner's look (seen in step 3) | Claude's, 2026-09-24: the `Alert` part sets a banner's title at the page's text size and its body smaller, where the old page set both small. So the refusal, the block and the "4 things to check on this cut" titles read one step larger than before; the limit line and the list under the fold are unchanged. The words, the colours and the glyphs are the same. A banner with no title keeps the old small size through an app class on its own paragraph. |
+| How the charts are drawn (settled in step 4) | Claude's, 2026-09-24, carrying out Scott's chart ruling: `src/chart-view.js` is `ladderHtml()`, `drillFeedChart()`, `drillSpeedChart()` and the cascade from `js/ui/app.js` as plain data, the arithmetic unchanged, and `src/Charts.tsx` draws it. Each ladder track is a one-cell grid holding two lanes laid over each other; in each lane an empty spacer sized with `inline-size` to the start percentage pushes the bar (sized with `inline-size`) or the dotted marker along. The cascade fill keeps its absolute placement and takes its length as `inline-size`. The highlight is the app's `chart-emphasis` class, painted from `--wood-chart-mark-emphasis` in `src/app-tokens.css`, which reads `--lt-chart-mark-emphasis`, with `forced-color-adjust: none; background-color: Highlight` re-declared on the app's class. Every bar, fill and marker also carries its percentage as `data-at`, the exact string the code computed, because the browser rounds an `inline-size` to six figures when it writes the attribute back. Checked 2026-09-24: all 96 charts in the baseline match the old page's highlight, positions, names and tables (`tests/charts.test.js` CH1 in Node, `tools/baseline.mjs` in the browser, which also measures each mark where it is painted); the 1280 px screenshots match the old page pixel for pixel in the light scheme, and under forced colours; the design system's paint probe passes on four states at two widths. |
+| Which rows the highlight goes on (seen in step 4) | Claude's, 2026-09-24: on every row that serves, as the old page did. That is one row in the cascade and in both drilling charts, but the ladder highlights every published chart the engine serves from, and in two baseline states that is more than one: two Onsrud charts for a 12.7 mm straight tool in softwood, three for the same tool in MDF. CH2 holds it to the engine's own list of serving charts. |
+| The floating tip, the table fold's gap, and the drill speed chart's heading (settled in step 4) | Claude's, 2026-09-24: the tip is gone, as ruled; each chart is still one Tab stop with the arrow keys, Home and End moving between its rows, and each row keeps its accessible name (checked key for key against the old page). The space between a table fold's summary and its table was a margin on the design system's table wrapper, and is now on the open fold's own summary, the same size. The drill speed chart's heading keeps the extra space above it that the old page gave it by accident of its CSS (the section heading rule outranked the chart heading rule on its id), so the chart draws where it did. The "Something looks wrong" folds and the footer are word for word the old page's, the list and the footer in the `Prose` part, the link the `Link` part; both match the old page pixel for pixel in the light scheme. |
 
 ## How the work is run
 
@@ -78,8 +81,30 @@ its current behaviour is recorded separately and marked as not a target.
 
 ## What is not settled yet
 
-- Whether the table part's row-header release lets a long chart name wrap in the first
-  column (survey, section 2, row 26). The first build session checks it.
+- The table part's row-header release does NOT let a long chart name wrap (checked in step
+  4, 2026-09-24; survey, section 2, row 26). The release rule
+  (`.lt-table tbody .lt-table__rowheader`) writes `white-space: nowrap`, so the chart
+  names stay on one line and the table under the chart ladder is 765 px wide in a 602 px
+  box at every page width: it scrolls sideways, and the part makes its box a Tab stop
+  while it does. The old page wrapped the names and never scrolled at 900 px or wider.
+  Nothing is lost, but reading a row now means scrolling. It is an upstream request to
+  the design system (a way for a table to let its row headers wrap), not an app rule
+  reaching into the part, so the app does nothing about it.
+- Two things the Table part changes in the tables under the charts, both seen in step 4's
+  full comparison and both waiting for Scott before any re-capture of the baseline: the
+  chart and limit names in the first column are in their own case where the old page
+  uppercased them (the part does it on purpose, its D58), and the hidden caption is gone
+  (the part names the table with `aria-label` instead), so the caption's line is no
+  longer in the section's read text. `tests/baseline/README.md` has the whole result.
+- Holding each banner's re-mount to the same one-second settle as "Numbers updated."
+  cannot be done with the `Alert` part as it is (step 4, 2026-09-24, so not attempted). A
+  banner mounted after load is a live region (Chromium's accessibility tree reports
+  `live: assertive` or `polite`, `atomic: true`, `relevant: additions text`), so a
+  banner kept mounted while its words change live is announced on every change, the same
+  as a re-mount; only holding back the displayed words would stop it, and the displayed
+  words must never wait. It needs the design system: a way for an `Alert` to stay quiet
+  so the app can say its words once, through `announce()`, when the result has settled.
+  Until then the banners stay as step 3 left them, keyed by their words.
 - Whether the design system's publish workflow succeeds on its first real run, which has
   never happened (survey, section 6). Found out at step 6.
 - The build depends on the design-system checkout beside this one until step 6. Found in

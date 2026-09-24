@@ -8,17 +8,13 @@
 // description list with app CSS, because no part lines a column of feedrates
 // up on the right with the imperial figure under each (the survey, row 21).
 //
-// THE CHARTS ARE STEP 4. Their places are held by three empty, hidden
-// elements, each marked data-chart-slot, where the old page drew them:
-//   - data-chart-slot="ladder" (routing) or "drill-feed" (drilling), the last
-//     thing in #results: app.js's ladderHtml() or drillFeedChart(), each with
-//     its table twin inside it;
-//   - data-chart-slot="cascade" (routing), after the badges in #diagnostics:
-//     the capacity cascade and, after it, its table twin;
-//   - data-chart-slot="drill-speed" (drilling), the whole of #diagnostics:
-//     drillSpeedChart() with its table twin.
-// Step 4 replaces each slot with its chart. They are hidden so that an empty
-// one takes no gap in the results area's grid.
+// THE CHARTS (step 4, 2026-09-24) are drawn by src/Charts.tsx from what
+// src/chart-view.js builds, where the old page drew them:
+//   - the chart ladder (routing) or the published feed range chart
+//     (drilling), the last thing in #results, each with its table inside it;
+//   - the capacity cascade (routing), after the badges in #diagnostics, and
+//     after it its table;
+//   - the drill speed chart (drilling), the whole of #diagnostics.
 //
 // SCREEN READERS (the plan's rulings, settled for this step on 2026-09-24).
 // The results area carries no live region. Each banner announces itself: the
@@ -33,6 +29,8 @@
 // the figures as they were.
 import { useEffect, useRef, type ReactNode } from "react";
 import { Alert, Badge, Row, announce } from "@livetools/ui";
+import type { ChartsView } from "./chart-view.js";
+import { CascadeChart, LadderChart } from "./Charts";
 import { figuresOf, type Banner, type ResultsView } from "./result-view.js";
 
 /** How long the figures must stay still before "Numbers updated." is said. */
@@ -41,11 +39,13 @@ const SETTLE_MS = 1000;
 type Props = {
   /** What to show, or null while a box holds the results back. */
   view: ResultsView | null;
+  /** The charts for the same result, or null when it shows none. */
+  charts: ChartsView | null;
   /** The blocking message while a box holds the results back. */
   holding: string | null;
 };
 
-export function Results({ view, holding }: Props) {
+export function Results({ view, charts, holding }: Props) {
   useNumbersUpdated(figuresOf(view));
 
   return (
@@ -87,14 +87,15 @@ export function Results({ view, holding }: Props) {
                 </ul>
               </div>
             )}
-            <div hidden data-chart-slot={view.drilling ? "drill-feed" : "ladder"} />
+            {charts?.drilling === true && <LadderChart chart={charts.drillFeed} />}
+            {charts?.drilling === false && charts.ladder !== null && <LadderChart chart={charts.ladder} />}
           </>
         ) : null}
       </section>
       <section id="diagnostics" className="diagnostics">
         {view?.kind === "figures" &&
           (view.chips === null ? (
-            <div hidden data-chart-slot="drill-speed" />
+            charts?.drilling === true && <LadderChart chart={charts.drillSpeed} />
           ) : (
             <>
               <h2>What is going on in this cut</h2>
@@ -105,7 +106,7 @@ export function Results({ view, holding }: Props) {
                   </Badge>
                 ))}
               </Row>
-              <div hidden data-chart-slot="cascade" />
+              {charts?.drilling === false && <CascadeChart chart={charts.cascade} />}
             </>
           ))}
       </section>

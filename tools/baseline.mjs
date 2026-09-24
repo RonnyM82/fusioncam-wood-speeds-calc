@@ -41,7 +41,13 @@
 //     between this server, vite preview and the live site; the query is what a
 //     shared link carries.
 //   - Positions are the strings the code wrote into the style attribute, with
-//     the property name and the % sign taken off. Nothing is re-rounded.
+//     the property name and the % sign taken off. Nothing is re-rounded. The
+//     React page (step 4, 2026-09-24) writes its lengths as inline-size, which
+//     the browser rounds when it writes the attribute back, so there the exact
+//     string is read from data-at beside it and checked against the
+//     inline-size (exact() in readPage). On both pages every bar, fill and
+//     marker is also measured where it is painted and must sit within half a
+//     pixel of its percentage of its track, or the read fails.
 
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
@@ -181,6 +187,54 @@ function readPage() {
     return m ? m[1].trim().replace(/%$/, '') : null;
   };
 
+  // THE CHARTS' POSITIONS on either page (step 4 of the conversion,
+  // 2026-09-24). The old page wrote each bar's start and width and each
+  // marker's place into the style attribute as left and width, and the string
+  // it wrote is read as it was written. The React page cannot write left
+  // inline, so it places each bar and marker after an empty spacer
+  // (.chart-spacer) sized with inline-size, and sizes the bar and the cascade
+  // fill with inline-size. The browser writes an inline-size back into the
+  // style attribute rounded to six significant figures, where the code
+  // computed an unrounded number (the cascade's 7.235834287500001), so the
+  // React page also writes the exact string as data-at, and that is what is
+  // recorded; exact() fails the read if the inline-size the browser holds is
+  // not that number to its six figures. Either way the JSON carries the
+  // number the code computed, in the same field.
+  const exact = (el) => {
+    const at = el.getAttribute('data-at');
+    const styled = styleNum(el, 'inline-size');
+    if (at === null || styled === null) throw new Error(`a chart length has no data-at or no inline-size: ${el.outerHTML.slice(0, 120)}`);
+    const a = Number(at);
+    const b = Number(styled);
+    if (!(Math.abs(a - b) <= 1e-5 * Math.max(1, Math.abs(a)))) {
+      throw new Error(`a chart length is drawn at ${styled}% where the code computed ${at}%`);
+    }
+    return at;
+  };
+  // The spacer in front of a bar or a marker on the React page, or null.
+  const lead = (el) => (el && el.previousElementSibling && el.previousElementSibling.matches('.chart-spacer')
+    ? el.previousElementSibling : null);
+  const startOf = (el) => (lead(el) ? exact(lead(el)) : styleNum(el, 'left'));
+  const widthOf = (el) => (el && el.hasAttribute('data-at') ? exact(el) : styleNum(el, 'width'));
+  // And the paint: wherever the percentage came from, the mark must be drawn
+  // there. Its left edge (and, given a width, its width) is measured against
+  // the track it sits in and must land within half a pixel of that percentage
+  // of the track's width. This adds nothing to the JSON; a mark drawn
+  // anywhere else fails the read, on either page.
+  const drawnAt = (el, track, start, width) => {
+    if (!el || !track || start === null) return;
+    const t = track.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    const off = [Math.abs(r.left - (t.left + (Number(start) / 100) * t.width))];
+    if (width !== null) off.push(Math.abs(r.width - (Number(width) / 100) * t.width));
+    if (off.some((d) => !(d <= 0.5))) {
+      throw new Error(`a chart mark is drawn ${off.map((d) => d.toFixed(2)).join(' px and ')} px away from where ${start}% (width ${width}%) puts it`);
+    }
+  };
+  // The highlight: the design system's class on the old page, the app's own
+  // on the React page (the plan's chart ruling).
+  const emphasised = (el) => !!el && (el.classList.contains('lt-chart-emphasis') || el.classList.contains('chart-emphasis'));
+
   // Open every fold first, so what is read is rendered text.
   for (const d of $$('#results details, #diagnostics details, details#advanced')) d.open = true;
 
@@ -198,7 +252,11 @@ function readPage() {
   const table = (el) => ({
     role: 'table',
     summary: text($('summary', el)),
-    caption: text($('caption', el)),
+    // The table's name. The old page named it with a visually hidden
+    // caption; the Table part takes no caption and names its table with
+    // aria-label from its label (React Aria drops a caption, the part's
+    // header says), so on the React page the name is read from there.
+    caption: $('caption', el) ? text($('caption', el)) : ($('table', el) ? $('table', el).getAttribute('aria-label') : null),
     headers: $$('thead th', el).map(text),
     rows: $$('tbody tr', el).map((tr) => [...tr.children].map((c) => ({
       header: c.tagName === 'TH', text: text(c),
@@ -209,15 +267,21 @@ function readPage() {
     const rows = $$('.ladder-row', el).map((r) => {
       const bar = $('.ladder-bar', r);
       const mark = $('.ladder-mark', r);
+      const track = $('.ladder-track', r);
+      const barLeft = bar ? startOf(bar) : null;
+      const barWidth = widthOf(bar);
+      const marker = mark ? startOf(mark) : null;
+      drawnAt(bar, track, barLeft, barWidth);
+      drawnAt(mark, track, marker, null);
       return {
         label: text($('.ladder-label', r)),
         tag: text($('.ladder-tag', r)),
         value: text($('.ladder-range', r)),
-        emphasis: !!bar && bar.classList.contains('lt-chart-emphasis'),
+        emphasis: emphasised(bar),
         serving: r.classList.contains('is-serving'),
-        barLeft: styleNum(bar, 'left'),
-        barWidth: styleNum(bar, 'width'),
-        marker: styleNum(mark, 'left'),
+        barLeft,
+        barWidth,
+        marker,
         name: r.getAttribute('aria-label'),
       };
     });
@@ -237,14 +301,16 @@ function readPage() {
     const rows = $$('.casc-row', el).map((r) => {
       const fill = $('.casc-fill', r);
       const val = $('.casc-val', r);
+      const fillWidth = widthOf(fill);
+      drawnAt(fill, $('.casc-bar', r), fill ? '0' : null, fillWidth);
       return {
         label: text($('.casc-label', r)),
         metric: val && val.firstChild && val.firstChild.nodeType === 3 ? val.firstChild.textContent : null,
         imperial: text($('.imperial', val || r)),
-        emphasis: !!fill && fill.classList.contains('lt-chart-emphasis'),
+        emphasis: emphasised(fill),
         binds: r.classList.contains('is-bind'),
         farAbove: r.classList.contains('na'),
-        fillWidth: styleNum(fill, 'width'),
+        fillWidth,
         name: r.getAttribute('aria-label'),
       };
     });

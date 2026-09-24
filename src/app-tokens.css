@@ -1,4 +1,18 @@
 /* The public page's own tokens, loaded between the design system and app.css.
-   Empty for now. The chart emphasis alias arrives with the charts (step 4 of
-   docs/CONVERSION_PLAN.md). The app-tokens.css at the repo root is the Fusion
-   panel's and stays with it. */
+   The app-tokens.css at the repo root is the Fusion panel's and stays with it.
+
+   THE CHART HIGHLIGHT (step 4 of docs/CONVERSION_PLAN.md, 2026-09-24, Scott's
+   chart ruling). The calculator draws its charts itself and writes no
+   design-system class, so the highlighted bar cannot carry the system's own
+   emphasis class. It is painted from this token instead, which reads the
+   system's chart emphasis colour and adds nothing of its own: when the system
+   changes that colour, the calculator follows. The app's own prefix, not
+   --lt-, so it can never shadow a token the system adds later.
+
+   Declared on :root, where the system declares its chart tokens and nowhere
+   else (no scheme, theme or surface re-declares them; checked 2026-09-24 in
+   tokens/lt-tokens.css), so it resolves to the colour the system's own class
+   would paint. */
+:root {
+  --wood-chart-mark-emphasis: var(--lt-chart-mark-emphasis);
+}

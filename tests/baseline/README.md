@@ -96,6 +96,44 @@ compared exactly as in a full comparison. A non-chart block after a chart, or a 
 that cannot be found, fails the state instead of cutting it. Run against `legacy.html` it
 still reproduces all 52 files.
 
+The charts (step 4 of the conversion, 2026-09-24). The React page draws its charts with
+its own markup, so the reader reads them from either page into the same JSON:
+
+- **The highlight** is the design system's `lt-chart-emphasis` class on the old page and
+  the app's own `chart-emphasis` on the React page.
+- **Positions.** The React page cannot write an inline `left`, so each bar and marker sits
+  after an empty spacer (`.chart-spacer`) sized with `inline-size`, and each bar and
+  cascade fill is sized with `inline-size`. The browser writes an `inline-size` back into
+  the style attribute rounded to six significant figures (`7.23583%` for the cascade's
+  `7.235834287500001`), so the React page also writes the exact string the code computed
+  as `data-at`, and that is what is recorded. The read fails if the `inline-size` the
+  browser holds is not that number to its six figures.
+- **The paint.** On both pages every bar, fill and marker is measured where it is drawn,
+  and its left edge (and width) must land within half a pixel of its percentage of its
+  track, or the read fails. This adds nothing to the JSON. Run against `legacy.html` with
+  it, all 52 files are still reproduced.
+- **A table's name.** The old page named each table with a visually hidden caption. The
+  design system's Table part takes no caption and names its table with `aria-label`, so on
+  the React page the `caption` field is read from there. The caption's line in the
+  section's whole text has no counterpart on the React page: see the next paragraph.
+
+What a full comparison against `vite preview` showed on 2026-09-24, step 4: 48 of the 52
+states differ and 4 (the refusals and the blocks) are the same. Every chart in every state
+matched exactly: the 96 charts' highlighted rows, all 1,322 bar starts, bar widths,
+markers and fills, every row's words and accessible name, every legend and every table
+cell's words. The differences are four kinds and nothing else (checked by reading every
+difference, not the first twelve the tool prints per state):
+
+1. In the tables under the charts, the first column (the chart name, the limit) is in its
+   own case, where the old page uppercased it: `Onsrud 60-100MW`, was `ONSRUD 60-100MW`.
+   The design system's Table part does this on purpose (its D58: uppercasing is lossy on
+   a symbol, and "Ra 0.8 µm" painted as "RA 0.8 ΜM"). 48 states. Needs Scott's ruling
+   before any re-capture.
+2. The section's whole text no longer has the hidden caption's line under each table's
+   summary, for the same reason as the caption field above. 48 states, same ruling.
+3. The advanced fields on a drilling link, the ruled difference from step 2. 15 states.
+4. The banners' `role` in the two states with clicks, the ruled difference from step 3.
+
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts
 `tools/serve.js` itself and stops it afterwards. A full run takes under a minute.

@@ -142,3 +142,210 @@ header h1 {
    the size is set here, on this class. A titled banner's title is the
    part's, at the part's size (a visible difference, reported in step 3). */
 .banner-text { font-size: var(--lt-text-sm); }
+
+/* THE CHARTS ARE BESPOKE ON PURPOSE (Scott's chart ruling, 2026-09-24: the
+   calculator draws them itself, with its own class names, until the design
+   system has chart parts). The capacity cascade and the chip-load ladder are
+   bar and range visualisations; the two drilling charts use the ladder's
+   classes. The rules arrive from ../styles.css unchanged except where marked
+   CHANGED. They read the system's chart tokens (the track, the marks and the
+   emphasis colour), whose measurements live in the token file.
+
+   Both are EMPHASIS charts: grey the rest, highlight the one that matters.
+   Neither cycles hues, and neither leans on colour alone: the serving and
+   binding rows carry bold weight too.
+
+   CHANGED: the highlighted bar carries .chart-emphasis, the app's own class,
+   which owns its paint: the emphasis colour normally, Highlight in forced
+   colours, where every other fill collapses to one tone. The old page wrote
+   the design system's .lt-chart-emphasis; an app writes no lt- class now, so
+   the paint and its forced-colours rule are re-declared on the app's class
+   (the survey, section 2, row 24). The neutral rules step aside by name with
+   :not(), so a plain fill cannot beat the emphasis on source order.
+
+   Neither uses opacity to separate a live mark from a context one. An opacity
+   cannot be contrast-checked and is discarded under forced colours, so the
+   difference is carried by two different tokens.
+
+   Marks follow the fixed specs: capped thin bars, a rounded data end with the
+   baseline end left square, a surface gap between touching bars, and a
+   hairline recessive track. No border is ever drawn around a mark. */
+.chart-emphasis { background-color: var(--wood-chart-mark-emphasis); }
+@media (forced-colors: active) {
+  /* The emphasised mark keeps its emphasis where colour is gone. Highlight is
+     the one tone forced colours reserves for "this is the one" (the design
+     system's own rule on its emphasis class, re-declared on the app's). */
+  .chart-emphasis { forced-color-adjust: none; background-color: Highlight; }
+}
+
+.cascade { margin-top: var(--lt-space-4); }
+.casc-row {
+  display: flex;
+  align-items: center;
+  gap: var(--lt-space-3);
+  /* half the 2px surface gap on each side of a touching neighbour */
+  padding-block: 1px;
+  min-block-size: var(--lt-target-min);
+  font-size: var(--lt-text-sm);
+}
+.casc-label { flex: 0 1 7rem; min-width: 0; }
+/* Both charts run the same geometry: a 16px track carrying a 12px mark, so
+   the leftover band is air rather than more ink. */
+.casc-bar {
+  position: relative;
+  flex: 1 1 3rem;
+  min-width: 2rem;
+  block-size: var(--lt-space-5);
+  background: var(--lt-chart-track);
+  border-radius: var(--lt-radius-sm);
+}
+/* Square at the baseline it grows from, rounded at the data end. CHANGED: its
+   length is the inline-size the page writes, where the old page wrote width
+   (the same length in this writing mode). */
+.casc-fill {
+  position: absolute;
+  inset-block: var(--lt-space-1);
+  inset-inline-start: 0;
+  border-start-end-radius: var(--lt-radius-md);
+  border-end-end-radius: var(--lt-radius-md);
+}
+.casc-fill:not(.chart-emphasis) { background: var(--lt-chart-mark); }
+.casc-row.is-bind { font-weight: var(--lt-weight-bold); }
+/* A cap so far above the served feed that it cannot bind. Dimmed with a real
+   ink token rather than opacity: at 0.45 the label dropped under the contrast
+   floor and nothing could measure it. */
+.casc-row.na { color: var(--lt-text-placeholder); }
+.casc-row.na .casc-fill { background: var(--lt-chart-mark-context); }
+.casc-val { flex: 0 1 auto; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.ladder {
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  padding: var(--lt-space-4) var(--lt-space-5);
+  margin: var(--lt-space-4) 0;
+}
+.ladder-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--lt-space-3); }
+.ladder-head h2 { margin: 0 0 var(--lt-space-3); font-size: var(--lt-text-lg); line-height: var(--lt-leading-lg); }
+/* On the old page the section's `#diagnostics h2` rule outranked the one
+   above on its id, so the drill speed chart's heading, the one chart heading
+   in that section, took the section heading's top margin. Carried across so
+   the chart draws as it did (seen in the step 4 screenshots, 2026-09-24). */
+.diagnostics .ladder-head h2 { margin-block-start: var(--lt-space-6); }
+.ladder-units { font-size: var(--lt-text-xs); color: var(--lt-text-secondary); white-space: nowrap; }
+.ladder-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 15rem) 1fr auto;
+  gap: var(--lt-space-1) var(--lt-space-3);
+  align-items: center;
+  padding: var(--lt-space-1) 0;
+  font-size: var(--lt-text-xs);
+}
+.ladder-label { color: var(--lt-text-secondary); line-height: var(--lt-leading-xs); overflow-wrap: break-word; }
+.ladder-row.is-serving .ladder-label { color: var(--lt-text-primary); font-weight: var(--lt-weight-bold); }
+.ladder-tag {
+  font-style: normal;
+  font-size: var(--lt-text-2xs);
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-pill);
+  padding: 0 var(--lt-space-2);
+  color: var(--lt-text-secondary);
+  white-space: nowrap;
+}
+/* CHANGED: the placement. The old track positioned its bar and its marker
+   absolutely, with an inline left, which the lint refuses. Here the track is
+   a one-cell grid holding two lanes laid over each other, and in each lane an
+   empty spacer sized to the start percentage pushes the bar, or the marker,
+   along; the only inline geometry is inline-size. Nothing in a lane shrinks
+   or grows, or a percentage would stop meaning a percentage of the track: a
+   bar that starts at 100% and is 0.8% wide overhangs the track's end, exactly
+   as the absolutely placed bar did. */
+.ladder-track {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  block-size: var(--lt-space-5);
+  background: var(--lt-chart-track);
+  border-radius: var(--lt-radius-sm);
+}
+.ladder-lane {
+  grid-area: 1 / 1;
+  display: flex;
+  min-inline-size: 0;
+  /* the old bar's top and bottom insets */
+  padding-block: var(--lt-space-1);
+}
+.ladder-lane--mark { padding-block: 0; }
+.chart-spacer, .ladder-bar, .ladder-mark { flex: none; }
+/* A range bar, so BOTH ends are data ends and both round. */
+.ladder-bar { border-radius: var(--lt-radius-md); }
+.ladder-bar:not(.chart-emphasis) { background: var(--lt-chart-mark-context); }
+/* The served feed per tooth, marked in every row against the shared scale.
+   Dotted stays: this is a threshold reference line, which is the one case the
+   anti-pattern on dashed rules explicitly carves out. It is not a grid. Its
+   left edge sits where its spacer ends, where the old one's left put it. */
+.ladder-mark {
+  width: 0;
+  border-left: var(--lt-border-width-medium) dotted var(--lt-chart-mark-context);
+}
+.ladder-row.is-serving .ladder-mark { border-left-color: var(--lt-text-primary); }
+.ladder-range {
+  color: var(--lt-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: var(--lt-text-2xs);
+}
+.ladder-legend { margin: var(--lt-space-3) 0 0; font-size: var(--lt-text-xs); color: var(--lt-text-secondary); }
+
+/* Each chart is one tab stop with a roving tabindex, so the focus ring lands
+   on a row and the arrow keys walk the rest. The hovered or focused row lifts
+   with a ring in the surface colour rather than a border drawn on the mark,
+   which would add ink that is not data. The old page's floating tip is
+   dropped (the plan's rulings), and its rules with it. */
+.casc-row, .ladder-row {
+  border-radius: var(--lt-radius-sm);
+  outline-offset: calc(var(--lt-border-width-medium) * -1);
+}
+.casc-row:hover, .ladder-row:hover {
+  background: var(--lt-chart-track);
+}
+.casc-row:focus-visible, .ladder-row:focus-visible {
+  outline: var(--lt-focus-ring-width) solid var(--lt-focus-ring-color);
+  outline-offset: var(--lt-focus-ring-gap);
+}
+.ladder-row { min-block-size: var(--lt-target-min); }
+
+/* The table under each chart. CHANGED: the gap between the fold's summary
+   and the table was a margin on the design system's table wrapper, inside a
+   part the app no longer reaches into; it is the open fold's own summary's
+   now, the same space-3 (the survey, section 5). */
+.table-twin { margin-top: var(--lt-space-4); }
+.table-twin > summary {
+  cursor: pointer;
+  font-size: var(--lt-text-xs);
+  font-weight: var(--lt-weight-semibold);
+  color: var(--lt-text-secondary);
+}
+.table-twin[open] > summary { margin-block-end: var(--lt-space-3); }
+@media (max-width: 480px) {
+  .ladder-row { grid-template-columns: 1fr auto; }
+  .ladder-label { grid-column: 1 / -1; }
+}
+
+/* The two "Something looks wrong" folds, padded like every bounded block on
+   the panel, as the Advanced fold is (styles.css gave the two one rule). */
+.defects {
+  margin: var(--lt-space-5) 0;
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+  padding: var(--lt-space-4) var(--lt-space-5);
+}
+.defects > summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
+.defects dt { font-weight: var(--lt-weight-semibold); margin-top: var(--lt-space-3); }
+.defects dd { margin: 0 0 var(--lt-space-2); color: var(--lt-text-secondary); }
+
+/* The footer's type, on the app's class on the Prose part. On the old page
+   this was a rule on the footer, which carried the design system's prose
+   class itself; the app's rule set the smaller size over the prose class's
+   own, and so does this one (the package stylesheet is layered, the app's
+   is not). */
+.page-footer { margin: var(--lt-space-8) 0 var(--lt-space-5); font-size: var(--lt-text-sm); color: var(--lt-text-secondary); }
