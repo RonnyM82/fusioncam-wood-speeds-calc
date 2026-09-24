@@ -9,7 +9,7 @@ behaviour regression is worse than any styling gap.
 `index.html` and `src/` are the new React page, built with Vite, and the page
 this file describes is `legacy.html`, the old `index.html` renamed with not a
 byte changed. `npm run check` runs the lint, the type check, the build, the
-201 tests and conformance. `smoke-measure.py` and `tools/baseline.mjs` load
+209 tests (201 before step 2 added the form state's eight) and conformance. `smoke-measure.py` and `tools/baseline.mjs` load
 `legacy.html` by default. `main` is still the live site, unchanged.
 
 ## The design system is vendored. Do not edit it.

@@ -5,6 +5,8 @@
 //   node tools/baseline.mjs --base http://localhost:4173/ --compare
 //   node tools/baseline.mjs --out <dir>             capture somewhere else
 //   node tools/baseline.mjs --only name,name        a subset of the states
+//   node tools/baseline.mjs --compare --sections url,form   compare only these parts
+//   node tools/baseline.mjs --compare --url-only    the same as --sections url
 //
 // Written 2026-09-24 as step 0 of the React conversion (docs/CONVERSION_SURVEY.md,
 // sections 8 and 9). The conversion is judged by reproducing these files at zero
@@ -63,6 +65,25 @@ const compare = args.includes('--compare');
 const baseArg = opt('--base');
 const outDir = resolve(opt('--out') ?? join(repo, 'tests', 'baseline'));
 const only = opt('--only')?.split(',').map((s) => s.trim()).filter(Boolean);
+// --sections compares only the named top-level parts of each file (url, form,
+// results, diagnostics), for a converted page that has not rebuilt the rest
+// yet: step 2 of the conversion (2026-09-24) built the form and the address
+// but not the results, so it is held to `url` and `form` alone. The parts
+// named are compared whole and exactly as in a full comparison; the rest are
+// not read. It only narrows a comparison, so it needs --compare.
+const SECTIONS = ['url', 'form', 'results', 'diagnostics'];
+const sections = args.includes('--url-only') ? ['url'] : opt('--sections')?.split(',').map((s) => s.trim()).filter(Boolean);
+if (sections) {
+  const unknown = sections.filter((s) => !SECTIONS.includes(s));
+  if (unknown.length || !sections.length) {
+    console.error(`baseline: --sections takes some of ${SECTIONS.join(', ')}; got ${sections.join(', ') || 'nothing'}`);
+    process.exit(2);
+  }
+  if (!compare) {
+    console.error('baseline: --sections and --url-only narrow a comparison, so they need --compare. Nothing was captured.');
+    process.exit(2);
+  }
+}
 const baselineDir = join(repo, 'tests', 'baseline');
 
 // ---------------------------------------------------------------------------
@@ -261,10 +282,27 @@ function readPage() {
   // advanced hints that quote the data), and so does risk 2: the machine max
   // feed shows in m/min.
   const painted = (el) => el.checkVisibility();
-  const fields = $$('#inputs .lt-field').filter(painted).map((f) => {
+  // Each kind of field is found in both pages' markup: the old page's native
+  // controls and <lt-number-field>, and the React parts (2026-09-24, step 2).
+  // The JSON is the same shape for both, and must be the same text:
+  //   - A React Select is a button face; its chosen option is the face's
+  //     current chip, and its options are the face's hidden sizing copies
+  //     of every option (read with textContent, because they are not painted).
+  //   - A React checkbox is an element with role="checkbox".
+  //   - A React tool picker is the card-layout radio group, whose label is
+  //     the field label where the old page had a fieldset legend. It is read
+  //     into toolPicker, as the old fieldset was, and not into fields.
+  //   - aria-invalid: the old field always wrote "false" or "true"; the React
+  //     field writes it only when wrong. An absent aria-invalid means false
+  //     (WAI-ARIA), so it is read as "false".
+  const toolGrid = $('#inputs .lt-choice-grid');
+  const toolField = toolGrid ? toolGrid.closest('.lt-field') : null;
+  const fields = $$('#inputs .lt-field').filter(painted).filter((f) => f !== toolField).map((f) => {
     const group = $('[role="radiogroup"]', f);
-    const check = $('.lt-check input', f);
+    const check = $('.lt-check input[type="checkbox"]', f);
+    const reactCheck = $('[role="checkbox"]', f);
     const select = $('select', f);
+    const face = $('.lt-status-select__face', f);
     const input = $('input.lt-input', f);
     const affix = $('.lt-affix', f);
     const msg = $('.lt-field__error, .lt-field__warning', f);
@@ -275,20 +313,31 @@ function readPage() {
     } else if (check) {
       out.checkLabel = text(check.closest('.lt-check'));
       out.checked = check.checked;
+    } else if (reactCheck) {
+      out.checkLabel = text(reactCheck.closest('.lt-check'));
+      out.checked = reactCheck.getAttribute('aria-checked') === 'true';
     } else if (select) {
       out.shows = select.selectedOptions[0] ? select.selectedOptions[0].text : null;
       out.options = [...select.options].map((o) => o.text);
+    } else if (face) {
+      const current = $('.lt-status-select__current', face);
+      out.shows = current && current.textContent !== '' ? current.textContent : null;
+      out.options = $$('[data-ghost]', face).map((g) => g.textContent);
     } else if (input) {
       out.shows = input.value;
       out.unit = affix && painted(affix) ? text(affix) : null;
-      out.invalid = input.getAttribute('aria-invalid');
+      out.invalid = input.getAttribute('aria-invalid') ?? 'false';
     }
     out.hint = text($('.lt-field__hint', f));
     out.message = text(msg);
     return out;
   });
   const legend = $('#inputs fieldset legend');
-  const toolPicker = {
+  const toolPicker = toolField ? {
+    legend: text($('.lt-field__label', toolField)),
+    options: $$('.lt-choice-card', toolGrid).map(text),
+    chosen: $$('.lt-choice-card', toolGrid).filter((c) => $('[role="radio"][aria-checked="true"]', c)).map(text),
+  } : {
     legend: text(legend),
     options: $$('#inputs fieldset input[type="radio"]').map((r) => text(r.closest('label'))),
     chosen: $$('#inputs fieldset input[type="radio"]').filter((r) => r.checked).map((r) => text(r.closest('label'))),
@@ -428,6 +477,7 @@ console.log(`baseline: Playwright from ${from}`);
 const server = baseArg ? null : await startServer();
 const base = baseArg ?? server.base;
 console.log(`baseline: page at ${base}`);
+if (sections) console.log(`baseline: comparing only ${sections.join(', ')}`);
 
 const browser = await playwright.chromium.launch();
 let failed = 0;
@@ -445,7 +495,12 @@ try {
     }
     if (compare) {
       const path = join(baselineDir, file);
-      const want = existsSync(path) ? readFileSync(path, 'utf8') : null;
+      let want = existsSync(path) ? readFileSync(path, 'utf8') : null;
+      if (sections && want !== null) {
+        const pick = (json) => serialise(Object.fromEntries(sections.map((k) => [k, JSON.parse(json)[k]])));
+        want = pick(want);
+        body = pick(body);
+      }
       if (want === body) {
         console.log(`  same   ${st.name}`);
       } else {

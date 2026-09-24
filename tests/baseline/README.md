@@ -65,6 +65,8 @@ node tools/baseline.mjs --compare                    # this checkout's legacy.ht
 node tools/baseline.mjs --compare --base http://localhost:4173/     # vite preview
 node tools/baseline.mjs --compare --base https://wood.fusioncam.co/ # the live site
 node tools/baseline.mjs --compare --only drill-bank-on-hinge-35     # one state
+node tools/baseline.mjs --compare --base http://localhost:4173/ --sections url,form  # some parts only
+node tools/baseline.mjs --compare --base http://localhost:4173/ --url-only           # the address only
 node tools/baseline.mjs --out some/dir               # capture somewhere else
 node tools/baseline.mjs                              # RE-CAPTURE into this folder
 ```
@@ -73,6 +75,14 @@ Since step 1 of the conversion (2026-09-24) the page before the conversion is
 `legacy.html`, the old `index.html` renamed with not a byte changed, and `index.html` is
 the React page. Without `--base` the tool loads `legacy.html`; to reach it on a server
 you started yourself, pass `--base http://localhost:<port>/legacy.html`.
+
+`--sections` (added in step 2 of the conversion, 2026-09-24) compares only the named parts
+of each file, from `url`, `form`, `results` and `diagnostics`, for a converted page that has
+not rebuilt the rest yet; `--url-only` is `--sections url`. The parts named are compared whole,
+exactly as in a full comparison. The reader in `tools/baseline.mjs` reads the form from either
+page's markup into the same JSON: the React select's face, its checkbox role and its card-layout
+tool picker, and an absent `aria-invalid` read as `"false"`. Run against `legacy.html` after
+that change it still reproduced all 52 files.
 
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts

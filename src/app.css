@@ -40,3 +40,26 @@ header h1 {
   border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
   border-radius: var(--lt-radius-lg);
 }
+
+.tagline {
+  color: var(--lt-text-secondary);
+  margin-top: 0;
+  font-size: var(--lt-text-base);
+  line-height: var(--lt-leading-base);
+}
+
+/* The Advanced fold. Every bounded block on the panel pads the same: space-4
+   block, space-5 inline (styles.css, carried across unchanged). */
+.advanced {
+  margin: var(--lt-space-5) 0;
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+  padding: var(--lt-space-4) var(--lt-space-5);
+}
+.advanced > summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
+.advanced-fields { margin-top: var(--lt-space-4); }
+
+/* The results area spaces its blocks; the parts carry no outer margin of
+   their own. */
+.results { display: grid; gap: var(--lt-space-4); margin-block: var(--lt-space-5); }
