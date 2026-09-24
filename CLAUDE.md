@@ -109,6 +109,21 @@ hex: a border token used as a fill passes every check and is still wrong.
 
 ## TODO
 
+- **Three 3D surfacing calls waiting for Scott (from research session 6,
+  deferred by him on 2026-09-24 to when surfacing is next worked on).** Put
+  each to him in plain words with the evidence in
+  `research/research-session-6-ball-surfacing.md`:
+  1. Whether a ball's light surfacing pass should skip the first-cut feed
+     reduction. It is on by default and drives a light pass's chip toward the
+     rubbing floor, which is why the Finishing profile disables it; a ball
+     roughing pass at a 40 per cent stepover is a different case.
+  2. The ball chart's material order: softwood above MDF above hardwood, the
+     reverse of every flat-tool chart in the repo, and nothing on the page
+     says so.
+  3. The single-pass finish row. The research's "Still open" list has it
+     refusing, but the same file records Scott's later decision that a pass
+     with no stated depth serves, with the power and hold-down checks skipped.
+     Check with him that this settled it, then close it in the research file.
 - **Tool identity in the Fusion panel: use the library GUID before the
   fingerprint (Scott, 2026-09-02).** The panel remembers each confirmed tool
   (geometry, up-cut length, drill type) against a key from
