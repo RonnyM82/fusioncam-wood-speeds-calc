@@ -15,7 +15,7 @@
 // drill diameter snapping to the nearest size the family publishes, the
 // first-cut choice hidden while Finishing, and the advanced fields filled from
 // the machine preset until the machine changes. Where this file departs from
-// app.js it says so, and the only departure is the ruled one below.
+// app.js it says so, and the only departures are the two changes below.
 //
 // THE ONE RULED CHANGE (Scott, 2026-09-24, the plan's rulings): a box the
 // calculator cannot read holds the results back. The old page quietly
@@ -28,13 +28,20 @@
 // field's own chip does. An EMPTY optional box still means what it always
 // meant: full board, full slot, the published speed, the machine's own value.
 //
+// A SECOND CHANGE, Claude's (2026-09-24, step 3, recorded in the plan's
+// rulings): an advanced box holding 0 or a negative number is refused like any
+// other value outside its range, where app.js quietly served the machine's own
+// value in its place, the stand-in the ruling above ended. An EMPTY advanced
+// box still means the machine's own value.
+//
 // THE BOX AND THE STATE ARE KEPT APART. `boxes` holds what each number field
 // holds (its metric base, or null for empty or unreadable), which is what the
 // field part is handed back as its value. The calculation state holds what
 // app.js's mapping made of it. They differ where app.js mapped: an empty board
 // thickness box holds null while the state holds 0 (which the engine refuses
 // in words); a flute count of 2.6 holds 2.6 while the state holds 3; an
-// advanced box at 0 holds 0 while the state falls back to the machine preset.
+// advanced box at 0 holds 0 (and holds the results back) while the state
+// drops the override.
 // Handing the part the mapped number instead would repaint the box under the
 // person's fingers (clearing the thickness box would show 0.0 at once, and
 // typing 0.4 into the grip factor would be wiped at the 0).
@@ -145,7 +152,7 @@ export const ADV_FIELDS = [
  * @typedef {{
  *   label: string, name: string, mode: 'rout' | 'drill' | 'adv',
  *   measure?: 'length' | 'rotation' | 'speed', unit?: string, decimals?: number,
- *   min?: number, max?: number, step?: number,
+ *   min?: number, max?: number, above?: number, step?: number,
  *   hint?: string | ((d: CalcData) => string),
  *   mustHold?: boolean,
  *   read: (s: FormState) => number | null,
@@ -219,10 +226,16 @@ const ADV_NUMBER_FIELDS = Object.fromEntries(ADV_FIELDS.filter((f) => !f.select)
   ...(f.decimals != null ? { decimals: f.decimals } : {}),
   ...(f.step != null ? { step: f.step } : {}),
   ...(f.hint != null ? { hint: f.hint } : {}),
+  // The box takes only a number above 0 (the second change, at the top of
+  // this file). An exclusive bound, not a `min`: the field part rounds a
+  // `min` to the box's display decimals in its message, and the machine max
+  // feed shows whole m/min, so any `min` there either refuses the 0.5 m/min
+  // the old page served (a baseline state) or tells the person "at least 0".
+  above: 0,
   read: (/** @type {FormState} */ s) => s.adv[f.id] ?? null,
   // app.js: anything that is not a number above zero drops the override, and
-  // the machine preset serves. These fields carry no range, so 0 and below
-  // are not refused by the field; that is today's behaviour, kept.
+  // the machine preset serves. A number at 0 or below now also holds the
+  // results back (blockers()), so the preset never serves in its place.
   apply: (/** @type {FormState} */ s, /** @type {number | null} */ v) => {
     if (v == null || !Number.isFinite(v) || v <= 0) delete s.adv[f.id];
     else s.adv[f.id] = v;
@@ -627,6 +640,14 @@ function numberChanged(s, key, value, state) {
 }
 
 /**
+ * The words under a box that takes only a number above a bound and holds one
+ * at or below it. The field part is handed this as its own rule, as
+ * EMPTY_WORDS below.
+ * @param {number} above
+ */
+export const aboveWords = (above) => `Must be more than ${above}.`;
+
+/**
  * The words under a box that must hold a number and is empty. The field part
  * is handed this as its own rule, so the chip and the blocking message agree.
  */
@@ -647,7 +668,8 @@ export function blockers(s) {
     const box = s.boxes[key];
     const fault = s.faults[key];
     if (fault) out.push({ key, name: spec.name, why: fault });
-    else if (box != null && ((spec.min != null && box < spec.min) || (spec.max != null && box > spec.max))) {
+    else if (box != null && ((spec.min != null && box < spec.min) || (spec.max != null && box > spec.max)
+      || (spec.above != null && box <= spec.above))) {
       out.push({ key, name: spec.name, why: 'range' });
     }
   }

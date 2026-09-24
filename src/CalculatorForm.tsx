@@ -20,6 +20,7 @@ import {
   MODES,
   NUMBER_FIELDS,
   TOOL_TYPES,
+  aboveWords,
   advKey,
   firstCutLabel,
   profilesFor,
@@ -32,6 +33,14 @@ type Props = {
   state: FormState;
   dispatch: (action: FormAction) => void;
   presets: Preset[];
+};
+
+// The field's own rule for the two things its range cannot say: empty where a
+// number must be, and a number that must be above a bound. The words match
+// what blockers() reports for the same box.
+const rule = (mustHold: boolean, above: number | undefined) => (v: number | null) => {
+  if (v === null) return mustHold ? EMPTY_WORDS : null;
+  return above !== undefined && v <= above ? aboveWords(above) : null;
 };
 
 const toItems = (list: readonly { id: string; label: string }[]) => list.map((o) => ({ value: o.id, label: o.label }));
@@ -60,7 +69,9 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
         {...(hint !== undefined ? { hint } : {})}
         // A box that must hold a number says so when emptied, with the part's
         // own words, without the required asterisk the old page never showed.
-        {...(spec.mustHold === true ? { validate: (v: number | null) => (v === null ? EMPTY_WORDS : null) } : {})}
+        // An advanced box takes only a number above 0 (form-state.js), and
+        // says so under the box as the part says any other range.
+        {...(spec.mustHold === true || spec.above !== undefined ? { validate: rule(spec.mustHold === true, spec.above) } : {})}
         stepper
         value={state.boxes[key] ?? null}
         onValueChange={(value: number | null, detail: NumberFieldDetail) =>

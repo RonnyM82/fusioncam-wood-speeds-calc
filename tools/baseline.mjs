@@ -7,6 +7,7 @@
 //   node tools/baseline.mjs --only name,name        a subset of the states
 //   node tools/baseline.mjs --compare --sections url,form   compare only these parts
 //   node tools/baseline.mjs --compare --url-only    the same as --sections url
+//   node tools/baseline.mjs --compare --no-charts   leave the charts out of both sides
 //
 // Written 2026-09-24 as step 0 of the React conversion (docs/CONVERSION_SURVEY.md,
 // sections 8 and 9). The conversion is judged by reproducing these files at zero
@@ -83,6 +84,24 @@ if (sections) {
     console.error('baseline: --sections and --url-only narrow a comparison, so they need --compare. Nothing was captured.');
     process.exit(2);
   }
+}
+// --no-charts (added in step 3 of the conversion, 2026-09-24) leaves the charts
+// and their table twins out of both sides of a comparison, for a converted
+// page whose charts are not built yet: step 3 built the results and the
+// badges, and the charts are step 4. On each side, in `results` and
+// `diagnostics`, it drops every block the reader calls a chart or a table
+// (the converted page's empty chart slots are charts to the reader), and it
+// cuts the section's whole text where the first chart's text begins, which
+// must be after every other block: the old page drew its charts last in both
+// sections. Everything before the cut is compared exactly as in a full
+// comparison. If a block that is not a chart follows a chart, or the first
+// chart's text cannot be found, the state fails rather than being cut
+// somewhere a difference could hide. It only narrows a comparison, so it
+// needs --compare.
+const noCharts = args.includes('--no-charts');
+if (noCharts && !compare) {
+  console.error('baseline: --no-charts narrows a comparison, so it needs --compare. Nothing was captured.');
+  process.exit(2);
 }
 const baselineDir = join(repo, 'tests', 'baseline');
 
@@ -257,6 +276,10 @@ function readPage() {
     if (el.matches('.ladder')) return ladder(el);
     if (el.matches('.cascade')) return cascade(el);
     if (el.matches('details.table-twin')) return table(el);
+    // The converted page holds each chart's place with an empty, hidden
+    // element until the chart is built (step 3 of the conversion); the old
+    // page has none, so its files never carry this block.
+    if (el.matches('[data-chart-slot]')) return { role: 'chart', kind: 'slot', slot: el.getAttribute('data-chart-slot') };
     if (el.matches('h2, h3')) return { role: 'heading', level: el.tagName, text: text(el) };
     if (el.matches('.lt-row') && $('.lt-badge', el)) {
       return {
@@ -456,6 +479,39 @@ function diffPaths(a, b, path = '', out = []) {
 
 const serialise = (obj) => `${JSON.stringify(obj, null, 2)}\n`;
 
+// --no-charts: one section with its charts left out (see the argument above).
+// A chart's text begins with its heading (the ladder), its first row's label
+// (the cascade) or its summary (a table twin); an empty slot has none. The
+// cut is at the first whole line equal to that: if an earlier line happened
+// to match, the cut would come too early and the state would differ, which
+// is loud, never a silent pass.
+function withoutCharts(section, where) {
+  if (!section || !section.present) return section;
+  const isChart = (b) => b.role === 'chart' || b.role === 'table';
+  const first = section.blocks.findIndex(isChart);
+  if (first < 0) return section;
+  const after = section.blocks.slice(first).filter((b) => !isChart(b));
+  if (after.length) throw new Error(`${where}: a ${after[0].role} block follows a chart, so --no-charts cannot cut the text`);
+  const starts = section.blocks.slice(first).map((b) => (b.kind === 'ladder' ? b.heading
+    : b.kind === 'cascade' ? (b.rows[0] ? b.rows[0].label : null)
+      : b.role === 'table' ? b.summary : null)).filter((t) => t);
+  let text = section.text;
+  if (starts.length) {
+    const lines = text.split('\n');
+    const at = lines.indexOf(starts[0]);
+    if (at < 0) throw new Error(`${where}: the chart's first line "${starts[0]}" is not in the section's text`);
+    // innerText drops the line breaks at the end of a section, so the blank
+    // line a paragraph leaves before the chart goes with the chart.
+    text = lines.slice(0, at).join('\n').replace(/\n+$/, '');
+  }
+  return { ...section, text, blocks: section.blocks.filter((b) => !isChart(b)) };
+}
+const chartsLeftOut = (json, name) => {
+  const obj = JSON.parse(json);
+  for (const k of ['results', 'diagnostics']) if (k in obj) obj[k] = withoutCharts(obj[k], `${name} ${k}`);
+  return serialise(obj);
+};
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -478,6 +534,7 @@ const server = baseArg ? null : await startServer();
 const base = baseArg ?? server.base;
 console.log(`baseline: page at ${base}`);
 if (sections) console.log(`baseline: comparing only ${sections.join(', ')}`);
+if (noCharts) console.log('baseline: the charts and their tables are left out of both sides');
 
 const browser = await playwright.chromium.launch();
 let failed = 0;
@@ -500,6 +557,16 @@ try {
         const pick = (json) => serialise(Object.fromEntries(sections.map((k) => [k, JSON.parse(json)[k]])));
         want = pick(want);
         body = pick(body);
+      }
+      if (noCharts && want !== null) {
+        try {
+          want = chartsLeftOut(want, `${st.name} (baseline)`);
+          body = chartsLeftOut(body, `${st.name} (this page)`);
+        } catch (err) {
+          failed++;
+          console.log(`  ERROR  ${err.message}`);
+          continue;
+        }
       }
       if (want === body) {
         console.log(`  same   ${st.name}`);

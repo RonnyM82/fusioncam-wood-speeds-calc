@@ -60,6 +60,85 @@ header h1 {
 .advanced > summary { cursor: pointer; font-weight: var(--lt-weight-semibold); }
 .advanced-fields { margin-top: var(--lt-space-4); }
 
-/* The results area spaces its blocks; the parts carry no outer margin of
-   their own. */
+/* The limit line, the warnings, the refusal and the block are Alert banners,
+   and the diagnostic chips are Badges. The results area spaces them; the
+   parts carry no outer margin of their own. */
 .results { display: grid; gap: var(--lt-space-4); margin-block: var(--lt-space-5); }
+
+/* A grid item's minimum inline size is auto, so an expanded table twin's
+   min-content width (driven by the nowrap header cells) pushed the results
+   column, the card and the body wide, and the table's wrapper never got to
+   scroll. Measured on the old page 2026-08-31: body scrollWidth 853 in a
+   704px body. A zero minimum keeps wide content inside the column. Carried
+   across now so the charts arrive (step 4) into a column that holds them. */
+.results > *, .diagnostics > * { min-inline-size: 0; }
+
+/* Scoped, not a bare h2. A bare element selector reaches inside any component
+   that generates its own heading, which is how a gallery once gave every
+   dialog title a 64px top margin and a rule under it. */
+.diagnostics h2 {
+  font-size: var(--lt-text-lg);
+  line-height: var(--lt-leading-lg);
+  margin: var(--lt-space-6) 0 var(--lt-space-3);
+}
+
+/* Provenance notes, not banners. One cut can produce nine of them, because
+   most published charts hold no value at a 3.175 mm tool, and nine banners
+   bury the feedrates they sit under. */
+.notes {
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  background: var(--lt-surface-subtle);
+  padding: var(--lt-space-4) var(--lt-space-5);
+  color: var(--lt-text-secondary);
+  font-size: var(--lt-text-sm);
+  line-height: var(--lt-leading-sm);
+}
+.notes-title {
+  font-size: var(--lt-text-xs);
+  font-weight: var(--lt-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--lt-text-primary);
+  margin-bottom: var(--lt-space-3);
+}
+.notes ul { padding-inline-start: var(--lt-space-5); }
+.notes li { margin-block: var(--lt-space-2); }
+
+/* The output rows stay bespoke (the survey, row 21). The Specs part is the
+   nearest and it is not an equivalent: it left-aligns its values in a second
+   column, and a column of feedrates a machinist transcribes needs its digits
+   right-aligned and its imperial conversion under each one. */
+.out-card {
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-md);
+  padding: var(--lt-space-2) var(--lt-space-5);
+}
+.out-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: var(--lt-space-1) var(--lt-space-3);
+  padding: var(--lt-space-3) 0;
+  border-bottom: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+}
+.out-row:last-child { border-bottom: 0; }
+.out-row.secondary .out-label, .out-row.secondary .metric { color: var(--lt-text-secondary); font-weight: var(--lt-weight-regular); }
+.out-label { font-weight: var(--lt-weight-semibold); }
+.out-vals { text-align: right; }
+.metric { font-weight: var(--lt-weight-bold); font-variant-numeric: tabular-nums; }
+.imperial { display: block; font-size: var(--lt-text-xs); color: var(--lt-text-secondary); font-variant-numeric: tabular-nums; }
+.row-note {
+  grid-column: 1 / -1;
+  font-size: var(--lt-text-sm);
+  color: var(--lt-text-secondary);
+  padding-top: var(--lt-space-2);
+}
+
+/* A banner with no title is one paragraph, at the size the old page gave it:
+   app.js put every banner's words in the design system's body class, which
+   sets the small text size. The Alert part sets a titleless banner at the
+   density's own size; this paragraph is the app's own element inside it, so
+   the size is set here, on this class. A titled banner's title is the
+   part's, at the part's size (a visible difference, reported in step 3). */
+.banner-text { font-size: var(--lt-text-sm); }

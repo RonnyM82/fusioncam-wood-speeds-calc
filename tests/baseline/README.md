@@ -67,6 +67,7 @@ node tools/baseline.mjs --compare --base https://wood.fusioncam.co/ # the live s
 node tools/baseline.mjs --compare --only drill-bank-on-hinge-35     # one state
 node tools/baseline.mjs --compare --base http://localhost:4173/ --sections url,form  # some parts only
 node tools/baseline.mjs --compare --base http://localhost:4173/ --url-only           # the address only
+node tools/baseline.mjs --compare --base http://localhost:4173/ --no-charts          # all but the charts
 node tools/baseline.mjs --out some/dir               # capture somewhere else
 node tools/baseline.mjs                              # RE-CAPTURE into this folder
 ```
@@ -83,6 +84,17 @@ exactly as in a full comparison. The reader in `tools/baseline.mjs` reads the fo
 page's markup into the same JSON: the React select's face, its checkbox role and its card-layout
 tool picker, and an absent `aria-invalid` read as `"false"`. Run against `legacy.html` after
 that change it still reproduced all 52 files.
+
+`--no-charts` (added in step 3 of the conversion, 2026-09-24) leaves the charts out of both
+sides of a comparison, for a converted page whose charts are not built yet. In `results` and
+`diagnostics` it drops every chart and table block (the converted page holds each chart's
+place with an empty element marked `data-chart-slot`, which the reader counts as a chart),
+and cuts each section's whole text at the line where the first chart's text begins: its
+heading, its first row's label, or its table's summary. The old page drew its charts last in
+both sections, so everything before the cut is every banner, number, note and badge, and is
+compared exactly as in a full comparison. A non-chart block after a chart, or a first line
+that cannot be found, fails the state instead of cutting it. Run against `legacy.html` it
+still reproduces all 52 files.
 
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts

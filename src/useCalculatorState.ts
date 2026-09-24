@@ -46,7 +46,7 @@ export function useCalculatorState() {
   }, [state]);
 
   // What the engine is handed: exactly what currentInput() and
-  // currentDrillInput() built. The results use it from step 3.
+  // currentDrillInput() built. The results (App.tsx) hand it to the engine.
   const engineInput = useMemo(
     () => (state.mode === "drill" ? currentDrillInput(state, data, presets) : currentInput(state, data, presets)),
     [state, presets],

@@ -19,7 +19,7 @@ import { feedPair, rpmPair, fzPair } from '../js/ui/format.js';
 import { DRILL_OUTPUT_ROWS } from '../js/ui/drill-tables.js';
 import {
   createState, update, writeUrlState, currentInput, currentDrillInput,
-  blockers, blockingMessage, advKey,
+  blockers, blockingMessage, advKey, aboveWords, NUMBER_FIELDS,
 } from '../src/form-state.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -191,9 +191,38 @@ test('FS7', 'the derived rules: parked profile, diameter snap, first cut kept, m
   s = update(s, { type: 'machine', value: '0' }, presets);
   assert(s.adv.spindleKw === presets[0].machine.spindleKw, 'a new machine refills the spindle power');
   assert(blockers(s).length === 0, 'and the refilled grip factor box is readable again');
-  // An advanced box at 0 or emptied falls back to the preset, as before.
+  // An emptied advanced box falls back to the preset, as before (FS9 has 0).
   s = update(s, { type: 'number', field: advKey('accelMs2'), value: null, state: 'ok' }, presets);
   assert(!('accelMs2' in s.adv) && currentInput(s, data, presets).machine.accelMs2 === presets[0].machine.accelMs2, 'an empty advanced box serves the preset');
+});
+
+test('FS9', "an advanced box at 0 or below holds the results back; empty still means the machine's own value", () => {
+  // Claude's decision, 2026-09-24 (the plan's rulings, step 3). The old page
+  // quietly served the machine's own value for a 0 or a negative number, the
+  // stand-in Scott's ruling on unreadable boxes ended.
+  const advanced = Object.keys(NUMBER_FIELDS).filter((k) => k.startsWith('adv:'));
+  assert(advanced.length === 11, `${advanced.length} advanced number fields, expected 11`);
+  for (const key of advanced) {
+    assert(NUMBER_FIELDS[key].above === 0, `${key} takes only a number above 0`);
+    for (const v of [0, -1]) {
+      const s = update(createState(data, presets, ''), { type: 'number', field: key, value: v, state: 'ok' }, presets);
+      const b = blockers(s);
+      assert(b.length === 1 && b[0].key === key && b[0].why === 'range', `${key} at ${v}: ${JSON.stringify(b)}`);
+      assert(blockingMessage(b) === `The ${NUMBER_FIELDS[key].name} is outside the range its box takes. Fix it to see feeds and speeds.`, blockingMessage(b));
+    }
+    const empty = update(createState(data, presets, ''), { type: 'number', field: key, value: null, state: 'ok' }, presets);
+    assert(blockers(empty).length === 0, `${key} empty holds nothing back`);
+  }
+  // In drilling too, on the three fields drilling reads.
+  const drill = update(createState(data, presets, '?k=drill'), { type: 'number', field: advKey('spindleKw'), value: 0, state: 'ok' }, presets);
+  assert(blockers(drill).length === 1, 'a spindle power of 0 holds drilling back');
+  // Empty means the machine's value, as before.
+  const empty = update(createState(data, presets, ''), { type: 'number', field: advKey('spindleKw'), value: null, state: 'ok' }, presets);
+  assert(currentInput(empty, data, presets).machine.spindleKw === presets[empty.machineIdx].machine.spindleKw, "an empty spindle power serves the machine's own");
+  // A small number above 0 is still taken: the baseline's 0.5 m/min feed cap.
+  const small = update(createState(data, presets, ''), { type: 'number', field: advKey('feedMaxMMin'), value: 0.5, state: 'ok' }, presets);
+  assert(blockers(small).length === 0 && currentInput(small, data, presets).machine.feedMaxMmMin === 500, 'a 0.5 m/min cap serves as 500 mm/min');
+  assert(aboveWords(0) === 'Must be more than 0.', aboveWords(0));
 });
 
 test('FS8', 'the baseline files FS1 and FS3 read are all present', () => {

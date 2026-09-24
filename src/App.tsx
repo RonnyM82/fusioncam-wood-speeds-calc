@@ -1,12 +1,18 @@
+import { useMemo } from "react";
 import { Alert, Panel } from "@livetools/ui";
+import { calculate } from "../js/core/calculate.js";
+import { calculateDrilling } from "../js/core/drilling.js";
 import { CalculatorForm } from "./CalculatorForm";
-import { dataErrors } from "./data";
+import { data, dataErrors } from "./data";
 import { blockingMessage } from "./form-state.js";
+import { Results } from "./Results";
+import { resultsView } from "./result-view.js";
 import { useCalculatorState } from "./useCalculatorState";
 
 // The page. Step 1 of docs/CONVERSION_PLAN.md gave it the title and the data
-// gate; step 2 (2026-09-24) the form, the state and the address. The results
-// arrive in step 3 and the charts in step 4.
+// gate; step 2 (2026-09-24) the form, the state and the address; step 3 (the
+// same day) the results and "What is going on in this cut". The charts arrive
+// in step 4.
 export function App() {
   return (
     <>
@@ -38,21 +44,21 @@ export function App() {
 }
 
 function Calculator() {
-  const { state, dispatch, presets, blockers } = useCalculatorState();
+  const { state, dispatch, presets, engineInput, blockers } = useCalculatorState();
+  // app.js's recalc(): the engine for the mode on screen, on exactly the input
+  // currentInput() or currentDrillInput() built. Not run at all while a box
+  // holds the results back, because its numbers would be for a cut the boxes
+  // are not showing.
+  const holding = blockers.length > 0 ? blockingMessage(blockers) : null;
+  const view = useMemo(() => {
+    if (holding !== null) return null;
+    const result = state.mode === "drill" ? calculateDrilling(engineInput, data) : calculate(engineInput, data);
+    return resultsView(result);
+  }, [holding, state.mode, engineInput]);
   return (
     <>
       <CalculatorForm state={state} dispatch={dispatch} presets={presets} />
-      {/* No aria-live on the section: the plan's rulings have the banners
-          announce themselves, and the Alert part carries its own role. */}
-      <section id="results" className="results">
-        {blockers.length > 0 ? (
-          // Scott's ruling, 2026-09-24: while any box cannot be read, the
-          // results show no numbers and say which box.
-          <Alert variant="danger">{blockingMessage(blockers)}</Alert>
-        ) : (
-          <p>Results follow in the next step.</p>
-        )}
-      </section>
+      <Results view={view} holding={holding} />
     </>
   );
 }
