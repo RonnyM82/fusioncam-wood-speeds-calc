@@ -247,8 +247,8 @@ was 52 identical with the accepted differences, the paint measurement passed, an
 panel's harness rendered a job with the beta tick present. `legacy.html` is not published
 (it is not in `SITE_FILES`); it stays in the repo for the baseline.
 
-Left for Scott: opening the Fusion add-in against the live site, and trying the page on a
-phone. Left for later: removing `legacy.html`, `js/ui/app.js` and `styles.css` once the
+Scott's own checks, 2026-09-24: the page looks right on his phone, and the Fusion add-in's
+palette renders and works against the live site. Step 6 is done, and with it the conversion. Left for later: removing `legacy.html`, `js/ui/app.js` and `styles.css` once the
 conversion is settled, since the baseline compares against `legacy.html`.
 
 ## TODO
