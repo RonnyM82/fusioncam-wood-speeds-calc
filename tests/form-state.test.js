@@ -20,7 +20,7 @@ import { DRILL_OUTPUT_ROWS } from '../js/ui/drill-tables.js';
 import {
   createState, update, writeUrlState, currentInput, currentDrillInput,
   blockers, blockingMessage, advKey, aboveWords, NUMBER_FIELDS,
-  toolTypesFor, DEFAULT_TOOL_TYPE,
+  toolTypesFor, DEFAULT_TOOL_TYPE, diametersFor, fieldHint,
 } from '../src/form-state.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -275,4 +275,42 @@ test('FS10', 'the beta tick: off hides the ball nose, a ball link turns it on, u
   assert(on.beta === true && on.toolType === 'compression', 'ticking changes no tool');
   const ball = update(on, { type: 'tool', value: 'ball' }, presets);
   assert(ball.beta === true && ball.toolType === 'ball', 'the ball nose chosen with the tick on');
+});
+
+test('FS11', 'the beta tick: off gives the live diameter list and hints, a beta size in a link is ignored, unticking snaps it', () => {
+  // The live site at commit 1e6c265: js/ui/app.js DIAMETERS, and index.html's
+  // hints for the depth per pass and the width of cut, word for word.
+  const LIVE = [3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 16, 19.05, 25.4];
+  assert(JSON.stringify(diametersFor(false)) === JSON.stringify(LIVE), `beta off: ${diametersFor(false)}`);
+  assert(JSON.stringify(diametersFor(true)) === JSON.stringify([1.5875, ...LIVE.slice(0, 10), 15.875, ...LIVE.slice(10)]), `beta on: ${diametersFor(true)}`);
+  const off = createState(data, presets, '');
+  const on = createState(data, presets, '', true);
+  const hint = (s, k) => fieldHint(NUMBER_FIELDS[k], s, data);
+  assert(hint(off, 'doc') === 'Leave empty to cut the full board thickness.', hint(off, 'doc'));
+  assert(hint(off, 'woc') === 'Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead.', hint(off, 'woc'));
+  assert(hint(on, 'doc') === 'Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.', hint(on, 'doc'));
+  assert(hint(on, 'woc') === 'Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.', hint(on, 'woc'));
+  // Every other field's hint is the same either way.
+  for (const k of Object.keys(NUMBER_FIELDS).filter((x) => x !== 'doc' && x !== 'woc')) {
+    assert(hint(off, k) === hint(on, k), `${k}: ${hint(off, k)} / ${hint(on, k)}`);
+  }
+  // With beta off, 1e6c265 ignored a size not in its list and kept 12.7 mm.
+  for (const d of ['1.5875', '15.875']) {
+    const s = createState(data, presets, `?t=upcut&d=${d}`);
+    assert(s.beta === false && s.diameterMm === 12.7, `d=${d} with beta off: ${s.diameterMm}`);
+    assert(new URLSearchParams(writeUrlState(s)).get('d') === '12.7', writeUrlState(s));
+    // Remembered on, the size is on the list and the link reads.
+    assert(createState(data, presets, `?t=upcut&d=${d}`, true).diameterMm === Number(d), `d=${d} with beta remembered`);
+    // A ball link turns beta on first, so its sizes stay valid.
+    const ball = createState(data, presets, `?t=ball&d=${d}`);
+    assert(ball.beta === true && ball.diameterMm === Number(d), `ball link d=${d}: ${ball.diameterMm}`);
+  }
+  // Unticking with a beta size chosen: the nearest size left, the snap a drill
+  // diameter takes. 1/16 in goes to 1/8 in, 5/8 in to 16 mm.
+  const small = update(createState(data, presets, '?t=ball&d=1.5875'), { type: 'beta', value: false }, presets);
+  assert(small.diameterMm === 3.175 && small.toolType === 'compression', `1.5875 unticked: ${small.diameterMm} ${small.toolType}`);
+  const big = update(createState(data, presets, '?t=upcut&d=15.875', true), { type: 'beta', value: false }, presets);
+  assert(big.diameterMm === 16 && big.toolType === 'upcut', `15.875 unticked: ${big.diameterMm} ${big.toolType}`);
+  const plain = update(createState(data, presets, '?t=upcut&d=6.35', true), { type: 'beta', value: false }, presets);
+  assert(plain.diameterMm === 6.35, 'a size on both lists stays');
 });

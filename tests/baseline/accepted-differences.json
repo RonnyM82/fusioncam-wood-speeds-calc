@@ -82,14 +82,30 @@
     },
     {
       "id": "beta-hides-ball-nose",
-      "field": "form.toolPicker.options: the routing tool list.",
+      "field": "form.toolPicker.options, the routing tool list; the TOOL DIAMETER field's options; the DEPTH PER PASS and WIDTH OF CUT hints.",
       "states": "all",
       "statesNote": "Every routing state whose \"Show beta tools\" box is unticked: the routing states that do not name the ball nose. A state that names it (the four ball-* states, tool-ball-12.7-mdf-depth-empty and the two ball-nose refusals) opens with the box ticked and the list whole, so this rewrites nothing there; drilling shows the drill list, which never had the ball nose.",
-      "was": "Five tool types, the last \"Ball nose\" with its hint.",
-      "now": "The four flat tools only, while the box is unticked. The ball nose arrived in commit bc85559 and was never live; wood.fusioncam.co serves commit 1e6c265, which had no ball nose.",
+      "was": "Five tool types, the last \"Ball nose\" with its hint; fifteen diameters, 1/16 in and 5/8 in among them; the depth and width hints each with a sentence on the ball nose.",
+      "now": "While the box is unticked, what commit 1e6c265 showed: the four flat tools, the thirteen diameters without the two added for the ball chart, and the two hints without their ball-nose sentences. That work arrived in commit bc85559 and was never live; wood.fusioncam.co serves commit 1e6c265.",
+      "diameters": [
+        "1.5875 mm (1/16\")",
+        "15.875 mm (5/8\")"
+      ],
+      "hints": [
+        {
+          "label": "DEPTH PER PASS",
+          "was": "Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.",
+          "now": "Leave empty to cut the full board thickness."
+        },
+        {
+          "label": "WIDTH OF CUT",
+          "was": "Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.",
+          "now": "Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead."
+        }
+      ],
       "option": "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only.",
-      "rewrite": "Only where the React page's \"Show beta tools\" box is there and unticked: on the old side, the ball nose option is taken out of the tool list after checking it is there exactly once, last, and not the chosen tool. Listed before beta-checkbox, which removes the box this one reads.",
-      "ruling": "Scott's ruling, 2026-09-24: the ball nose, the bull nose and 3D surfacing go live behind a beta switch, off by default, and with it off the page offers what the live site offers."
+      "rewrite": "Only where the React page's \"Show beta tools\" box is there and unticked: on the old side, the ball nose option is taken out of the tool list after checking it is there exactly once, last, and not the chosen tool; the two sizes in 'diameters' are taken out of TOOL DIAMETER's options after checking each is there once and is not the size shown; and each hint in 'hints' is changed from its 'was' to its 'now' after checking the field is there once holding exactly the 'was'. Listed before beta-checkbox, which removes the box this one reads.",
+      "ruling": "Scott's ruling, 2026-09-24: the ball nose, the bull nose and 3D surfacing go live behind a beta switch, off by default, and with it off the page offers what the live site offers. The diameters and the hints joined this entry the same day, under the same ruling, on the coordinator's instruction."
     },
     {
       "id": "beta-checkbox",

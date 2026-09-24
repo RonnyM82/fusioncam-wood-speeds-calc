@@ -13,7 +13,7 @@ import { diameterLabel } from "../js/ui/format.js";
 import { data } from "./data";
 import {
   ADV_FIELDS,
-  DIAMETERS,
+  diametersFor,
   DRILL_ADV,
   EMPTY_WORDS,
   MATERIALS,
@@ -22,6 +22,7 @@ import {
   toolTypesFor,
   aboveWords,
   advKey,
+  fieldHint,
   firstCutLabel,
   profilesFor,
   type FormAction,
@@ -54,8 +55,9 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
   // and the state decides what that means for the calculation.
   const numberField = (key: string) => {
     const spec = NUMBER_FIELDS[key];
-    // Some advanced hints quote the data ("for example 80").
-    const hint = typeof spec.hint === "function" ? spec.hint(data) : spec.hint;
+    // Some advanced hints quote the data ("for example 80"), and the depth
+    // and width hints follow the beta tick (form-state.js).
+    const hint = fieldHint(spec, state, data);
     return (
       <NumberField
         key={key}
@@ -81,7 +83,7 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
     );
   };
 
-  const diameters: number[] = drilling ? (DRILL_DIAMETERS as Record<string, number[]>)[state.drillTool] ?? [] : DIAMETERS;
+  const diameters: number[] = drilling ? (DRILL_DIAMETERS as Record<string, number[]>)[state.drillTool] ?? [] : diametersFor(state.beta);
   const machine = presets[state.machineIdx];
 
   return (

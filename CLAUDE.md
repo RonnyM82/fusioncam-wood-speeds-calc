@@ -129,7 +129,9 @@ from research session 6) had never been live. They go live behind a beta tick, *
 default**, and with it off the page and the panel behave exactly as the live site did at
 commit 1e6c265 for anything ball, bull nose or surfacing.
 
-- **What it gates.** On the page: "Ball nose" in the routing tool list. In the panel: the ball
+- **What it gates.** On the page: "Ball nose" in the routing tool list, the 1/16 in and 5/8 in
+  diameters added for its chart, and the ball-nose sentences in the depth-per-pass and
+  width-of-cut hints; with the tick off all three read as 1e6c265's page. In the panel: the ball
   and the bull nose on every strategy, every 3D surfacing strategy, and Flat and Horizontal
   served as facing work. The engine (`js/core/`) and the data carry the ball nose whatever
   the tick says; only what reaches them is gated.
@@ -149,11 +151,13 @@ commit 1e6c265 for anything ball, bull nose or surfacing.
   that forgets it gets the proven behaviour; the panel always passes it.
   `tests/fusion-beta.test.js` pins the off answers in 1e6c265's own words, and every test in
   `fusion-map.test.js` runs with `beta: true`. Never edit the stable file.
-- **Not gated**, because the baseline records them and Scott's ruling named only the tool:
-  the 1/16 in and 5/8 in diameters, and the ball-nose sentences in the depth-per-pass and
-  width-of-cut hints, show with the tick off.
+- **The two ball sizes.** With the tick off a link naming 1/16 in or 5/8 in on a flat tool
+  is ignored and keeps 12.7 mm, as 1e6c265 ignored any size not on its list; a ball link
+  ticks beta first, so its sizes read. Unticking with one chosen moves it to the nearest size
+  left, the rule a drill diameter follows (1/16 in to 1/8 in, 5/8 in to 16 mm).
 - **Promoting a feature out of beta is Scott's call**, never a session's. When he makes it,
-  the stable mapping, `stableToolKind()`, `STABLE_KIND_NOTE`, `BETA_TOOL_TYPES`, the two
+  the stable mapping, `stableToolKind()`, `STABLE_KIND_NOTE`, `BETA_TOOL_TYPES`,
+  `BETA_DIAMETERS`, the fields' `betaHint`, the two
   ticks and the two baseline entries for them (`beta-hides-ball-nose`, `beta-checkbox`) go.
 
 ## The charts are drawn by the app
@@ -181,7 +185,7 @@ emphasis pattern, its mark specs and its rule that every chart has a table twin.
 ```bash
 npm run check          # the whole gate, in this order:
                        #   python conformance.py .   the panel, its CSS, the app CSS
-                       #   node tests/run.js         223 tests: engine, data, form, results, charts
+                       #   node tests/run.js         224 tests: engine, data, form, results, charts
                        #   the lint                  the rules above, over src/
                        #   tsc --noEmit
                        #   vite build                fails if a panel file is missing
@@ -225,7 +229,7 @@ Against the React page the comparison applies the differences ruled deliberate, 
 their rulings in `tests/baseline/accepted-differences.json`, and is exact about everything
 else; `--no-accepted` turns them off. On 2026-09-24 the React page matched all 52 states
 with those four differences and nothing else, and again after the beta switch with two more
-(the tick, and the ball nose missing from the list while it is off). Any other difference, above all any number, is
+(the tick, and while it is off the ball nose, its two sizes and its hint sentences gone). Any other difference, above all any number, is
 a regression until explained. Re-capture the baseline only when Scott has ruled a new
 behaviour right, and say so in the commit. `legacy.html` is the old `index.html` renamed with
 not a byte changed; it, `js/ui/app.js` and `styles.css` go when the conversion is done.

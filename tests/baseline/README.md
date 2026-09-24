@@ -168,12 +168,16 @@ unaccepted differences**, charts included; 48 matched through the accepted diffe
 states, in those four kinds only. Against `legacy.html` all 52 still match with no accepted
 difference applied, so reading which page is loaded changed nothing in the files.
 
-**Two more for the beta switch (Scott's ruling, 2026-09-24).** The ball nose is offered only
-while the React page's "Show beta tools" box is ticked, and the box is new. Both are listed
+**Two more for the beta switch (Scott's ruling, 2026-09-24).** The ball nose, the two sizes
+added for its chart and the ball-nose sentences in two hints show only while the React page's
+"Show beta tools" box is ticked, and the box is new. Both are listed
 in `accepted-differences.json` and rewritten in `tools/baseline.mjs`, in this order:
 
 - `beta-hides-ball-nose`: where the box is there and unticked, the ball nose option leaves
-  the baseline's tool list, after checking it is there once, last, and not chosen.
+  the baseline's tool list, after checking it is there once, last, and not chosen; the
+  1/16 in and 5/8 in sizes leave its diameter list, after checking each is there once and
+  not shown; and the depth-per-pass and width-of-cut hints lose their ball-nose sentences,
+  after checking each is exactly the wording the entry names.
 - `beta-checkbox`: the box leaves the React page's form, after checking it is there once in
   a routing state and never in drilling, right after MATERIAL, with its hint, and ticked
   exactly when the ball nose is chosen. A link naming the ball nose ticks it, so the seven

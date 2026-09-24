@@ -36,13 +36,15 @@
 //
 // THE BETA SWITCH (Scott's ruling, 2026-09-24): the ball nose is offered only
 // while "Show beta tools" is ticked. It arrived in commit bc85559 and was never
-// live, so with the tick off the tool list is the live site's (commit 1e6c265).
+// live, so with the tick off the tool list, the diameter list and the depth
+// and width hints are the live site's (commit 1e6c265), word for word.
 // The tick is off by default; the page remembers it in the browser
 // (useCalculatorState.ts), which this file never touches, so createState()
 // is handed what was remembered. A link naming the ball nose opens with the
 // tick on, so a shared ball-nose link still works, and the address carries no
 // key of its own for it. Unticking with the ball nose chosen falls back to the
-// page's default tool.
+// page's default tool, and a diameter only the ball chart needed goes to the
+// nearest one left, as a drill diameter does when its family changes.
 //
 // THE BOX AND THE STATE ARE KEPT APART. `boxes` holds what each number field
 // holds (its metric base, or null for empty or unreadable), which is what the
@@ -102,6 +104,13 @@ export const toolTypesFor = (beta) => (beta ? TOOL_TYPES : TOOL_TYPES.filter((t)
 // there for that chart alone and sits between two metric sizes nothing else
 // publishes (2026-09-02).
 export const DIAMETERS = [1.5875, 3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 15.875, 16, 19.05, 25.4];
+
+// The two sizes added for the ball chart, offered only with the beta tick on.
+// With it off the list is the live site's at commit 1e6c265.
+export const BETA_DIAMETERS = new Set([1.5875, 15.875]);
+
+/** The routing diameters the picker offers. @param {boolean} beta */
+export const diametersFor = (beta) => (beta ? DIAMETERS : DIAMETERS.filter((d) => !BETA_DIAMETERS.has(d)));
 
 export const PROFILES = [
   { id: 'gentle', label: 'Gentle' },
@@ -176,6 +185,7 @@ export const ADV_FIELDS = [
  *   measure?: 'length' | 'rotation' | 'speed', unit?: string, decimals?: number,
  *   min?: number, max?: number, above?: number, step?: number,
  *   hint?: string | ((d: CalcData) => string),
+ *   betaHint?: string,
  *   mustHold?: boolean,
  *   read: (s: FormState) => number | null,
  *   apply: (s: FormState, v: number | null) => void,
@@ -201,7 +211,8 @@ const MAIN_FIELDS = {
   },
   doc: {
     label: 'Depth per pass', name: 'depth per pass', mode: 'rout', measure: 'length', decimals: 1, min: 0.1, step: 0.5,
-    hint: 'Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.',
+    hint: 'Leave empty to cut the full board thickness.',
+    betaHint: 'Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.',
     read: (s) => s.apMm,
     apply: (s, v) => { s.apMm = v != null && v > 0 ? v : null; },
   },
@@ -224,7 +235,8 @@ const MAIN_FIELDS = {
   },
   woc: {
     label: 'Width of cut', name: 'width of cut', mode: 'rout', measure: 'length', decimals: 1, min: 0.1, step: 0.5,
-    hint: 'Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.',
+    hint: 'Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead.',
+    betaHint: 'Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.',
     read: (s) => s.aeMm,
     apply: (s, v) => { s.aeMm = v != null && v > 0 ? v : null; },
   },
@@ -236,6 +248,18 @@ const MAIN_FIELDS = {
     apply: (s, v) => { s.rpm = v != null && v > 0 ? v : 18000; },
   },
 };
+
+/**
+ * The hint under a number field. `betaHint` is the wording with the beta tick
+ * on, which adds what the box means on a ball nose; with it off the field
+ * says what the live site said (1e6c265).
+ * @param {NumberSpec} spec @param {FormState} s @param {CalcData} data
+ * @returns {string | undefined}
+ */
+export function fieldHint(spec, s, data) {
+  if (s.beta && spec.betaHint !== undefined) return spec.betaHint;
+  return typeof spec.hint === 'function' ? spec.hint(data) : spec.hint;
+}
 
 /** The advanced number fields' ids in the form `adv:<id>`, each backed by state.adv. */
 export const advKey = (/** @type {string} */ id) => `adv:${id}`;
@@ -354,7 +378,6 @@ export function createState(data, presets, search, betaRemembered = false) {
   s.machineIdx = genericIdx >= 0 ? genericIdx : 0;
   s.firstCut = data.rules.first_cut?.default_on ?? false;
   readUrlState(s, search, presets);
-  if (BETA_TOOL_TYPES.has(s.toolType)) s.beta = true;
   snapDrillDiameter(s);
   if (!profilesFor(s.mode).some((p) => p.id === s.profile)) s.profile = 'standard';
   applyMachineToAdvanced(s, presets, { keepExisting: true });
@@ -380,7 +403,12 @@ export function readUrlState(s, search, presets) {
   if (q.get('db') != null) s.drillBank = q.get('db') === '1';
   if (q.get('m') && MATERIALS.some((x) => x.id === q.get('m'))) s.material = /** @type {string} */ (q.get('m'));
   if (q.get('t') && TOOL_TYPES.some((x) => x.id === q.get('t'))) s.toolType = /** @type {string} */ (q.get('t'));
-  if (q.get('d') && DIAMETERS.includes(num('d'))) s.diameterMm = num('d');
+  // A link naming a beta tool ticks beta first, so the sizes its chart needs
+  // stay valid. With beta off a size outside the live list is ignored and the
+  // diameter stays as it was, as the live site's page did with any size not in
+  // its list.
+  if (BETA_TOOL_TYPES.has(s.toolType)) s.beta = true;
+  if (q.get('d') && diametersFor(s.beta).includes(num('d'))) s.diameterMm = num('d');
   if (q.get('th') && num('th') > 0) s.thicknessMm = num('th');
   if (q.get('f') && num('f') >= 1) s.flutes = Math.round(num('f'));
   if (q.get('r') && num('r') > 0) s.rpm = num('r');
@@ -447,10 +475,15 @@ export function writeUrlState(s) {
 function snapDrillDiameter(s) {
   if (s.mode !== 'drill') return;
   const list = /** @type {Record<string, number[]>} */ (DRILL_DIAMETERS)[s.drillTool] ?? [];
-  if (!list.includes(s.drillDiameterMm)) {
-    s.drillDiameterMm = list.reduce((a, b) =>
-      (Math.abs(b - s.drillDiameterMm) < Math.abs(a - s.drillDiameterMm) ? b : a), list[0]);
-  }
+  if (!list.includes(s.drillDiameterMm)) s.drillDiameterMm = nearest(list, s.drillDiameterMm);
+}
+
+/**
+ * The size in `list` nearest `v`, the earlier on a tie: app.js's snap.
+ * @param {number[]} list @param {number} v
+ */
+function nearest(list, v) {
+  return list.reduce((a, b) => (Math.abs(b - v) < Math.abs(a - v) ? b : a), list[0]);
 }
 
 /**
@@ -636,6 +669,10 @@ export function update(prev, action, presets) {
       // Unticked with a beta tool chosen: the page's default tool, and the
       // results follow as for any other tool change.
       if (!s.beta && BETA_TOOL_TYPES.has(s.toolType)) s.toolType = DEFAULT_TOOL_TYPE;
+      // A size only the beta list has goes to the nearest one left, the
+      // earlier on a tie, the rule a drill diameter follows when its family
+      // no longer offers it: 1/16 in to 1/8 in, 5/8 in to 16 mm.
+      if (!s.beta && BETA_DIAMETERS.has(s.diameterMm)) s.diameterMm = nearest(diametersFor(false), s.diameterMm);
       return s;
     case 'advSelect':
       s.adv[action.id] = action.value;

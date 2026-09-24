@@ -700,8 +700,9 @@ const REWRITES = {
     return named.length;
   },
   // The beta switch (Scott's ruling, 2026-09-24). While the React page's
-  // "Show beta tools" box is unticked its tool list has no ball nose: the
-  // option leaves the old side. Reads the box, so it runs before
+  // "Show beta tools" box is unticked the form is the live site's (1e6c265):
+  // no ball nose in the tool list, no 1/16 in or 5/8 in, and no ball-nose
+  // sentence in the depth and width hints. Reads the box, so it runs before
   // beta-checkbox removes it (the order of accepted-differences.json).
   'beta-hides-ball-nose'(entry, was, now, where) {
     const box = now.form.fields.find((f) => f.checkLabel === 'Show beta tools');
@@ -713,6 +714,21 @@ const REWRITES = {
     }
     if (was.form.toolPicker.chosen.includes(entry.option)) throw new Error(`${where}: ${entry.id}: the ball nose is chosen but the beta box is unticked`);
     opts.splice(at, 1);
+    // The two sizes added for the ball chart leave the diameter list.
+    const dia = was.form.fields.filter((f) => f.label === 'TOOL DIAMETER');
+    if (dia.length !== 1) throw new Error(`${where}: ${entry.id}: the baseline has ${dia.length} TOOL DIAMETER fields, not 1`);
+    for (const size of entry.diameters) {
+      const n = dia[0].options.filter((o) => o === size).length;
+      if (n !== 1) throw new Error(`${where}: ${entry.id}: the baseline lists ${size} ${n} times, not once`);
+      if (dia[0].shows === size) throw new Error(`${where}: ${entry.id}: the baseline shows ${size} but the beta box is unticked`);
+    }
+    dia[0].options = dia[0].options.filter((o) => !entry.diameters.includes(o));
+    // The depth and width hints lose their ball-nose sentences.
+    for (const h of entry.hints) {
+      const hits = was.form.fields.filter((f) => f.label === h.label);
+      if (hits.length !== 1 || hits[0].hint !== h.was) throw new Error(`${where}: ${entry.id}: the baseline's ${h.label} hint is not the one the entry names`);
+      hits[0].hint = h.now;
+    }
     return 1;
   },
   // The "Show beta tools" box leaves the React side's form, after checking it
