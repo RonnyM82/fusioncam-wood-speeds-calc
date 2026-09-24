@@ -1,0 +1,864 @@
+{
+  "state": "machine-5-homag-centateq-n500",
+  "shows": "Machine preset 5, Homag Centateq N-500.",
+  "query": "mc=5",
+  "actions": [],
+  "url": "?k=rout&m=mdf&mc=5&p=standard&t=compression&d=12.7&f=2&th=18&r=18000&fc=1&a_spindleKw=10&a_breakpointRpm=12000&a_feedMaxMMin=30&a_accelMs2=3&a_vacDPkPa=5&a_vacMu=0.4",
+  "form": {
+    "toolPicker": {
+      "legend": "TOOL TYPE",
+      "options": [
+        "Up-cut spiral\nPulls chips up and out. Clears chips best, but it can fray the top face.",
+        "Down-cut spiral\nPresses chips down. Leaves a clean top face, but clears chips poorly.",
+        "Compression\nUp-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts.",
+        "Straight\nSimple straight flutes. General purpose, but harder on the faces than a spiral.",
+        "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only."
+      ],
+      "chosen": [
+        "Compression\nUp-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts."
+      ]
+    },
+    "fields": [
+      {
+        "label": "WHAT ARE YOU CUTTING",
+        "options": [
+          "Routing",
+          "Drilling"
+        ],
+        "chosen": [
+          "Routing"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "MATERIAL",
+        "shows": "MDF",
+        "options": [
+          "MDF",
+          "Melamine / chipboard",
+          "Hard plywood",
+          "Soft plywood",
+          "HPL-faced panel",
+          "Hardwood",
+          "Softwood"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "TOOL DIAMETER",
+        "shows": "12.7 mm (1/2\")",
+        "options": [
+          "1.5875 mm (1/16\")",
+          "3.175 mm (1/8\")",
+          "4 mm",
+          "5 mm",
+          "6 mm",
+          "6.35 mm (1/4\")",
+          "8 mm",
+          "9.525 mm (3/8\")",
+          "10 mm",
+          "12 mm",
+          "12.7 mm (1/2\")",
+          "15.875 mm (5/8\")",
+          "16 mm",
+          "19.05 mm (3/4\")",
+          "25.4 mm (1\")"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "FLUTES",
+        "shows": "2",
+        "unit": null,
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "BOARD THICKNESS",
+        "shows": "18.0",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "DEPTH PER PASS",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.",
+        "message": null
+      },
+      {
+        "label": "WIDTH OF CUT",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE SPEED",
+        "shows": "18000",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "MACHINE",
+        "shows": "Homag Centateq N-500",
+        "options": [
+          "Biesse Rover B/S",
+          "SCM Morbidelli X50",
+          "SCM Morbidelli M100/X100",
+          "SCM Morbidelli M200/X200",
+          "SCM Morbidelli M600/800",
+          "Homag Centateq N-500",
+          "Anderson Stratos Pro",
+          "Generic Heavy nesting router (default)",
+          "Heliner 3-axis router"
+        ],
+        "hint": "This machine publishes no cutting feed. The reference default of 30 m/min serves.",
+        "message": null
+      },
+      {
+        "label": "HOW HARD TO RUN IT",
+        "options": [
+          "Gentle",
+          "Standard",
+          "Aggressive",
+          "Finishing"
+        ],
+        "chosen": [
+          "Standard"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": null,
+        "checkLabel": "First cut: run 65% of the chart feed until the cut proves good",
+        "checked": true,
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "FLUTE COUNT CONVENTION",
+        "shows": "Count total flutes (default)",
+        "options": [
+          "Count total flutes (default)",
+          "Count up-cut flutes only"
+        ],
+        "hint": "The vendor charts give per-tooth values for the total flute count. Some engineers count only the up-cut flutes on up/down spirals. If that is your convention, the served feed runs conservative.",
+        "message": null
+      },
+      {
+        "label": "CUT DIRECTION",
+        "shows": "Climb (default, the safe higher-force assumption)",
+        "options": [
+          "Climb (default, the safe higher-force assumption)",
+          "Conventional (lower force, modelled for MDF, melamine and plywood only)"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "COMPRESSION UP-CUT LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Defaults to one tool diameter.",
+        "message": null
+      },
+      {
+        "label": "FLUTE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to check the pass depth against the flutes. A pass deeper than the flutes draws a red chip.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE POWER",
+        "shows": "10.0",
+        "unit": "kW",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE BREAKPOINT",
+        "shows": "12000",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": "The rpm where constant torque becomes constant power. Typically 12000.",
+        "message": null
+      },
+      {
+        "label": "MACHINE MAX FEED",
+        "shows": "30",
+        "unit": "m/min",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "AXIS ACCELERATION",
+        "shows": "3.0",
+        "unit": "m/s²",
+        "invalid": "false",
+        "hint": "No OEM publishes this value. Derived tiers: hobby 0.4-1, light 1-3, heavy nesting 2-4.",
+        "message": null
+      },
+      {
+        "label": "PART FOOTPRINT ON VACUUM",
+        "shows": "",
+        "unit": "cm²",
+        "invalid": "false",
+        "hint": "Enter a value to enable the hold-down check, for example 80.",
+        "message": null
+      },
+      {
+        "label": "SMALLEST FEATURE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to enable the corner check, for example 120.",
+        "message": null
+      },
+      {
+        "label": "VACUUM ΔP ACHIEVED",
+        "shows": "5",
+        "unit": "kPa",
+        "invalid": "false",
+        "hint": "On a cut-open nested sheet, 2.4-7 kPa is realistic. 83 kPa is a sealed pod, not a nest.",
+        "message": null
+      },
+      {
+        "label": "GRIP FACTOR",
+        "shows": "0.40",
+        "unit": "μ",
+        "invalid": "false",
+        "hint": "Your own estimate, typically 0.4. No source publishes this value. It covers friction, air leakage and safety margin.",
+        "message": null
+      },
+      {
+        "label": "TIMBER DENSITY",
+        "shows": "",
+        "unit": "kg/m³",
+        "invalid": "false",
+        "hint": "Solid timber only, for example 515 for radiata. The model is valid 287-1080 kg/m³ and warns outside that range.",
+        "message": null
+      }
+    ]
+  },
+  "results": {
+    "present": true,
+    "text": "No limit applies. The cut can take the chart feed. Onsrud 60-100MW sets it, and first-cut mode serves 65% of it.\nSpindle speed\n18,000 rpm\nSurface speed\n718 m/min\n2,356 SFM\nCutting feedrate\n9,000 mm/min\n356 in/min\nFeed per tooth\n0.251 mm/tooth\n0.0099 in/tooth\nLead-in feedrate\n9,000 mm/min\n356 in/min\nAn arc lead-in enters at reduced engagement, so the full cutting feed is safe there.\nLead-out feedrate\n9,000 mm/min\n356 in/min\nRamp feedrate\n3,000 mm/min\n119 in/min\nRamp and plunge at up to 45° over 50–100 mm at one third of the cutting feed.\nPlunge feedrate\n3,000 mm/min\n119 in/min\n\nCutting-force values come from a low-speed test. Expect +15-20% more power at production speed.\n\nNOTES ON THIS CALCULATION\nFirst-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value.\nEvery published chart for this cut\nmm/tooth\nITA Tools (generic chart)\n0.100–0.200\nOnsrud 60-200 (finisher)\n0.127–0.178\nOnsrud 48-000 (straight)\n0.152–0.203\nOnsrud 56-200 (straight)\n0.178–0.229\nOnsrud 52-200/57-200 (spiral)\n0.203–0.254\nOnsrud 61-200 (straight)\n0.279–0.330\nOnsrud 60-000-LH (low-helix hogger)\n0.330–0.381\nOnsrud 60-100MW\n0.406–0.457\nOnsrud 60-350 (chipbreaker finisher)\n0.406–0.457\nOnsrud 60-000-HH (high-helix hogger)\n0.457–0.508\nOnsrud 60-100C (compression chipbreaker)\n0.457–0.508\nOnsrud 60-300 (chipbreaker finisher)\n0.457–0.508\nFreud (generic chart) 10 hp+ charts\n0.580–0.690\nVortex Tool (generic chart) 10 hp+ charts\n0.635–0.686\n\nThe highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.251 mm/tooth. The other charts are context, and their numbers do not serve.\n\nShow every published chart for this cut as a table\nEvery published chart for this cut\nCHART\tPUBLISHED BAND (MM/TOOTH)\tAGAINST THE EFFECTIVE CHIP\nITA TOOLS (GENERIC CHART)\t0.100–0.200\tThe effective chip is above this band, by 0.051 mm/tooth.\nONSRUD 60-200 (FINISHER)\t0.127–0.178\tThe effective chip is above this band, by 0.073 mm/tooth.\nONSRUD 48-000 (STRAIGHT)\t0.152–0.203\tThe effective chip is above this band, by 0.048 mm/tooth.\nONSRUD 56-200 (STRAIGHT)\t0.178–0.229\tThe effective chip is above this band, by 0.022 mm/tooth.\nONSRUD 52-200/57-200 (SPIRAL)\t0.203–0.254\tThe effective chip falls inside this band, but this chart does not serve it.\nONSRUD 61-200 (STRAIGHT)\t0.279–0.330\tThe effective chip is below this band, by 0.028 mm/tooth.\nONSRUD 60-000-LH (LOW-HELIX HOGGER)\t0.330–0.381\tThe effective chip is below this band, by 0.079 mm/tooth.\nONSRUD 60-100MW\t0.406–0.457\tSets your numbers. The effective chip 0.251 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.\nONSRUD 60-350 (CHIPBREAKER FINISHER)\t0.406–0.457\tThe effective chip is below this band, by 0.155 mm/tooth.\nONSRUD 60-000-HH (HIGH-HELIX HOGGER)\t0.457–0.508\tThe effective chip is below this band, by 0.206 mm/tooth.\nONSRUD 60-100C (COMPRESSION CHIPBREAKER)\t0.457–0.508\tThe effective chip is below this band, by 0.206 mm/tooth.\nONSRUD 60-300 (CHIPBREAKER FINISHER)\t0.457–0.508\tThe effective chip is below this band, by 0.206 mm/tooth.\nFREUD (GENERIC CHART) (10 HP+ CHARTS)\t0.580–0.690\tThe effective chip is below this band, by 0.329 mm/tooth.\nVORTEX TOOL (GENERIC CHART) (10 HP+ CHARTS)\t0.635–0.686\tThe effective chip is below this band, by 0.384 mm/tooth.",
+    "blocks": [
+      {
+        "role": "banner",
+        "variant": "success",
+        "icon": "#lt-ic-success",
+        "ariaRole": null,
+        "title": "No limit applies. The cut can take the chart feed. Onsrud 60-100MW sets it, and first-cut mode serves 65% of it.",
+        "paragraphs": [],
+        "list": [],
+        "text": "No limit applies. The cut can take the chart feed. Onsrud 60-100MW sets it, and first-cut mode serves 65% of it."
+      },
+      {
+        "role": "outputs",
+        "rows": [
+          {
+            "label": "Spindle speed",
+            "metric": "18,000 rpm",
+            "imperial": null,
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Surface speed",
+            "metric": "718 m/min",
+            "imperial": "2,356 SFM",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Cutting feedrate",
+            "metric": "9,000 mm/min",
+            "imperial": "356 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Feed per tooth",
+            "metric": "0.251 mm/tooth",
+            "imperial": "0.0099 in/tooth",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Lead-in feedrate",
+            "metric": "9,000 mm/min",
+            "imperial": "356 in/min",
+            "secondary": false,
+            "note": "An arc lead-in enters at reduced engagement, so the full cutting feed is safe there."
+          },
+          {
+            "label": "Lead-out feedrate",
+            "metric": "9,000 mm/min",
+            "imperial": "356 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Ramp feedrate",
+            "metric": "3,000 mm/min",
+            "imperial": "119 in/min",
+            "secondary": false,
+            "note": "Ramp and plunge at up to 45° over 50–100 mm at one third of the cutting feed."
+          },
+          {
+            "label": "Plunge feedrate",
+            "metric": "3,000 mm/min",
+            "imperial": "119 in/min",
+            "secondary": false,
+            "note": null
+          }
+        ]
+      },
+      {
+        "role": "banner",
+        "variant": "warning",
+        "icon": "#lt-ic-warning",
+        "ariaRole": null,
+        "title": null,
+        "paragraphs": [
+          "Cutting-force values come from a low-speed test. Expect +15-20% more power at production speed."
+        ],
+        "list": [],
+        "text": "Cutting-force values come from a low-speed test. Expect +15-20% more power at production speed."
+      },
+      {
+        "role": "notes",
+        "title": "NOTES ON THIS CALCULATION",
+        "items": [
+          "First-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value."
+        ]
+      },
+      {
+        "role": "chart",
+        "kind": "ladder",
+        "heading": "Every published chart for this cut",
+        "units": "mm/tooth",
+        "emphasised": [
+          "Onsrud 60-100MW"
+        ],
+        "rows": [
+          {
+            "label": "ITA Tools (generic chart)",
+            "tag": null,
+            "value": "0.100–0.200",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "0",
+            "barWidth": "16.9",
+            "marker": "25.6",
+            "name": "ITA Tools (generic chart). 0.100–0.200 mm/tooth. The effective chip is above this band, by 0.051 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-200 (finisher)",
+            "tag": null,
+            "value": "0.127–0.178",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "4.6",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Onsrud 60-200 (finisher). 0.127–0.178 mm/tooth. The effective chip is above this band, by 0.073 mm/tooth."
+          },
+          {
+            "label": "Onsrud 48-000 (straight)",
+            "tag": null,
+            "value": "0.152–0.203",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "8.8",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 48-000 (straight). 0.152–0.203 mm/tooth. The effective chip is above this band, by 0.048 mm/tooth."
+          },
+          {
+            "label": "Onsrud 56-200 (straight)",
+            "tag": null,
+            "value": "0.178–0.229",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "13.2",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 56-200 (straight). 0.178–0.229 mm/tooth. The effective chip is above this band, by 0.022 mm/tooth."
+          },
+          {
+            "label": "Onsrud 52-200/57-200 (spiral)",
+            "tag": null,
+            "value": "0.203–0.254",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "17.5",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Onsrud 52-200/57-200 (spiral). 0.203–0.254 mm/tooth. The effective chip falls inside this band, but this chart does not serve it."
+          },
+          {
+            "label": "Onsrud 61-200 (straight)",
+            "tag": null,
+            "value": "0.279–0.330",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "30.3",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 61-200 (straight). 0.279–0.330 mm/tooth. The effective chip is below this band, by 0.028 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-000-LH (low-helix hogger)",
+            "tag": null,
+            "value": "0.330–0.381",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "39",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Onsrud 60-000-LH (low-helix hogger). 0.330–0.381 mm/tooth. The effective chip is below this band, by 0.079 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-100MW",
+            "tag": null,
+            "value": "0.406–0.457",
+            "emphasis": true,
+            "serving": true,
+            "barLeft": "51.9",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Onsrud 60-100MW. 0.406–0.457 mm/tooth. Sets your numbers. The effective chip 0.251 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+          },
+          {
+            "label": "Onsrud 60-350 (chipbreaker finisher)",
+            "tag": null,
+            "value": "0.406–0.457",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "51.9",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Onsrud 60-350 (chipbreaker finisher). 0.406–0.457 mm/tooth. The effective chip is below this band, by 0.155 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-000-HH (high-helix hogger)",
+            "tag": null,
+            "value": "0.457–0.508",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "60.5",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 60-000-HH (high-helix hogger). 0.457–0.508 mm/tooth. The effective chip is below this band, by 0.206 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-100C (compression chipbreaker)",
+            "tag": null,
+            "value": "0.457–0.508",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "60.5",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 60-100C (compression chipbreaker). 0.457–0.508 mm/tooth. The effective chip is below this band, by 0.206 mm/tooth."
+          },
+          {
+            "label": "Onsrud 60-300 (chipbreaker finisher)",
+            "tag": null,
+            "value": "0.457–0.508",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "60.5",
+            "barWidth": "8.7",
+            "marker": "25.6",
+            "name": "Onsrud 60-300 (chipbreaker finisher). 0.457–0.508 mm/tooth. The effective chip is below this band, by 0.206 mm/tooth."
+          },
+          {
+            "label": "Freud (generic chart) 10 hp+ charts",
+            "tag": "10 hp+ charts",
+            "value": "0.580–0.690",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "81.4",
+            "barWidth": "18.6",
+            "marker": "25.6",
+            "name": "Freud (generic chart) (10 hp+ charts). 0.580–0.690 mm/tooth. The effective chip is below this band, by 0.329 mm/tooth."
+          },
+          {
+            "label": "Vortex Tool (generic chart) 10 hp+ charts",
+            "tag": "10 hp+ charts",
+            "value": "0.635–0.686",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "90.7",
+            "barWidth": "8.6",
+            "marker": "25.6",
+            "name": "Vortex Tool (generic chart) (10 hp+ charts). 0.635–0.686 mm/tooth. The effective chip is below this band, by 0.384 mm/tooth."
+          }
+        ],
+        "legend": "The highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.251 mm/tooth. The other charts are context, and their numbers do not serve.",
+        "table": {
+          "role": "table",
+          "summary": "Show every published chart for this cut as a table",
+          "caption": "Every published chart for this cut",
+          "headers": [
+            "CHART",
+            "PUBLISHED BAND (MM/TOOTH)",
+            "AGAINST THE EFFECTIVE CHIP"
+          ],
+          "rows": [
+            [
+              {
+                "header": true,
+                "text": "ITA TOOLS (GENERIC CHART)"
+              },
+              {
+                "header": false,
+                "text": "0.100–0.200"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is above this band, by 0.051 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-200 (FINISHER)"
+              },
+              {
+                "header": false,
+                "text": "0.127–0.178"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is above this band, by 0.073 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 48-000 (STRAIGHT)"
+              },
+              {
+                "header": false,
+                "text": "0.152–0.203"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is above this band, by 0.048 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 56-200 (STRAIGHT)"
+              },
+              {
+                "header": false,
+                "text": "0.178–0.229"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is above this band, by 0.022 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 52-200/57-200 (SPIRAL)"
+              },
+              {
+                "header": false,
+                "text": "0.203–0.254"
+              },
+              {
+                "header": false,
+                "text": "The effective chip falls inside this band, but this chart does not serve it."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 61-200 (STRAIGHT)"
+              },
+              {
+                "header": false,
+                "text": "0.279–0.330"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.028 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-000-LH (LOW-HELIX HOGGER)"
+              },
+              {
+                "header": false,
+                "text": "0.330–0.381"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.079 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-100MW"
+              },
+              {
+                "header": false,
+                "text": "0.406–0.457"
+              },
+              {
+                "header": false,
+                "text": "Sets your numbers. The effective chip 0.251 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-350 (CHIPBREAKER FINISHER)"
+              },
+              {
+                "header": false,
+                "text": "0.406–0.457"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.155 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-000-HH (HIGH-HELIX HOGGER)"
+              },
+              {
+                "header": false,
+                "text": "0.457–0.508"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.206 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-100C (COMPRESSION CHIPBREAKER)"
+              },
+              {
+                "header": false,
+                "text": "0.457–0.508"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.206 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "ONSRUD 60-300 (CHIPBREAKER FINISHER)"
+              },
+              {
+                "header": false,
+                "text": "0.457–0.508"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.206 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "FREUD (GENERIC CHART) (10 HP+ CHARTS)"
+              },
+              {
+                "header": false,
+                "text": "0.580–0.690"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.329 mm/tooth."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "VORTEX TOOL (GENERIC CHART) (10 HP+ CHARTS)"
+              },
+              {
+                "header": false,
+                "text": "0.635–0.686"
+              },
+              {
+                "header": false,
+                "text": "The effective chip is below this band, by 0.384 mm/tooth."
+              }
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "diagnostics": {
+    "present": true,
+    "text": "What is going on in this cut\nChip 0.251 mm, above the minimum\nDepth 1.4×D gives 90% chip load\nPower 7% of available\nkc 21 N/mm² · mdf\nBand 0.406 to 0.457 mm/tooth · Onsrud 60-100MW\nChip load target\n9,000 mm/min\n356 in/min\nMachine feed\n30,000 mm/min\n1,181 in/min\nSpindle power\n125,000 mm/min\n4,921 in/min\nShow what could cap the feed as a table\nWhat could cap the feed\nLIMIT\tFEEDRATE\tDOES IT BIND?\nCHIP LOAD TARGET\t9,000 mm/min (356 in/min)\tThis is the cap that sets the feed.\nMACHINE FEED\t30,000 mm/min (1,181 in/min)\tFar above the served feed, so it cannot bind.\nSPINDLE POWER\t125,000 mm/min (4,921 in/min)\tFar above the served feed, so it cannot bind.",
+    "blocks": [
+      {
+        "role": "heading",
+        "level": "H2",
+        "text": "What is going on in this cut"
+      },
+      {
+        "role": "badges",
+        "badges": [
+          {
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Chip 0.251 mm, above the minimum"
+          },
+          {
+            "variant": "warning",
+            "icon": "#lt-ic-warning",
+            "text": "Depth 1.4×D gives 90% chip load"
+          },
+          {
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Power 7% of available"
+          },
+          {
+            "variant": "info",
+            "icon": "#lt-ic-info",
+            "text": "kc 21 N/mm² · mdf"
+          },
+          {
+            "variant": "info",
+            "icon": "#lt-ic-info",
+            "text": "Band 0.406 to 0.457 mm/tooth · Onsrud 60-100MW"
+          }
+        ]
+      },
+      {
+        "role": "chart",
+        "kind": "cascade",
+        "emphasised": [
+          "Chip load target"
+        ],
+        "rows": [
+          {
+            "label": "Chip load target",
+            "metric": "9,000 mm/min",
+            "imperial": "356 in/min",
+            "emphasis": true,
+            "binds": true,
+            "farAbove": false,
+            "fillWidth": "7.235834287500001",
+            "name": "Chip load target. 9,000 mm/min. This is the cap that sets the feed."
+          },
+          {
+            "label": "Machine feed",
+            "metric": "30,000 mm/min",
+            "imperial": "1,181 in/min",
+            "emphasis": false,
+            "binds": false,
+            "farAbove": true,
+            "fillWidth": "24.003000000000004",
+            "name": "Machine feed. 30,000 mm/min. Far above the served feed, so it cannot bind."
+          },
+          {
+            "label": "Spindle power",
+            "metric": "125,000 mm/min",
+            "imperial": "4,921 in/min",
+            "emphasis": false,
+            "binds": false,
+            "farAbove": true,
+            "fillWidth": "100",
+            "name": "Spindle power. 125,000 mm/min. Far above the served feed, so it cannot bind."
+          }
+        ]
+      },
+      {
+        "role": "table",
+        "summary": "Show what could cap the feed as a table",
+        "caption": "What could cap the feed",
+        "headers": [
+          "LIMIT",
+          "FEEDRATE",
+          "DOES IT BIND?"
+        ],
+        "rows": [
+          [
+            {
+              "header": true,
+              "text": "CHIP LOAD TARGET"
+            },
+            {
+              "header": false,
+              "text": "9,000 mm/min (356 in/min)"
+            },
+            {
+              "header": false,
+              "text": "This is the cap that sets the feed."
+            }
+          ],
+          [
+            {
+              "header": true,
+              "text": "MACHINE FEED"
+            },
+            {
+              "header": false,
+              "text": "30,000 mm/min (1,181 in/min)"
+            },
+            {
+              "header": false,
+              "text": "Far above the served feed, so it cannot bind."
+            }
+          ],
+          [
+            {
+              "header": true,
+              "text": "SPINDLE POWER"
+            },
+            {
+              "header": false,
+              "text": "125,000 mm/min (4,921 in/min)"
+            },
+            {
+              "header": false,
+              "text": "Far above the served feed, so it cannot bind."
+            }
+          ]
+        ]
+      }
+    ]
+  }
+}

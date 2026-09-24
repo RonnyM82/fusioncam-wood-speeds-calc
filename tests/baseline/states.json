@@ -1,0 +1,72 @@
+{
+  "about": "The links the baseline loads (tools/baseline.mjs). Each query is appended to the page address as it stands; the page fills every key it is not given from its own defaults (MDF, compression, 12.7 mm, 2 flutes, 18 mm board, 18000 rpm, the Generic machine at index 7, Standard, first cut on; drilling: hinge drill, 35 mm, 13 mm hole). Actions use a control's role and accessible name, not its markup, so they still work on the converted page. Written 2026-09-24.",
+  "states": [
+    { "name": "routing-default-page-no-link", "shows": "The page opened with no query at all: MDF, compression 12.7 mm, full board and full slot (both optional boxes empty), Generic machine, Standard, first cut on.", "query": "" },
+
+    { "name": "material-melamine-downcut-6.35", "shows": "Melamine / chipboard with a down-cut spiral, which reads two data materials (laminated_pb and laminated_chipboard).", "query": "m=melamine&t=downcut&d=6.35" },
+    { "name": "material-hard-plywood-compression-12.7", "shows": "Hard plywood with a compression tool.", "query": "m=hard_ply&t=compression&d=12.7" },
+    { "name": "material-soft-plywood-upcut-6.35", "shows": "Soft plywood with an up-cut spiral, the one material with a fallback to the plywood charts.", "query": "m=soft_ply&t=upcut&d=6.35" },
+    { "name": "material-hpl-compression-12.7", "shows": "HPL-faced panel with a compression tool.", "query": "m=hpl&t=compression&d=12.7" },
+    { "name": "material-hardwood-upcut-6.35", "shows": "Hardwood with an up-cut spiral.", "query": "m=hardwood&t=upcut&d=6.35" },
+    { "name": "material-softwood-straight-12.7", "shows": "Softwood with a straight-flute tool.", "query": "m=softwood&t=straight&d=12.7" },
+
+    { "name": "tool-upcut-12.7-mdf", "shows": "Up-cut spiral at 12.7 mm in MDF (compression at 12.7 is the default page).", "query": "t=upcut&d=12.7" },
+    { "name": "tool-downcut-12.7-mdf", "shows": "Down-cut spiral at 12.7 mm in MDF.", "query": "t=downcut&d=12.7" },
+    { "name": "tool-straight-12.7-mdf", "shows": "Straight-flute tool at 12.7 mm in MDF.", "query": "t=straight&d=12.7" },
+    { "name": "tool-ball-12.7-mdf-depth-empty", "shows": "Ball nose at 12.7 mm in MDF with the depth box empty, which the page reads as the full board.", "query": "t=ball&d=12.7" },
+
+    { "name": "ball-12.7-mdf-depth-0.5-stepover-1.3", "shows": "Ball nose surfacing pass: 0.5 mm depth, 1.3 mm stepover. The ball geometry rows (scallop, cutting diameter, its surface speed) appear.", "query": "t=ball&d=12.7&ap=0.5&ae=1.3" },
+    { "name": "ball-12.7-mdf-depth-2-stepover-1.3", "shows": "Ball nose at 2 mm depth, same stepover.", "query": "t=ball&d=12.7&ap=2&ae=1.3" },
+    { "name": "ball-12.7-mdf-depth-6-stepover-5", "shows": "Ball nose at 6 mm depth, just under the radius, with a 5 mm stepover.", "query": "t=ball&d=12.7&ap=6&ae=5" },
+    { "name": "ball-6.35-hardwood-depth-1-stepover-0.6", "shows": "A smaller ball in hardwood, 1 mm depth.", "query": "m=hardwood&t=ball&d=6.35&ap=1&ae=0.6" },
+
+    { "name": "routing-finishing-mdf-compression-12.7", "shows": "The Finishing profile: finisher charts serve, the first-cut box is hidden, the 1 mm skim is assumed.", "query": "p=finishing" },
+    { "name": "routing-first-cut-off", "shows": "First-cut reduction switched off, so the chart feed serves in full.", "query": "fc=0" },
+    { "name": "routing-gentle-3-flutes-22000rpm", "shows": "Gentle profile, three flutes, a spindle speed other than the default.", "query": "p=gentle&f=3&r=22000" },
+    { "name": "routing-aggressive-upcut-depth-6-width-3", "shows": "Aggressive profile, up-cut spiral, with both optional boxes filled: 6 mm depth per pass, 3 mm width of cut.", "query": "p=aggressive&t=upcut&ap=6&ae=3" },
+
+    { "name": "machine-0-biesse-rover-bs", "shows": "Machine preset 0, Biesse Rover B/S: a spindle power range (the lower value serves) and no published feed (the reference default fills in, and the note says so).", "query": "mc=0" },
+    { "name": "machine-1-scm-morbidelli-x50", "shows": "Machine preset 1, SCM Morbidelli X50.", "query": "mc=1" },
+    { "name": "machine-2-scm-morbidelli-m100-x100", "shows": "Machine preset 2, SCM Morbidelli M100/X100.", "query": "mc=2" },
+    { "name": "machine-3-scm-morbidelli-m200-x200", "shows": "Machine preset 3, SCM Morbidelli M200/X200, which publishes a 50 m/min feed.", "query": "mc=3" },
+    { "name": "machine-4-scm-morbidelli-m600-800", "shows": "Machine preset 4, SCM Morbidelli M600/800.", "query": "mc=4" },
+    { "name": "machine-5-homag-centateq-n500", "shows": "Machine preset 5, Homag Centateq N-500.", "query": "mc=5" },
+    { "name": "machine-6-anderson-stratos-pro", "shows": "Machine preset 6, Anderson Stratos Pro: no published spindle power, so the reference default serves and the machine note says so.", "query": "mc=6" },
+    { "name": "machine-8-heliner-3-axis", "shows": "Machine preset 8, Heliner 3-axis router. (Preset 7, Generic, is the default page.)", "query": "mc=8" },
+
+    { "name": "advanced-machine-feed-cap-20-m-min", "shows": "The advanced machine max feed set to 20 m/min, which the page multiplies by 1000 into 20000 mm/min before the engine sees it. Aggressive, four flutes, 24000 rpm, so the chart feed is above 20 m/min and the machine feed cap binds.", "query": "p=aggressive&f=4&r=24000&a_feedMaxMMin=20" },
+    { "name": "advanced-overrides-hardwood-density-corner-conventional", "shows": "Advanced overrides: timber density 700, smallest feature 50 mm (turns on the corner check), conventional direction, up-cut-only flute convention.", "query": "m=hardwood&t=compression&a_densityKgM3=700&a_featureMm=50&a_direction=conventional&a_fluteBasis=upcut_only" },
+    { "name": "advanced-hold-down-binds-small-footprint", "shows": "A 20 cm² part footprint on the vacuum, so the hold-down cap binds and the limit line turns danger.", "query": "a_footprintCm2=20" },
+
+    { "name": "refusal-ball-nose-finishing", "shows": "A refusal: no finisher chart covers a ball nose.", "query": "t=ball&d=12.7&p=finishing" },
+    { "name": "refusal-ball-nose-in-hpl", "shows": "A refusal: the ball nose chart covers softwood, hardwood and MDF only.", "query": "m=hpl&t=ball&d=12.7&ap=1&ae=1.3" },
+    { "name": "block-depth-over-3x-diameter", "shows": "A block: a 3.175 mm tool through an 18 mm board is 5.7 times its diameter.", "query": "t=upcut&d=3.175" },
+    { "name": "block-compression-pass-too-shallow", "shows": "A block: a 2 mm pass with a compression tool leaves the up-cut section lifting the top face.", "query": "t=compression&d=12.7&ap=2" },
+    { "name": "four-warnings-fold-into-one-list", "shows": "Four warnings (speed clamped, chip ploughing, the ITA speed caveat, big-iron charts) fold into one banner carrying a list. From test SC30's sweep.", "query": "m=melamine&t=upcut&d=6&r=30000&p=gentle" },
+
+    { "name": "drill-hinge-35-published-speed", "shows": "Drilling's defaults: hinge drill 35 mm, 13 mm hole, the speed box empty so the published speed serves.", "query": "k=drill" },
+    { "name": "drill-hinge-26", "shows": "Hinge drill at 26 mm.", "query": "k=drill&dt=hinge&dd=26" },
+    { "name": "drill-dowel-5", "shows": "Dowel drill at 5 mm, a shelf-pin hole.", "query": "k=drill&dt=dowel&dd=5" },
+    { "name": "drill-dowel-8-hole-30", "shows": "Dowel drill at 8 mm, a 30 mm hole. No peck row: no dowel drill source publishes a clearing rule.", "query": "k=drill&dt=dowel&dd=8&hd=30" },
+    { "name": "drill-through-5", "shows": "Through-hole drill at 5 mm.", "query": "k=drill&dt=through&dd=5&hd=18" },
+    { "name": "drill-through-8", "shows": "Through-hole drill at 8 mm.", "query": "k=drill&dt=through&dd=8&hd=18" },
+    { "name": "drill-twist-3", "shows": "Twist drill at 3 mm.", "query": "k=drill&dt=twist&dd=3&hd=10" },
+    { "name": "drill-twist-8-hardwood-hole-40-peck", "shows": "Twist drill at 8 mm in hardwood, a 40 mm hole: past four diameters, so the peck row and its note appear (the double-heel twist drill is the one family that publishes a clearing rule).", "query": "k=drill&dt=twist&dd=8&hd=40&m=hardwood" },
+    { "name": "drill-bank-on-hinge-35", "shows": "The drill bank ticked: the router spindle's speed floor no longer applies and its range is not drawn.", "query": "k=drill&db=1" },
+    { "name": "drill-speed-given-dowel-8-4000rpm", "shows": "Drilling with the speed box filled, 4000 rpm, on the SCM X50.", "query": "k=drill&dt=dowel&dd=8&dr=4000&mc=1" },
+    { "name": "drill-gentle-melamine-dowel-5", "shows": "Drilling on the Gentle profile in melamine.", "query": "k=drill&dt=dowel&dd=5&p=gentle&m=melamine" },
+    { "name": "drill-machine-feed-cap-0.5-m-min", "shows": "The advanced machine max feed at 0.5 m/min in drilling, which caps the plunge (drilling caps on the machine feed only).", "query": "k=drill&a_feedMaxMMin=0.5" },
+
+    { "name": "fallback-finishing-link-opened-in-drilling", "shows": "A Finishing link opened in drilling falls back to Standard, because drilling offers no Finishing.", "query": "k=drill&p=finishing" },
+    { "name": "fallback-drill-family-link-snaps-diameter", "shows": "A dowel link with no diameter: the drilling default of 35 mm is not a dowel size, so it snaps to the nearest one the family publishes.", "query": "k=drill&dt=dowel" },
+    { "name": "fallback-drill-family-change-snaps-diameter", "shows": "Opened on the 35 mm hinge drill, then the Twist drill is picked: the diameter snaps to the nearest twist size.", "query": "k=drill&dt=hinge&dd=35", "actions": [ { "click": { "role": "radio", "name": "Twist drill" } } ] },
+    { "name": "fallback-mode-switch-parks-finishing", "shows": "Opened on Finishing in routing, switched to Drilling (Finishing is not offered, Standard serves), then back to Routing (Finishing returns).", "query": "p=finishing", "actions": [ { "click": { "role": "radio", "name": "Drilling", "exact": true } }, { "click": { "role": "radio", "name": "Routing", "exact": true } } ] },
+
+    { "name": "old-link-before-drilling", "shows": "A link in the format the page wrote before drilling existed (2026-08-18 to 2026-08-31, commit cabfddd): no mode key, keys in the old order, the machine values the old page wrote as a_ keys. It must still read as routing.", "query": "m=melamine&t=downcut&d=6.35&f=2&th=18&r=18000&mc=7&p=finishing&fc=1&a_spindleKw=10&a_breakpointRpm=12000&a_feedMaxMMin=30&a_accelMs2=3&a_vacDPkPa=5&a_vacMu=0.4" }
+  ],
+  "todayUnreadable": [
+    { "name": "speed-12-comma-000", "shows": "12,000 typed into the routing spindle speed.", "query": "", "actions": [ { "fill": { "label": "Spindle speed", "text": "12,000" } }, { "snapshot": "typing, with the text still in the box" }, { "blur": { "label": "Spindle speed" } } ] },
+    { "name": "flutes-abc", "shows": "abc typed into the flutes.", "query": "", "actions": [ { "fill": { "label": "Flutes", "text": "abc" } }, { "snapshot": "typing, with the text still in the box" }, { "blur": { "label": "Flutes" } } ] },
+    { "name": "depth-6-comma-5", "shows": "6,5 typed into the depth per pass, on an up-cut spiral (a compression tool would block any pass that shallow).", "query": "t=upcut", "actions": [ { "fill": { "label": "Depth per pass", "text": "6,5" } }, { "snapshot": "typing, with the text still in the box" }, { "blur": { "label": "Depth per pass" } } ] }
+  ]
+}

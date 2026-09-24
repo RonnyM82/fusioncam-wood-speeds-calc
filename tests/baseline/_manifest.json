@@ -1,0 +1,9 @@
+{
+  "capturedFrom": "tools/serve.js on this checkout",
+  "commit": "d2af43ed3733f2b520172f310622ce130de255af",
+  "browser": "chromium 153.0.8010.12",
+  "playwright": "1.63.0",
+  "viewport": "900x1000, locale en-NZ, light scheme",
+  "states": 52,
+  "todayUnreadable": 3
+}

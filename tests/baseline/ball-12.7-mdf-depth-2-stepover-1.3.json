@@ -1,0 +1,565 @@
+{
+  "state": "ball-12.7-mdf-depth-2-stepover-1.3",
+  "shows": "Ball nose at 2 mm depth, same stepover.",
+  "query": "t=ball&d=12.7&ap=2&ae=1.3",
+  "actions": [],
+  "url": "?k=rout&m=mdf&mc=7&p=standard&t=ball&d=12.7&f=2&th=18&r=18000&fc=1&ap=2&ae=1.3&a_spindleKw=10&a_breakpointRpm=12000&a_feedMaxMMin=30&a_accelMs2=3&a_vacDPkPa=5&a_vacMu=0.4",
+  "form": {
+    "toolPicker": {
+      "legend": "TOOL TYPE",
+      "options": [
+        "Up-cut spiral\nPulls chips up and out. Clears chips best, but it can fray the top face.",
+        "Down-cut spiral\nPresses chips down. Leaves a clean top face, but clears chips poorly.",
+        "Compression\nUp-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts.",
+        "Straight\nSimple straight flutes. General purpose, but harder on the faces than a spiral.",
+        "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only."
+      ],
+      "chosen": [
+        "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only."
+      ]
+    },
+    "fields": [
+      {
+        "label": "WHAT ARE YOU CUTTING",
+        "options": [
+          "Routing",
+          "Drilling"
+        ],
+        "chosen": [
+          "Routing"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "MATERIAL",
+        "shows": "MDF",
+        "options": [
+          "MDF",
+          "Melamine / chipboard",
+          "Hard plywood",
+          "Soft plywood",
+          "HPL-faced panel",
+          "Hardwood",
+          "Softwood"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "TOOL DIAMETER",
+        "shows": "12.7 mm (1/2\")",
+        "options": [
+          "1.5875 mm (1/16\")",
+          "3.175 mm (1/8\")",
+          "4 mm",
+          "5 mm",
+          "6 mm",
+          "6.35 mm (1/4\")",
+          "8 mm",
+          "9.525 mm (3/8\")",
+          "10 mm",
+          "12 mm",
+          "12.7 mm (1/2\")",
+          "15.875 mm (5/8\")",
+          "16 mm",
+          "19.05 mm (3/4\")",
+          "25.4 mm (1\")"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "FLUTES",
+        "shows": "2",
+        "unit": null,
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "BOARD THICKNESS",
+        "shows": "18.0",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "DEPTH PER PASS",
+        "shows": "2.0",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter.",
+        "message": null
+      },
+      {
+        "label": "WIDTH OF CUT",
+        "shows": "1.3",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE SPEED",
+        "shows": "18000",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "MACHINE",
+        "shows": "Generic Heavy nesting router (default)",
+        "options": [
+          "Biesse Rover B/S",
+          "SCM Morbidelli X50",
+          "SCM Morbidelli M100/X100",
+          "SCM Morbidelli M200/X200",
+          "SCM Morbidelli M600/800",
+          "Homag Centateq N-500",
+          "Anderson Stratos Pro",
+          "Generic Heavy nesting router (default)",
+          "Heliner 3-axis router"
+        ],
+        "hint": "Not a real model. This preset combines an HSD ES929-class 10 kW spindle, the heavy-nesting acceleration tier, and the reference defaults for feed, breakpoint and vacuum.",
+        "message": null
+      },
+      {
+        "label": "HOW HARD TO RUN IT",
+        "options": [
+          "Gentle",
+          "Standard",
+          "Aggressive",
+          "Finishing"
+        ],
+        "chosen": [
+          "Standard"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": null,
+        "checkLabel": "First cut: run 65% of the chart feed until the cut proves good",
+        "checked": true,
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "FLUTE COUNT CONVENTION",
+        "shows": "Count total flutes (default)",
+        "options": [
+          "Count total flutes (default)",
+          "Count up-cut flutes only"
+        ],
+        "hint": "The vendor charts give per-tooth values for the total flute count. Some engineers count only the up-cut flutes on up/down spirals. If that is your convention, the served feed runs conservative.",
+        "message": null
+      },
+      {
+        "label": "CUT DIRECTION",
+        "shows": "Climb (default, the safe higher-force assumption)",
+        "options": [
+          "Climb (default, the safe higher-force assumption)",
+          "Conventional (lower force, modelled for MDF, melamine and plywood only)"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "COMPRESSION UP-CUT LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Defaults to one tool diameter.",
+        "message": null
+      },
+      {
+        "label": "FLUTE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to check the pass depth against the flutes. A pass deeper than the flutes draws a red chip.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE POWER",
+        "shows": "10.0",
+        "unit": "kW",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE BREAKPOINT",
+        "shows": "12000",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": "The rpm where constant torque becomes constant power. Typically 12000.",
+        "message": null
+      },
+      {
+        "label": "MACHINE MAX FEED",
+        "shows": "30",
+        "unit": "m/min",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "AXIS ACCELERATION",
+        "shows": "3.0",
+        "unit": "m/s²",
+        "invalid": "false",
+        "hint": "No OEM publishes this value. Derived tiers: hobby 0.4-1, light 1-3, heavy nesting 2-4.",
+        "message": null
+      },
+      {
+        "label": "PART FOOTPRINT ON VACUUM",
+        "shows": "",
+        "unit": "cm²",
+        "invalid": "false",
+        "hint": "Enter a value to enable the hold-down check, for example 80.",
+        "message": null
+      },
+      {
+        "label": "SMALLEST FEATURE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to enable the corner check, for example 120.",
+        "message": null
+      },
+      {
+        "label": "VACUUM ΔP ACHIEVED",
+        "shows": "5",
+        "unit": "kPa",
+        "invalid": "false",
+        "hint": "On a cut-open nested sheet, 2.4-7 kPa is realistic. 83 kPa is a sealed pod, not a nest.",
+        "message": null
+      },
+      {
+        "label": "GRIP FACTOR",
+        "shows": "0.40",
+        "unit": "μ",
+        "invalid": "false",
+        "hint": "Your own estimate, typically 0.4. No source publishes this value. It covers friction, air leakage and safety margin.",
+        "message": null
+      },
+      {
+        "label": "TIMBER DENSITY",
+        "shows": "",
+        "unit": "kg/m³",
+        "invalid": "false",
+        "hint": "Solid timber only, for example 515 for radiata. The model is valid 287-1080 kg/m³ and warns outside that range.",
+        "message": null
+      }
+    ]
+  },
+  "results": {
+    "present": true,
+    "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it.\nSpindle speed\n18,000 rpm\nSurface speed\n718 m/min\n2,356 SFM\nCutting feedrate\n8,800 mm/min\n347 in/min\nFeed per tooth\n0.245 mm/tooth\n0.0096 in/tooth\nLead-in feedrate\n8,800 mm/min\n347 in/min\nAn arc lead-in enters at reduced engagement, so the full cutting feed is safe there.\nLead-out feedrate\n8,800 mm/min\n347 in/min\nRamp feedrate\n2,900 mm/min\n116 in/min\nRamp and plunge at up to 45° over 50–100 mm at one third of the cutting feed.\nPlunge feedrate\n2,900 mm/min\n116 in/min\nScallop height\n0.033 mm\n0.0013 in\nThis is the ridge left standing between passes, from the stepover and the ball radius alone. Shops and CAM documentation run 8 to 12 per cent of the tool diameter for a 3D finish pass, and no tooling maker publishes a figure. Halving the stepover quarters the ridge and doubles the cutting time.\nCutting diameter at this depth\n9.25 mm\n0.364 in\nA ball cuts on a smaller circle than its full diameter until the pass reaches half the diameter deep, and the speed falls to zero at the exact tip. Use a larger ball where the surface is flat.\nSurface speed at that diameter\n523 m/min\n1,717 SFM\n\nCutting-force values come from a low-speed test. Expect +15-20% more power at production speed.\n\nNOTES ON THIS CALCULATION\nFirst-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value.\nEvery published chart for this cut\nmm/tooth\nAmana spiral ball nose\n0.203–0.254\n\nThe highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.149 mm/tooth. The other charts are context, and their numbers do not serve.\n\nShow every published chart for this cut as a table\nEvery published chart for this cut\nCHART\tPUBLISHED BAND (MM/TOOTH)\tAGAINST THE EFFECTIVE CHIP\nAMANA SPIRAL BALL NOSE\t0.203–0.254\tSets your numbers. The effective chip 0.149 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.",
+    "blocks": [
+      {
+        "role": "banner",
+        "variant": "success",
+        "icon": "#lt-ic-success",
+        "ariaRole": null,
+        "title": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it.",
+        "paragraphs": [],
+        "list": [],
+        "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it."
+      },
+      {
+        "role": "outputs",
+        "rows": [
+          {
+            "label": "Spindle speed",
+            "metric": "18,000 rpm",
+            "imperial": null,
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Surface speed",
+            "metric": "718 m/min",
+            "imperial": "2,356 SFM",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Cutting feedrate",
+            "metric": "8,800 mm/min",
+            "imperial": "347 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Feed per tooth",
+            "metric": "0.245 mm/tooth",
+            "imperial": "0.0096 in/tooth",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Lead-in feedrate",
+            "metric": "8,800 mm/min",
+            "imperial": "347 in/min",
+            "secondary": false,
+            "note": "An arc lead-in enters at reduced engagement, so the full cutting feed is safe there."
+          },
+          {
+            "label": "Lead-out feedrate",
+            "metric": "8,800 mm/min",
+            "imperial": "347 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Ramp feedrate",
+            "metric": "2,900 mm/min",
+            "imperial": "116 in/min",
+            "secondary": false,
+            "note": "Ramp and plunge at up to 45° over 50–100 mm at one third of the cutting feed."
+          },
+          {
+            "label": "Plunge feedrate",
+            "metric": "2,900 mm/min",
+            "imperial": "116 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Scallop height",
+            "metric": "0.033 mm",
+            "imperial": "0.0013 in",
+            "secondary": false,
+            "note": "This is the ridge left standing between passes, from the stepover and the ball radius alone. Shops and CAM documentation run 8 to 12 per cent of the tool diameter for a 3D finish pass, and no tooling maker publishes a figure. Halving the stepover quarters the ridge and doubles the cutting time."
+          },
+          {
+            "label": "Cutting diameter at this depth",
+            "metric": "9.25 mm",
+            "imperial": "0.364 in",
+            "secondary": true,
+            "note": "A ball cuts on a smaller circle than its full diameter until the pass reaches half the diameter deep, and the speed falls to zero at the exact tip. Use a larger ball where the surface is flat."
+          },
+          {
+            "label": "Surface speed at that diameter",
+            "metric": "523 m/min",
+            "imperial": "1,717 SFM",
+            "secondary": true,
+            "note": null
+          }
+        ]
+      },
+      {
+        "role": "banner",
+        "variant": "warning",
+        "icon": "#lt-ic-warning",
+        "ariaRole": null,
+        "title": null,
+        "paragraphs": [
+          "Cutting-force values come from a low-speed test. Expect +15-20% more power at production speed."
+        ],
+        "list": [],
+        "text": "Cutting-force values come from a low-speed test. Expect +15-20% more power at production speed."
+      },
+      {
+        "role": "notes",
+        "title": "NOTES ON THIS CALCULATION",
+        "items": [
+          "First-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value."
+        ]
+      },
+      {
+        "role": "chart",
+        "kind": "ladder",
+        "heading": "Every published chart for this cut",
+        "units": "mm/tooth",
+        "emphasised": [
+          "Amana spiral ball nose"
+        ],
+        "rows": [
+          {
+            "label": "Amana spiral ball nose",
+            "tag": null,
+            "value": "0.203–0.254",
+            "emphasis": true,
+            "serving": true,
+            "barLeft": "51.6",
+            "barWidth": "48.4",
+            "marker": "0.0",
+            "name": "Amana spiral ball nose. 0.203–0.254 mm/tooth. Sets your numbers. The effective chip 0.149 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+          }
+        ],
+        "legend": "The highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.149 mm/tooth. The other charts are context, and their numbers do not serve.",
+        "table": {
+          "role": "table",
+          "summary": "Show every published chart for this cut as a table",
+          "caption": "Every published chart for this cut",
+          "headers": [
+            "CHART",
+            "PUBLISHED BAND (MM/TOOTH)",
+            "AGAINST THE EFFECTIVE CHIP"
+          ],
+          "rows": [
+            [
+              {
+                "header": true,
+                "text": "AMANA SPIRAL BALL NOSE"
+              },
+              {
+                "header": false,
+                "text": "0.203–0.254"
+              },
+              {
+                "header": false,
+                "text": "Sets your numbers. The effective chip 0.149 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+              }
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "diagnostics": {
+    "present": true,
+    "text": "What is going on in this cut\nChip 0.149 mm, above the minimum\nDepth 0.2×D at 10% radial, full chip load\nChip thinning 1.65× at 10% radial\nPower 0% of available\nkc 21 N/mm² · mdf\nBand 0.203 to 0.254 mm/tooth · Amana spiral ball nose\nChip load target\n8,800 mm/min\n347 in/min\nMachine feed\n30,000 mm/min\n1,181 in/min\nSpindle power\n10,989,000 mm/min\n432,638 in/min\nShow what could cap the feed as a table\nWhat could cap the feed\nLIMIT\tFEEDRATE\tDOES IT BIND?\nCHIP LOAD TARGET\t8,800 mm/min (347 in/min)\tThis is the cap that sets the feed.\nMACHINE FEED\t30,000 mm/min (1,181 in/min)\tFar above the served feed, so it cannot bind.\nSPINDLE POWER\t10,989,000 mm/min (432,638 in/min)\tFar above the served feed, so it cannot bind.",
+    "blocks": [
+      {
+        "role": "heading",
+        "level": "H2",
+        "text": "What is going on in this cut"
+      },
+      {
+        "role": "badges",
+        "badges": [
+          {
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Chip 0.149 mm, above the minimum"
+          },
+          {
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Depth 0.2×D at 10% radial, full chip load"
+          },
+          {
+            "variant": "warning",
+            "icon": "#lt-ic-warning",
+            "text": "Chip thinning 1.65× at 10% radial"
+          },
+          {
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Power 0% of available"
+          },
+          {
+            "variant": "info",
+            "icon": "#lt-ic-info",
+            "text": "kc 21 N/mm² · mdf"
+          },
+          {
+            "variant": "info",
+            "icon": "#lt-ic-info",
+            "text": "Band 0.203 to 0.254 mm/tooth · Amana spiral ball nose"
+          }
+        ]
+      },
+      {
+        "role": "chart",
+        "kind": "cascade",
+        "emphasised": [
+          "Chip load target"
+        ],
+        "rows": [
+          {
+            "label": "Chip load target",
+            "metric": "8,800 mm/min",
+            "imperial": "347 in/min",
+            "emphasis": true,
+            "binds": true,
+            "farAbove": false,
+            "fillWidth": "2",
+            "name": "Chip load target. 8,800 mm/min. This is the cap that sets the feed."
+          },
+          {
+            "label": "Machine feed",
+            "metric": "30,000 mm/min",
+            "imperial": "1,181 in/min",
+            "emphasis": false,
+            "binds": false,
+            "farAbove": true,
+            "fillWidth": "2",
+            "name": "Machine feed. 30,000 mm/min. Far above the served feed, so it cannot bind."
+          },
+          {
+            "label": "Spindle power",
+            "metric": "10,989,000 mm/min",
+            "imperial": "432,638 in/min",
+            "emphasis": false,
+            "binds": false,
+            "farAbove": true,
+            "fillWidth": "100",
+            "name": "Spindle power. 10,989,000 mm/min. Far above the served feed, so it cannot bind."
+          }
+        ]
+      },
+      {
+        "role": "table",
+        "summary": "Show what could cap the feed as a table",
+        "caption": "What could cap the feed",
+        "headers": [
+          "LIMIT",
+          "FEEDRATE",
+          "DOES IT BIND?"
+        ],
+        "rows": [
+          [
+            {
+              "header": true,
+              "text": "CHIP LOAD TARGET"
+            },
+            {
+              "header": false,
+              "text": "8,800 mm/min (347 in/min)"
+            },
+            {
+              "header": false,
+              "text": "This is the cap that sets the feed."
+            }
+          ],
+          [
+            {
+              "header": true,
+              "text": "MACHINE FEED"
+            },
+            {
+              "header": false,
+              "text": "30,000 mm/min (1,181 in/min)"
+            },
+            {
+              "header": false,
+              "text": "Far above the served feed, so it cannot bind."
+            }
+          ],
+          [
+            {
+              "header": true,
+              "text": "SPINDLE POWER"
+            },
+            {
+              "header": false,
+              "text": "10,989,000 mm/min (432,638 in/min)"
+            },
+            {
+              "header": false,
+              "text": "Far above the served feed, so it cannot bind."
+            }
+          ]
+        ]
+      }
+    ]
+  }
+}

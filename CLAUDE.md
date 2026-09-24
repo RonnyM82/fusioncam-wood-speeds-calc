@@ -127,6 +127,11 @@ hex: a border token used as a fill passes every check and is still wrong.
      refusing, but the same file records Scott's later decision that a pass
      with no stated depth serves, with the power and hold-down checks skipped.
      Check with him that this settled it, then close it in the research file.
+     Found by the conversion's baseline capture on 2026-09-24: the public page
+     never reaches that path. An empty depth box on a ball nose is sent as
+     `undefined`, not `null`, so it is read as the full 18 mm board (a
+     cutting diameter of 12.70 mm and no scallop row); only the Fusion panel
+     sends `null`. Put that to him with this question.
 - **Tool identity in the Fusion panel: use the library GUID before the
   fingerprint (Scott, 2026-09-02).** The panel remembers each confirmed tool
   (geometry, up-cut length, drill type) against a key from

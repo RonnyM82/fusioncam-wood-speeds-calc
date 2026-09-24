@@ -1,0 +1,485 @@
+{
+  "state": "drill-through-5",
+  "shows": "Through-hole drill at 5 mm.",
+  "query": "k=drill&dt=through&dd=5&hd=18",
+  "actions": [],
+  "url": "?k=drill&m=mdf&mc=7&p=standard&dt=through&dd=5&hd=18&a_spindleKw=10&a_breakpointRpm=12000&a_feedMaxMMin=30&a_accelMs2=3&a_vacDPkPa=5&a_vacMu=0.4",
+  "form": {
+    "toolPicker": {
+      "legend": "DRILL TYPE",
+      "options": [
+        "Dowel drill\nBlind holes for dowels, shelf pins and confirmats.",
+        "Through-hole drill\nHoles that break out the far side, with the exit face kept clean.",
+        "Hinge drill\nCup boring for concealed hinges, on a machining centre or a boring head.",
+        "Twist drill\nGeneral blind and through holes, and the only drills here that go below 3 mm."
+      ],
+      "chosen": [
+        "Through-hole drill\nHoles that break out the far side, with the exit face kept clean."
+      ]
+    },
+    "fields": [
+      {
+        "label": "WHAT ARE YOU CUTTING",
+        "options": [
+          "Routing",
+          "Drilling"
+        ],
+        "chosen": [
+          "Drilling"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "MATERIAL",
+        "shows": "MDF",
+        "options": [
+          "MDF",
+          "Melamine / chipboard",
+          "Hard plywood",
+          "Soft plywood",
+          "HPL-faced panel",
+          "Hardwood",
+          "Softwood"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "DRILL DIAMETER",
+        "shows": "5 mm",
+        "options": [
+          "3 mm",
+          "4.5 mm",
+          "5 mm",
+          "6 mm",
+          "8 mm",
+          "10 mm",
+          "12 mm"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "HOLE DEPTH",
+        "shows": "18.0",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "The depth of the hole, not the thickness of the panel. A 35 mm hinge cup is usually about 13 mm.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE SPEED",
+        "shows": "",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": "Leave empty to run at the speed this drill is published for.",
+        "message": null
+      },
+      {
+        "label": "MACHINE",
+        "shows": "Generic Heavy nesting router (default)",
+        "options": [
+          "Biesse Rover B/S",
+          "SCM Morbidelli X50",
+          "SCM Morbidelli M100/X100",
+          "SCM Morbidelli M200/X200",
+          "SCM Morbidelli M600/800",
+          "Homag Centateq N-500",
+          "Anderson Stratos Pro",
+          "Generic Heavy nesting router (default)",
+          "Heliner 3-axis router"
+        ],
+        "hint": "Not a real model. This preset combines an HSD ES929-class 10 kW spindle, the heavy-nesting acceleration tier, and the reference defaults for feed, breakpoint and vacuum.",
+        "message": null
+      },
+      {
+        "label": "HOW HARD TO RUN IT",
+        "options": [
+          "Gentle",
+          "Standard",
+          "Aggressive"
+        ],
+        "chosen": [
+          "Standard"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": null,
+        "checkLabel": "These holes run on a drill bank, not the router spindle",
+        "checked": false,
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "FLUTE COUNT CONVENTION",
+        "shows": "Count total flutes (default)",
+        "options": [
+          "Count total flutes (default)",
+          "Count up-cut flutes only"
+        ],
+        "hint": "The vendor charts give per-tooth values for the total flute count. Some engineers count only the up-cut flutes on up/down spirals. If that is your convention, the served feed runs conservative.",
+        "message": null
+      },
+      {
+        "label": "CUT DIRECTION",
+        "shows": "Climb (default, the safe higher-force assumption)",
+        "options": [
+          "Climb (default, the safe higher-force assumption)",
+          "Conventional (lower force, modelled for MDF, melamine and plywood only)"
+        ],
+        "hint": null,
+        "message": null
+      },
+      {
+        "label": "COMPRESSION UP-CUT LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Defaults to one tool diameter.",
+        "message": null
+      },
+      {
+        "label": "FLUTE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to check the pass depth against the flutes. A pass deeper than the flutes draws a red chip.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE POWER",
+        "shows": "10.0",
+        "unit": "kW",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "SPINDLE BREAKPOINT",
+        "shows": "12000",
+        "unit": "rpm",
+        "invalid": "false",
+        "hint": "The rpm where constant torque becomes constant power. Typically 12000.",
+        "message": null
+      },
+      {
+        "label": "MACHINE MAX FEED",
+        "shows": "30",
+        "unit": "m/min",
+        "invalid": "false",
+        "hint": "Filled from the machine preset. Edit it to override.",
+        "message": null
+      },
+      {
+        "label": "AXIS ACCELERATION",
+        "shows": "3.0",
+        "unit": "m/s²",
+        "invalid": "false",
+        "hint": "No OEM publishes this value. Derived tiers: hobby 0.4-1, light 1-3, heavy nesting 2-4.",
+        "message": null
+      },
+      {
+        "label": "PART FOOTPRINT ON VACUUM",
+        "shows": "",
+        "unit": "cm²",
+        "invalid": "false",
+        "hint": "Enter a value to enable the hold-down check, for example 80.",
+        "message": null
+      },
+      {
+        "label": "SMALLEST FEATURE LENGTH",
+        "shows": "",
+        "unit": "mm",
+        "invalid": "false",
+        "hint": "Enter a value to enable the corner check, for example 120.",
+        "message": null
+      },
+      {
+        "label": "VACUUM ΔP ACHIEVED",
+        "shows": "5",
+        "unit": "kPa",
+        "invalid": "false",
+        "hint": "On a cut-open nested sheet, 2.4-7 kPa is realistic. 83 kPa is a sealed pod, not a nest.",
+        "message": null
+      },
+      {
+        "label": "GRIP FACTOR",
+        "shows": "0.40",
+        "unit": "μ",
+        "invalid": "false",
+        "hint": "Your own estimate, typically 0.4. No source publishes this value. It covers friction, air leakage and safety margin.",
+        "message": null
+      },
+      {
+        "label": "TIMBER DENSITY",
+        "shows": "",
+        "unit": "kg/m³",
+        "invalid": "false",
+        "hint": "Solid timber only, for example 515 for radiata. The model is valid 287-1080 kg/m³ and warns outside that range.",
+        "message": null
+      }
+    ]
+  },
+  "results": {
+    "present": true,
+    "text": "No limit applies. The drill can take its published feed at this speed.\nSpindle speed\n12,000 rpm\nThis drill is published from 3000 to 9000 rpm.\nSurface speed\n188 m/min\n618 SFM\nPlunge feedrate\n1,390 mm/min\n55 in/min\nFeed per revolution\n0.12 mm/rev\n0.0046 in/rev\nFeed per cutting edge\n0.058 mm/tooth\n0.0023 in/tooth\n\nThis machine is rated from 12000 rpm, above the 3000 to 9000 rpm this drill is published for. The numbers below run at 12000 rpm. On a drill bank, tick the drill bank box.\n\n12000 rpm is outside the 3000 to 9000 rpm this drill is published for. The feed holds at the nearest published speed.\n\nThe published feed range at this speed\nmm/rev\nGentle\n0.09\nStandard\n0.12\nAggressive\n0.14\n\nThe highlighted bar is the setting you picked. The bars run from the slowest published feed, which is the point below which the drill rubs instead of cutting.\n\nShow the published feed range at this speed as a table\nThe published feed range at this speed\nSETTING\tFEED PER REV\tWHAT IT MEANS\nGENTLE\t0.09 mm/rev\tGentle would plunge at 1,050 mm/min.\nSTANDARD\t0.12 mm/rev\tThe setting you picked. It plunges at 1,390 mm/min.\nAGGRESSIVE\t0.14 mm/rev\tAggressive would plunge at 1,730 mm/min.",
+    "blocks": [
+      {
+        "role": "banner",
+        "variant": "info",
+        "icon": "#lt-ic-info",
+        "ariaRole": null,
+        "title": "No limit applies. The drill can take its published feed at this speed.",
+        "paragraphs": [],
+        "list": [],
+        "text": "No limit applies. The drill can take its published feed at this speed."
+      },
+      {
+        "role": "outputs",
+        "rows": [
+          {
+            "label": "Spindle speed",
+            "metric": "12,000 rpm",
+            "imperial": null,
+            "secondary": false,
+            "note": "This drill is published from 3000 to 9000 rpm."
+          },
+          {
+            "label": "Surface speed",
+            "metric": "188 m/min",
+            "imperial": "618 SFM",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Plunge feedrate",
+            "metric": "1,390 mm/min",
+            "imperial": "55 in/min",
+            "secondary": false,
+            "note": null
+          },
+          {
+            "label": "Feed per revolution",
+            "metric": "0.12 mm/rev",
+            "imperial": "0.0046 in/rev",
+            "secondary": true,
+            "note": null
+          },
+          {
+            "label": "Feed per cutting edge",
+            "metric": "0.058 mm/tooth",
+            "imperial": "0.0023 in/tooth",
+            "secondary": true,
+            "note": null
+          }
+        ]
+      },
+      {
+        "role": "banner",
+        "variant": "warning",
+        "icon": "#lt-ic-warning",
+        "ariaRole": null,
+        "title": null,
+        "paragraphs": [
+          "This machine is rated from 12000 rpm, above the 3000 to 9000 rpm this drill is published for. The numbers below run at 12000 rpm. On a drill bank, tick the drill bank box."
+        ],
+        "list": [],
+        "text": "This machine is rated from 12000 rpm, above the 3000 to 9000 rpm this drill is published for. The numbers below run at 12000 rpm. On a drill bank, tick the drill bank box."
+      },
+      {
+        "role": "banner",
+        "variant": "warning",
+        "icon": "#lt-ic-warning",
+        "ariaRole": null,
+        "title": null,
+        "paragraphs": [
+          "12000 rpm is outside the 3000 to 9000 rpm this drill is published for. The feed holds at the nearest published speed."
+        ],
+        "list": [],
+        "text": "12000 rpm is outside the 3000 to 9000 rpm this drill is published for. The feed holds at the nearest published speed."
+      },
+      {
+        "role": "chart",
+        "kind": "ladder",
+        "heading": "The published feed range at this speed",
+        "units": "mm/rev",
+        "emphasised": [
+          "Standard"
+        ],
+        "rows": [
+          {
+            "label": "Gentle",
+            "tag": null,
+            "value": "0.09",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "0",
+            "barWidth": "0.8",
+            "marker": null,
+            "name": "Gentle. 0.09 mm/rev. Gentle would plunge at 1,050 mm/min."
+          },
+          {
+            "label": "Standard",
+            "tag": null,
+            "value": "0.12",
+            "emphasis": true,
+            "serving": true,
+            "barLeft": "0",
+            "barWidth": "50.0",
+            "marker": null,
+            "name": "Standard. 0.12 mm/rev. The setting you picked. It plunges at 1,390 mm/min."
+          },
+          {
+            "label": "Aggressive",
+            "tag": null,
+            "value": "0.14",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "0",
+            "barWidth": "100.0",
+            "marker": null,
+            "name": "Aggressive. 0.14 mm/rev. Aggressive would plunge at 1,730 mm/min."
+          }
+        ],
+        "legend": "The highlighted bar is the setting you picked. The bars run from the slowest published feed, which is the point below which the drill rubs instead of cutting.",
+        "table": {
+          "role": "table",
+          "summary": "Show the published feed range at this speed as a table",
+          "caption": "The published feed range at this speed",
+          "headers": [
+            "SETTING",
+            "FEED PER REV",
+            "WHAT IT MEANS"
+          ],
+          "rows": [
+            [
+              {
+                "header": true,
+                "text": "GENTLE"
+              },
+              {
+                "header": false,
+                "text": "0.09 mm/rev"
+              },
+              {
+                "header": false,
+                "text": "Gentle would plunge at 1,050 mm/min."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "STANDARD"
+              },
+              {
+                "header": false,
+                "text": "0.12 mm/rev"
+              },
+              {
+                "header": false,
+                "text": "The setting you picked. It plunges at 1,390 mm/min."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "AGGRESSIVE"
+              },
+              {
+                "header": false,
+                "text": "0.14 mm/rev"
+              },
+              {
+                "header": false,
+                "text": "Aggressive would plunge at 1,730 mm/min."
+              }
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  "diagnostics": {
+    "present": true,
+    "text": "Speed range for this drill\nrpm\nThis drill\n3000–9000\nThis machine\n12000–24000\n\nThe dotted line marks the 12,000 rpm being served.\n\nShow speed range for this drill as a table\nSpeed range for this drill\nRANGE\tFROM AND TO\tWHERE THE SERVED SPEED SITS\nTHIS DRILL\t3,000 rpm to 9,000 rpm\tThe served speed sits outside what this drill is published for, so the feed holds at the nearest published value.\nTHIS MACHINE\t12,000 rpm to 24,000 rpm\tThe served speed is inside what this machine is rated for.",
+    "blocks": [
+      {
+        "role": "chart",
+        "kind": "ladder",
+        "heading": "Speed range for this drill",
+        "units": "rpm",
+        "emphasised": [
+          "This drill"
+        ],
+        "rows": [
+          {
+            "label": "This drill",
+            "tag": null,
+            "value": "3000–9000",
+            "emphasis": true,
+            "serving": true,
+            "barLeft": "0",
+            "barWidth": "28.6",
+            "marker": "42.9",
+            "name": "This drill. 3,000 rpm to 9,000 rpm. The served speed sits outside what this drill is published for, so the feed holds at the nearest published value."
+          },
+          {
+            "label": "This machine",
+            "tag": null,
+            "value": "12000–24000",
+            "emphasis": false,
+            "serving": false,
+            "barLeft": "42.9",
+            "barWidth": "57.1",
+            "marker": "42.9",
+            "name": "This machine. 12,000 rpm to 24,000 rpm. The served speed is inside what this machine is rated for."
+          }
+        ],
+        "legend": "The dotted line marks the 12,000 rpm being served.",
+        "table": {
+          "role": "table",
+          "summary": "Show speed range for this drill as a table",
+          "caption": "Speed range for this drill",
+          "headers": [
+            "RANGE",
+            "FROM AND TO",
+            "WHERE THE SERVED SPEED SITS"
+          ],
+          "rows": [
+            [
+              {
+                "header": true,
+                "text": "THIS DRILL"
+              },
+              {
+                "header": false,
+                "text": "3,000 rpm to 9,000 rpm"
+              },
+              {
+                "header": false,
+                "text": "The served speed sits outside what this drill is published for, so the feed holds at the nearest published value."
+              }
+            ],
+            [
+              {
+                "header": true,
+                "text": "THIS MACHINE"
+              },
+              {
+                "header": false,
+                "text": "12,000 rpm to 24,000 rpm"
+              },
+              {
+                "header": false,
+                "text": "The served speed is inside what this machine is rated for."
+              }
+            ]
+          ]
+        }
+      }
+    ]
+  }
+}
