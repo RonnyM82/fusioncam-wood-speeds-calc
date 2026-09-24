@@ -45,7 +45,7 @@ The lint enforces the rules, extended from the package and never copied
 
 If a rule stops something, the answer is a part or an upstream request, never a local
 exception. When a part is wrong, do not patch it from the app: record it in
-`docs/CONVERSION_FINDINGS.md` (which goes to the design system as a consumer report) and
+the design system's `docs/consumer-reports/2026-09-24-wood-calculator-conversion.md` (which goes to the design system as a consumer report) and
 report it upstream, as step 4 did with the row headers that would not wrap.
 
 **Where the parts' docs are.** Each part has a docs page beside its source in the

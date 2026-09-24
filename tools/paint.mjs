@@ -27,7 +27,7 @@
 //     scroll sideways (the 2026-08-31 finding: an expanded table widened the
 //     page), checked at the wide width only: at 390 px a long badge's words do
 //     not wrap and the page scrolls sideways, on the old page exactly as on
-//     this one (docs/CONVERSION_FINDINGS.md).
+//     this one (livetools-design-system: docs/consumer-reports/2026-09-24-wood-calculator-conversion.md).
 //   - That the page loaded cleanly: no console error, no uncaught error, no
 //     failed request, the provider's three attributes on <html> and its one
 //     sprite with its symbols.
