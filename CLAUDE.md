@@ -4,6 +4,14 @@ A public, deployed calculator at wood.fusioncam.co. Static page, no build step,
 no dependencies. A wrong number here goes to someone's spindle, so a data or
 behaviour regression is worse than any styling gap.
 
+**On the `react-conversion` branch this file is partly out of date until step
+5 of `docs/CONVERSION_PLAN.md` rewrites it.** Since step 1 (2026-09-24),
+`index.html` and `src/` are the new React page, built with Vite, and the page
+this file describes is `legacy.html`, the old `index.html` renamed with not a
+byte changed. `npm run check` runs the lint, the type check, the build, the
+201 tests and conformance. `smoke-measure.py` and `tools/baseline.mjs` load
+`legacy.html` by default. `main` is still the live site, unchanged.
+
 ## The design system is vendored. Do not edit it.
 
 `tokens/`, `components/`, `fonts/` and `icons/` are copies of the Livetools

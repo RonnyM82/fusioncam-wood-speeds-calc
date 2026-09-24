@@ -1,0 +1,42 @@
+/* ---------------------------------------------------------------------------
+   Wood speeds and feeds calculator, the React page's app layer.
+
+   Loads last, after the design system and app-tokens.css. Every value reads a
+   --lt-* token. The rules arrive from ../styles.css (the page before the
+   conversion, still served by legacy.html) as each step of
+   docs/CONVERSION_PLAN.md renders the part they style, unchanged unless the
+   survey says otherwise (docs/CONVERSION_SURVEY.md, section 5).
+
+   SURFACES: <body> is the page surface and follows the colour scheme. <main>
+   is a panel and is light in both schemes. The header sits on the page.
+   There is no dark-mode block here: the design system's tokens own it.
+   --------------------------------------------------------------------------- */
+
+:root {
+  font-family: var(--lt-font-sans);
+}
+
+body {
+  margin: 0 auto;
+  padding: var(--lt-space-5);
+  max-width: 44rem;
+  background: var(--lt-surface-page);
+  color: var(--lt-text-primary);
+  font-size: var(--lt-text-md);
+  line-height: var(--lt-leading-md);
+}
+
+header h1 {
+  font-size: var(--lt-text-2xl);
+  line-height: var(--lt-leading-2xl);
+  margin: var(--lt-space-2) 0;
+}
+
+/* The panel paints its own background. This adds only the geometry, never a
+   background: a later single-class rule setting one would beat the surface
+   class and leave the ink saying the opposite. */
+.app-main {
+  padding: var(--lt-space-5);
+  border: var(--lt-border-width-thin) solid var(--lt-border-subtle);
+  border-radius: var(--lt-radius-lg);
+}

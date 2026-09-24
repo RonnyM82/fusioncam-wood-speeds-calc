@@ -275,8 +275,10 @@ test('FIN', 'the finishing skim is pinned, sourced, and quoted by the UI hint', 
   assert(data.rules.finishing.data_class === 'project_decision', 'the finishing skim is a project decision');
   // The width-of-cut hint states the skim as static markup, because the
   // element reads its hint attribute once at render. This keeps the two from
-  // drifting apart.
-  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  // drifting apart. The page this reads is legacy.html since step 1 of the
+  // React conversion (2026-09-24), when index.html became the React page;
+  // step 2 moves the hint into src/ and this line follows it there.
+  const html = readFileSync(new URL('../legacy.html', import.meta.url), 'utf8');
   assert(html.includes(`assumes a ${data.rules.finishing.skim_ae_mm} mm skim`),
     'the width-of-cut hint must quote the rules.json skim value');
 });

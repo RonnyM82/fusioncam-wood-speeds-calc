@@ -16,7 +16,11 @@ Treat the calculated values as a starting point, not a guarantee. Wood is not al
 
 ## Development
 
-No build step, no dependencies. The page is static; the data is plain JSON in [data/](data/).
+The public page is being rebuilt as a Vite and React app on the Livetools design system's parts, on the `react-conversion` branch ([docs/CONVERSION_PLAN.md](docs/CONVERSION_PLAN.md)). On that branch `index.html` and `src/` are the new page, `legacy.html` is the page as it was, unchanged, kept for comparison until the work is done, and `npm install` then `npm run check` runs the lint, the type check, the build, the tests and the conformance check in one go. `npm run dev` serves the new page, and `npm run build` then `npm run preview` serves the built site on port 4173, the Fusion panel included.
+
+**The design-system dependency is a local link for now.** `package.json` names `@livetools/ui` as `file:../livetools-design-system/packages/ui`, which needs the design-system repo checked out beside this one with its package built (`npm run build -w @livetools/ui` there). That is for the build sessions only. Step 6 of the plan swaps it for a published version, pinned exactly, before anything deploys, because the GitHub Pages build cannot reach a local folder. (This note lives here because `package.json` cannot carry a comment.)
+
+On `main` there is no build step and no dependency: the page is static, and the data is plain JSON in [data/](data/).
 
 - `node tests/run.js` runs the full test suite: the twenty worked regression values from [tests/regression-tests.md](tests/regression-tests.md), the data integrity sweep, the limit scenarios and the drilling behaviour. Run it before pushing; a data edit that moves a recommendation fails here first.
 - The drilling numbers are read off the vendor's printed diagrams rather than transcribed. `python tools/read-leitz-drilling.py` reads the band polygons out of the source PDF and `python tools/build-drill-entries.py` turns them into [data/drills.json](data/drills.json), so the whole file is reproducible. `node tools/drill-sight-sweep.mjs` prints the served grid for a human to look at.

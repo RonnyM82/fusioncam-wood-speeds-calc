@@ -5,3 +5,4 @@ __pycache__/
 # Fusion writes this debug config into an add-in folder when you choose
 # Edit in its Add-Ins dialog. It is per machine, never the repo's.
 fusion-addin/**/.vscode/
+dist/

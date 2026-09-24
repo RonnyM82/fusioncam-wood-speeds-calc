@@ -61,13 +61,18 @@ design-system checkout beside this one
 exit code 2. It never skips quietly.
 
 ```bash
-node tools/baseline.mjs --compare                    # this checkout, served on a free port
+node tools/baseline.mjs --compare                    # this checkout's legacy.html, served on a free port
 node tools/baseline.mjs --compare --base http://localhost:4173/     # vite preview
 node tools/baseline.mjs --compare --base https://wood.fusioncam.co/ # the live site
 node tools/baseline.mjs --compare --only drill-bank-on-hinge-35     # one state
 node tools/baseline.mjs --out some/dir               # capture somewhere else
 node tools/baseline.mjs                              # RE-CAPTURE into this folder
 ```
+
+Since step 1 of the conversion (2026-09-24) the page before the conversion is
+`legacy.html`, the old `index.html` renamed with not a byte changed, and `index.html` is
+the React page. Without `--base` the tool loads `legacy.html`; to reach it on a server
+you started yourself, pass `--base http://localhost:<port>/legacy.html`.
 
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts

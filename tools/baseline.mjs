@@ -12,8 +12,12 @@
 // here does not.
 //
 // Without --base it serves this repo with tools/serve.js on a free port (never
-// 6006) and stops it afterwards. With --base it loads that page instead: a
-// `vite preview`, or wood.fusioncam.co itself.
+// 6006), loads the page as it was before the conversion, and stops the server
+// afterwards. That page is legacy.html since step 1 of the conversion
+// (2026-09-24), when index.html became the React page; it is the old
+// index.html renamed, not a byte changed, so its relative addresses still
+// resolve. With --base it loads that page instead: a `vite preview`, or
+// wood.fusioncam.co itself.
 //
 // Playwright is not a dependency of this repo, and this file adds none. It is
 // found, in order, at $PLAYWRIGHT_MODULE, then as a plain `playwright` package
@@ -105,7 +109,7 @@ async function startServer() {
     child.stdout.on('data', (b) => { if (String(b).includes('serving on')) { clearTimeout(t); res(); } });
     child.on('exit', (code) => rej(new Error(`tools/serve.js exited ${code}`)));
   });
-  return { base: `http://localhost:${port}/`, stop: () => child.kill() };
+  return { base: `http://localhost:${port}/legacy.html`, stop: () => child.kill() };
 }
 
 // ---------------------------------------------------------------------------

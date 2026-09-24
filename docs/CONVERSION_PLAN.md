@@ -40,6 +40,8 @@ These are Scott's, from 2026-09-24, unless marked as Claude's.
 | Dark mode | Claude's: the page keeps following the device setting (`LivetoolsProvider scheme="system"`). |
 | The "Advanced" and "Something looks wrong" fold-outs | Claude's: they keep the browser's own open-and-close box, because no part exists for one and the rules allow it. |
 | The results banners announced twice to a screen reader | Claude's: the results area stops announcing itself as a whole, the banners announce themselves, and a short spoken "Numbers updated" carries the figures. The clash is reported to the design system. |
+| Where the page before the conversion lives while the work runs (settled in step 1) | Claude's, 2026-09-24: `index.html` was renamed to `legacy.html` at the repo root, with not a byte changed (checked against the committed `index.html` with `cmp`). Every relative address in it still resolves, so `node tools/serve.js` serves it at `/legacy.html` exactly as it ran before. `tools/baseline.mjs --compare` with no `--base` now loads that address, and `--base http://localhost:<port>/legacy.html` reaches it explicitly; the React page is `--base http://localhost:4173/` under `vite preview`. It is not part of the built site, so it is never published. A git worktree of `main` was the alternative; it was not chosen because it lives outside the repo and every session would have to recreate it. `legacy.html`, `js/ui/app.js` and `styles.css` go when the conversion is done. |
+| How the Fusion panel's files are published without keeping two copies (settled in step 1) | Claude's, 2026-09-24: a small step in `vite.config.ts` copies them into `dist/` at build time, byte for byte, from where they already are in the repo: `fusion.html`, `fusion.css`, the root `app-tokens.css`, `tokens/`, `components/`, `fonts/`, `icons/`, `js/core/`, `js/data/`, `js/fusion/`, the three panel modules in `js/ui/`, the five JSON files in `data/`, and `tools/fusion-harness.js` (which `?harness=1` imports, and which has been public since the panel shipped). The same step copies the archived reference article to its current address. Nothing is kept in `public/` except `CNAME`, so `js/core/`, `js/data/` and `data/` each exist once. After copying, the build reads every address `fusion.html` loads, follows every module import from there, and fails if any file is missing from `dist/`, so a panel file cannot silently drop out of the published site. The `?v=` cache keys are untouched because `fusion.html` is copied, not processed by Vite. Checked on 2026-09-24: under `vite preview`, `/fusion.html?harness=1` rendered the harness job with every tool confirmed, and its text and a full-page screenshot were identical to the same page served from the repo root. |
 
 ## How the work is run
 
@@ -72,9 +74,15 @@ its current behaviour is recorded separately and marked as not a target.
 
 - Whether the table part's row-header release lets a long chart name wrap in the first
   column (survey, section 2, row 26). The first build session checks it.
-- How the Fusion panel's files are published without duplicating `js/core/`, `js/data/`
-  and `data/` (survey, section 6). Settled in step 1.
 - Whether the design system's publish workflow succeeds on its first real run, which has
   never happened (survey, section 6). Found out at step 6.
+- The build depends on the design-system checkout beside this one until step 6. Found in
+  step 1 (2026-09-24): `@livetools/ui` is a link to `../livetools-design-system/packages/ui`,
+  and npm did not install that package's own dependencies (`@base-ui/react`,
+  `react-aria-components`) into this repo; they load from the design-system checkout's
+  `node_modules`, and the lockfile does not list them. So a fresh clone anywhere else cannot
+  build, and while the design-system repo is rebuilding its package, this repo's lint and
+  build fail for the seconds its `dist/` is missing (seen once in step 1; a rerun passed).
+  Swapping to the published version in step 6 ends both.
 - The three 3D surfacing decisions Scott deferred on 2026-09-24 are not part of this work;
   they are in `CLAUDE.md`'s TODO list.

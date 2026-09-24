@@ -147,7 +147,10 @@ def main():
         print("smoke-measure: playwright not installed, skipping.")
         return 0
 
-    url = f"http://localhost:{args.port}/"
+    # The page before the React conversion, renamed from index.html to
+    # legacy.html in its step 1 (2026-09-24). Step 4 points this at the React
+    # page under vite preview.
+    url = f"http://localhost:{args.port}/legacy.html"
     ok = True
     with sync_playwright() as p:
         browser = p.chromium.launch()
