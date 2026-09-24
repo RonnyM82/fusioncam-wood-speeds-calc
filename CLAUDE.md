@@ -14,11 +14,11 @@ to swap it over (step 6 of the plan, still to come).
 - **Vite 8 and React 19**, TypeScript for the app's own components. `index.html` and `src/`
   are the page. `npm run dev` serves it while working; `npm run build` then `npm run preview`
   serves the built site on port 4173, the Fusion panel included.
-- **`@livetools/ui`**, the design system's React parts. Until step 6 it is a local link to
-  `../livetools-design-system/packages/ui`, which needs that checkout beside this one with
-  its package built (`npm run build -w @livetools/ui` there). Step 6 swaps it for a published
-  version, pinned exactly, before anything deploys, because the GitHub Pages build cannot
-  reach a local folder.
+- **`@livetools/ui`**, the design system's React parts, installed from npm at 0.2.0, pinned
+  exactly (swapped from a local link to the design-system checkout at step 6, 2026-09-24).
+  A new version is taken on purpose: change the pin, `npm install`, then `npm run check`
+  and the baseline comparison before committing. The design-system checkout beside this
+  one is still needed for the paint measurement only (below).
 - `src/globals.css` imports, in this order and no other, the package's stylesheet,
   `src/app-tokens.css` (this app's own tokens, prefixed `--wood-`) and `src/app.css`.
   `src/main.tsx` mounts the app in `LivetoolsProvider` with `scheme="system"`, so the page
@@ -194,11 +194,16 @@ not a byte changed; it, `js/ui/app.js` and `styles.css` go when the conversion i
 
 ## Still to come
 
-Step 6 of the plan, on Scott's word: the design system's package published (Scott pushes
-the tag), the published version swapped in with a fresh lockfile, the baseline run against
-that build, the GitHub Pages workflow added and the Pages source switched from the branch to
-the workflow, the first deploy, the baseline run against wood.fusioncam.co, and the Fusion
-add-in opened against the live site. Until then `main` is the live site.
+Step 6 of the plan. Done on 2026-09-24: the design system's package published as 0.2.0,
+swapped in here with the lockfile updated, the baseline run against that build (52
+identical with the four accepted differences), and the GitHub Pages workflow added
+(`.github/workflows/pages.yml`: every push builds and runs `npm run check:site`, the gate
+without the paint step; only a push to `main` publishes). Waiting on Scott's word: the
+Pages source switched from the `main` branch to the workflow, which must happen before
+`main` moves, because the branch-served site would otherwise serve the unbuilt source;
+then `main` fast-forwarded to this branch and pushed, the first deploy, the baseline run
+against wood.fusioncam.co, and the Fusion add-in opened against the live site. Until then
+`main` is the live site.
 
 ## TODO
 

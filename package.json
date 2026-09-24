@@ -12,11 +12,12 @@
     "test": "node tests/run.js",
     "conformance": "python conformance.py .",
     "paint": "node tools/paint.mjs",
-    "check": "npm run conformance && npm run test && npm run lint && npm run typecheck && npm run build && npm run paint",
+    "check:site": "npm run conformance && npm run test && npm run lint && npm run typecheck && npm run build",
+    "check": "npm run check:site && npm run paint",
     "prepare": "node tools/install-hooks.mjs"
   },
   "dependencies": {
-    "@livetools/ui": "file:../livetools-design-system/packages/ui",
+    "@livetools/ui": "0.2.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

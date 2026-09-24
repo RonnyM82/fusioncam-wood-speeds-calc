@@ -1,0 +1,68 @@
+# Build the site and publish it to GitHub Pages (step 6 of
+# docs/CONVERSION_PLAN.md, written 2026-09-24). Until then Pages served the
+# repo's `main` branch as it stood; the React page needs a build, so Pages
+# takes this workflow's output instead (Settings, Pages, Source: GitHub
+# Actions), switched over at go-live.
+#
+# Every push runs the build and the gate. Only a push to `main` publishes, so
+# a push to any other branch proves the build on GitHub's machines without
+# touching wood.fusioncam.co.
+#
+# The gate here is `npm run check:site`: everything `npm run check` runs
+# except the paint measurement, which reads the design system's paint probe
+# from its checkout beside this repo (the probe is not in the published
+# package). The paint step stays a local check, run by the pre-commit hook
+# on Scott's machine. Decided 2026-09-24; see docs/CONVERSION_PLAN.md.
+
+name: Build and publish the site
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One publish at a time, and a publish already running is allowed to finish.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # conformance.py uses only Python's standard library.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install
+        run: npm ci
+
+      - name: Gate and build
+        run: npm run check:site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publish:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

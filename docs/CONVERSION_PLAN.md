@@ -105,7 +105,11 @@ its current behaviour is recorded separately and marked as not a target.
   so the app can say its words once, through `announce()`, when the result has settled.
   Until then the banners stay as step 3 left them, keyed by their words.
 - Whether the design system's publish workflow succeeds on its first real run, which has
-  never happened (survey, section 6). Found out at step 6.
+  never happened (survey, section 6). Found out at step 6. ANSWERED 2026-09-24: the first
+  run passed every check and was then refused by npm, because a signed build record
+  (`--provenance`) is only allowed from a public repository and the design system's is
+  private. Scott ruled to publish without the record for now (its open question 23, making
+  the repository public, waits on Arthur); the second run published 0.2.0.
 - The build depends on the design-system checkout beside this one until step 6. Found in
   step 1 (2026-09-24): `@livetools/ui` is a link to `../livetools-design-system/packages/ui`,
   and npm did not install that package's own dependencies (`@base-ui/react`,
@@ -113,7 +117,8 @@ its current behaviour is recorded separately and marked as not a target.
   `node_modules`, and the lockfile does not list them. So a fresh clone anywhere else cannot
   build, and while the design-system repo is rebuilding its package, this repo's lint and
   build fail for the seconds its `dist/` is missing (seen once in step 1; a rerun passed).
-  Swapping to the published version in step 6 ends both.
+  Swapping to the published version in step 6 ends both. DONE 2026-09-24: 0.2.0 from npm,
+  pinned exactly, with both libraries now in this repo's lockfile.
 - `tools/paint.mjs` (step 5) reads the paint probe's source and Playwright from the
   design-system checkout, so `npm run check`, and with it the pre-commit hook, still needs
   that checkout after step 6 swaps in the published package, because the package does not
@@ -121,5 +126,6 @@ its current behaviour is recorded separately and marked as not a target.
   the design system's `docs/consumer-reports/2026-09-24-wood-calculator-conversion.md`) or the Pages workflow in step 6 runs the gate without it.
   Decided 2026-09-24: the Pages workflow runs the gate without the paint step, which stays a
   local check on Scott's machine, where the design-system checkout sits beside this one.
+  Built as `npm run check:site`, which `npm run check` runs first and then the paint step.
 - The three 3D surfacing decisions Scott deferred on 2026-09-24 are not part of this work;
   they are in `CLAUDE.md`'s TODO list.

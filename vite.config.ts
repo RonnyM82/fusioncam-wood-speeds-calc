@@ -115,10 +115,11 @@ export default defineConfig({
   base: "/",
   plugins: [react(), publishSiteFiles()],
   resolve: {
-    // @livetools/ui is linked from the design-system checkout during the
-    // build sessions, and its own imports of React would otherwise resolve
-    // from that checkout's node_modules: two Reacts, and every hook throws.
-    // Harmless once the published package replaces the link.
+    // Kept from when @livetools/ui was linked from the design-system
+    // checkout, whose own imports of React resolved from that checkout's
+    // node_modules: two Reacts, and every hook throws. Harmless with the
+    // published package, and it keeps a temporary link, to try a local fix,
+    // working.
     dedupe: ["react", "react-dom"],
   },
   build: {
