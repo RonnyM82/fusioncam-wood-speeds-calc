@@ -159,7 +159,8 @@ main {
    toast levels. There is no --lt-z-tooltip. The width is capped to the
    viewport so the tip cannot overflow a 400 px palette. The width reads
    --lt-tip-max-inline-size from app-tokens.css: the system has no tip-width
-   token, and the gap is reported in DESIGN-SYSTEM-FEEDBACK.md (2026-09-01). */
+   token, and the gap is reported in the design-system repo's
+   docs/consumer-reports/2026-08-20-wood-calculator.md (2026-09-01). */
 .machine-tip {
   position: fixed;
   z-index: var(--lt-z-dropdown);
@@ -244,8 +245,9 @@ main {
    browser without :has() loses nothing that matters. The system has no
    selected-card border token (--lt-table-row-bg-selected is a fill), so
    --lt-card-selected-border is this app's own, defined in app-tokens.css
-   with its reasoning, and the gap is reported in DESIGN-SYSTEM-FEEDBACK.md
-   (verifier finding, 2026-09-01). */
+   with its reasoning, and the gap is reported in the design-system repo's
+   docs/consumer-reports/2026-08-20-wood-calculator.md (verifier finding,
+   2026-09-01). */
 .op-card:has(> .op-card__head input[data-op]:checked) {
   border-color: var(--lt-card-selected-border);
   outline: var(--lt-border-width-medium) solid var(--lt-card-selected-border);

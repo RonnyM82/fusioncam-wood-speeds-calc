@@ -24,7 +24,8 @@
    --------------------------------------------------------------------------- */
 
 /* Three gaps the Fusion panel opened on 2026-09-01, each reported in
-   DESIGN-SYSTEM-FEEDBACK.md. The system defines no page measure, no
+   the design-system repo's docs/consumer-reports/2026-08-20-wood-calculator.md
+   (the 2026-09-01 addendum). The system defines no page measure, no
    floating-tip width and no selected-record border, so fusion.css carried
    three literals and one borrowed token until these landed. */
 :root {

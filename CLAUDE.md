@@ -25,7 +25,10 @@ comment:
 
 One correction is live today: `.lt-field[hidden]` in `styles.css`
 (2026-08-29), because the field class sets its own display and beats the
-hidden attribute. It is reported in DESIGN-SYSTEM-FEEDBACK.md (the addendum).
+hidden attribute. It is reported in the design-system repo
+(`livetools-dev/livetools-design-system`,
+`docs/consumer-reports/2026-08-20-wood-calculator.md`, the 2026-08-29
+addendum), and was still open upstream when checked on 2026-09-24.
 Everything this app corrected before that was adopted upstream on 2026-08-20
 and arrived back in a re-vendor: the stepper-width fix, the chart tokens and
 the forced-colours emphasis class. When the next defect appears, fix it in
