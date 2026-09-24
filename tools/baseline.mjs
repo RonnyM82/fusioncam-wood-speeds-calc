@@ -700,13 +700,16 @@ const REWRITES = {
     return named.length;
   },
   // The beta switch (Scott's ruling, 2026-09-24). While the React page's
-  // "Show beta tools" box is unticked the form is the live site's (1e6c265):
+  // "Use beta mode" box is unticked the form is the live site's (1e6c265):
   // no ball nose in the tool list, no 1/16 in or 5/8 in, and no ball-nose
   // sentence in the depth and width hints. Reads the box, so it runs before
   // beta-checkbox removes it (the order of accepted-differences.json).
   'beta-hides-ball-nose'(entry, was, now, where) {
-    const box = now.form.fields.find((f) => f.checkLabel === 'Show beta tools');
+    const box = now.form.fields.find((f) => f.checkLabel === 'Use beta mode');
     if (!box || box.checked) return 0;
+    // The box shows in drilling too since 2026-09-25, and a drill list never
+    // had the ball nose, so there is nothing here to rewrite.
+    if (was.form.toolPicker.legend !== 'TOOL TYPE') return 0;
     const opts = was.form.toolPicker.options;
     const at = opts.indexOf(entry.option);
     if (at < 0 || opts.lastIndexOf(entry.option) !== at || at !== opts.length - 1) {
@@ -732,19 +735,19 @@ const REWRITES = {
     return 1;
   },
   // The plastics (Scott's ruling, 2026-09-24) join the material list only
-  // while the "Show beta tools" box is ticked. On a ticked React page the
-  // fourteen plastic picks leave MATERIAL's options, after checking they are
+  // while the "Use beta mode" box is ticked. On a ticked React page the
+  // plastic picks leave MATERIAL's options, after checking they are
   // there exactly once each, last, in the entry's order, and not the material
   // shown. Reads the box, so it runs before beta-checkbox removes it.
   'beta-adds-plastics'(entry, was, now, where) {
-    const box = now.form.fields.find((f) => f.checkLabel === 'Show beta tools');
+    const box = now.form.fields.find((f) => f.checkLabel === 'Use beta mode');
     if (!box || !box.checked) return 0;
     const mat = now.form.fields.filter((f) => f.label === 'MATERIAL');
     if (mat.length !== 1) throw new Error(`${where}: ${entry.id}: the page has ${mat.length} MATERIAL fields, not 1`);
     const opts = mat[0].options;
     const tail = opts.slice(opts.length - entry.options.length);
     if (JSON.stringify(tail) !== JSON.stringify(entry.options)) {
-      throw new Error(`${where}: ${entry.id}: MATERIAL's options do not end in the fourteen plastics: ${JSON.stringify(tail)}`);
+      throw new Error(`${where}: ${entry.id}: MATERIAL's options do not end in the plastics: ${JSON.stringify(tail)}`);
     }
     for (const o of entry.options) {
       if (opts.filter((x) => x === o).length !== 1) throw new Error(`${where}: ${entry.id}: "${o}" is listed more than once`);
@@ -753,20 +756,15 @@ const REWRITES = {
     mat[0].options = opts.slice(0, opts.length - entry.options.length);
     return 1;
   },
-  // The "Show beta tools" box leaves the React side's form, after checking it
-  // is where and what the ruling says: once in routing, never in drilling,
-  // right after MATERIAL, ticked exactly when the ball nose is chosen.
+  // The "Use beta mode" box leaves the React side's form, after checking it
+  // is where and what the ruling says: once in either mode, right before
+  // MATERIAL (Scott, 2026-09-25), ticked exactly when the ball nose is chosen.
   'beta-checkbox'(entry, was, now, where) {
     const hits = now.form.fields.filter((f) => f.checkLabel === entry.checkLabel);
-    const routing = was.form.toolPicker.legend === 'TOOL TYPE';
-    if (!routing) {
-      if (hits.length) throw new Error(`${where}: ${entry.id}: the beta box shows outside routing`);
-      return 0;
-    }
     if (hits.length !== 1) throw new Error(`${where}: ${entry.id}: ${hits.length} beta boxes, not 1`);
     const box = hits[0];
     const at = now.form.fields.indexOf(box);
-    if (at < 1 || now.form.fields[at - 1].label !== 'MATERIAL') throw new Error(`${where}: ${entry.id}: the beta box is not right after MATERIAL`);
+    if (now.form.fields[at + 1]?.label !== 'MATERIAL') throw new Error(`${where}: ${entry.id}: the beta box is not right before MATERIAL`);
     if (box.label !== null || box.hint !== entry.hint || box.message !== null) throw new Error(`${where}: ${entry.id}: the beta box reads ${JSON.stringify(box)}`);
     const ball = now.form.toolPicker.chosen.some((c) => c.startsWith('Ball nose\n'));
     if (box.checked !== ball) throw new Error(`${where}: ${entry.id}: the beta box is ${box.checked ? 'ticked' : 'unticked'} with the ball nose ${ball ? '' : 'not '}chosen`);

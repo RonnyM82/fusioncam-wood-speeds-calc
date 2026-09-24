@@ -107,7 +107,7 @@ address `fusion.html` loads is missing. Every address in `fusion.html` carries
 `?v=<PAGE_BUILD>`, the same string as `PAGE_BUILD` in `js/ui/fusion-panel.js` (a date and a
 letter; test FP15 pins the two equal). Bump both whenever a file the panel loads changes,
 because Fusion's palette browser serves a stale copy of any address whose key did not
-change. Last bumped to `2026-09-24c` when the plastics joined the panel's material lists.
+change. Last bumped to `2026-09-25b` when the panel learned the Trace toolpath.
 
 **The vendored design system is the panel's. Do not edit it.** `tokens/`, `components/`,
 `fonts/` and `icons/` are copies of the vanilla Livetools Design System, and
@@ -135,8 +135,9 @@ commit 1e6c265 for anything ball, bull nose or surfacing.
   and the bull nose on every strategy, every 3D surfacing strategy, and Flat and Horizontal
   served as facing work. The engine (`js/core/`) and the data carry the ball nose whatever
   the tick says; only what reaches them is gated.
-- **Where it is.** The page: "Show beta tools", the design system's Checkbox under the tool
-  list, routing only. The panel: "Use beta tools", an `.lt-check` in Machine and cut.
+- **Where it is.** The page: "Use beta mode", the design system's Checkbox right above the
+  material, in both modes (Scott, 2026-09-25). The panel: "Use beta mode", an `.lt-check` in
+  Machine and cut, above the setups and their material pickers.
 - **Remembered** in the browser under one key shared by both, `wood-beta`, `"1"` when on,
   every read and write in a try/catch so a page with blocked storage opens unticked and still
   works. Only a person's tick is remembered. A link naming the ball nose (`t=ball`) opens
@@ -156,8 +157,9 @@ commit 1e6c265 for anything ball, bull nose or surfacing.
   ticks beta first, so its sizes read. Unticking with one chosen moves it to the nearest size
   left, the rule a drill diameter follows (1/16 in to 1/8 in, 5/8 in to 16 mm).
 - **The plastics** (Scott's ruling, 2026-09-24) are behind the same tick. With it on, the
-  fourteen plastic picks join the material list on the page and in the panel, and the page
-  offers 3 mm while a plastic is chosen. A link naming a plastic (`m=abs`) opens ticked.
+  two plastic picks, "Hard plastics" and "Soft plastics" (Scott, 2026-09-25), join the
+  material list on the page and in the panel, and the page offers 3 mm while a plastic is
+  chosen. A link naming a plastic (`m=soft_plastic`) opens ticked.
   Unticking with a plastic chosen falls back to MDF (`DEFAULT_MATERIAL`), and 3 mm moves to
   1/8 in. The panel keeps a setup's stored plastic and reads it as MDF while the tick is off.
 - **Promoting a feature out of beta is Scott's call**, never a session's. When he makes it
@@ -264,7 +266,7 @@ their rulings in `tests/baseline/accepted-differences.json`, and is exact about 
 else; `--no-accepted` turns them off. On 2026-09-24 the React page matched all 52 states
 with those four differences and nothing else, and again after the beta switch with two more
 (the tick, and while it is off the ball nose, its two sizes and its hint sentences gone), and
-again after the plastics with one more (while the tick is on, the fourteen plastics at the end
+again after the plastics with one more (while the tick is on, the two plastic families at the end
 of the material list). Any other difference, above all any number, is
 a regression until explained. Re-capture the baseline only when Scott has ruled a new
 behaviour right, and say so in the commit. `legacy.html` is the old `index.html` renamed with

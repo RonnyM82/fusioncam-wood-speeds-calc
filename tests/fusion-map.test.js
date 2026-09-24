@@ -711,3 +711,30 @@ test('FM40', 'a bull nose reads the ball chart at its corner, and its scallop co
     'the same stepover on a full ball leaves a far finer ridge');
   assert(ballR.meta.bullNose === false, 'a full radius is a ball, not a bull nose');
 });
+
+test('FM41', 'a Trace serves exactly as a 2D contour, with the beta tick on or off, under either strategy name', () => {
+  // Scott, 2026-09-25. Fusion states no heights for a trace, so the add-in
+  // ships the stock top and the lowest traced point plus the axial offset,
+  // with the bottom in the from-contour mode (protocol.md, heights). The
+  // default sideways compensation on a trace is center.
+  const traceHeights = {
+    top: { mode: 'from stock top', offsetMm: 0, zMm: 18, zSource: 'parameter', zSpreadMm: null },
+    bottom: { mode: 'from contour', offsetMm: -6, zMm: 12, zSource: 'geometry', zSpreadMm: 0 },
+  };
+  for (const beta of [true, false]) {
+    for (const [params, finishing] of [[{ compensation: 'center' }, false], [{ compensation: 'left', doMultipleDepths: true, stepdownMm: 3 }, false], [{ compensation: 'left' }, true]]) {
+      const choices = { ...CHOICES, beta, finishing };
+      const asContour = mapOperation(op('contour2d', { params, heights: traceHeights }), choices);
+      for (const name of ['trace', 'path3d']) {
+        const asTrace = mapOperation(op(name, { params, heights: traceHeights }), choices);
+        assert(JSON.stringify(asTrace) === JSON.stringify(asContour), `${name}, beta ${beta}, ${JSON.stringify(params)}: ${JSON.stringify(asTrace)} against ${JSON.stringify(asContour)}`);
+      }
+    }
+  }
+  const m = mapOperation(op('trace', { params: { compensation: 'center' }, heights: traceHeights }), CHOICES);
+  assert(m.status === 'mapped' && m.calc.apMm === 6 && m.calc.aeMm === 12.7, JSON.stringify(m));
+  assert(m.reading === 'Full-width slot, 6 mm deep, in one pass. The tool cuts on the line. The ambiguous direction serves the climb force model, the conservative one.', m.reading);
+  // A trace whose curves did not read names the contour mode in its refusal.
+  const unread = mapOperation(op('trace', { heights: { ...traceHeights, bottom: { mode: 'from contour', offsetMm: -6, zMm: null, zSource: null, zSpreadMm: null } } }), CHOICES);
+  assert(unread.status === 'unreadable' && /from contour/.test(unread.reason), unread.reason);
+});

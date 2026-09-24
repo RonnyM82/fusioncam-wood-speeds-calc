@@ -104,6 +104,16 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
         onValueChange={(value) => dispatch({ type: "mode", value })}
       />
 
+      {/* The beta tick sits above the material it governs (Scott, 2026-09-25).
+          It shows in both modes, because the plastics it adds are in the
+          material list both modes share. */}
+      <Checkbox
+        label="Use beta mode"
+        hint="Adds the ball nose, for 3D surfacing and carving, and soft and hard plastics to the material list. Their numbers are new and less proven than the rest; start conservatively."
+        checked={state.beta}
+        onCheckedChange={(value) => dispatch({ type: "beta", value })}
+      />
+
       {/* The plastics join the list only while the beta tick is on (Scott's
           ruling, 2026-09-24). */}
       <Select
@@ -124,17 +134,6 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
         value={drilling ? state.drillTool : state.toolType}
         onValueChange={(value) => dispatch({ type: "tool", value })}
       />
-
-      {/* The beta tick sits under the list it governs (Scott's ruling,
-          2026-09-24). Routing only: no drill is in beta. */}
-      {!drilling && (
-        <Checkbox
-          label="Show beta tools"
-          hint="Adds the ball nose, for 3D surfacing and carving, and soft and hard plastics to the material list. Their numbers are new and less proven than the rest; start conservatively."
-          checked={state.beta}
-          onCheckedChange={(value) => dispatch({ type: "beta", value })}
-        />
-      )}
 
       <FormGrid>
         <Select

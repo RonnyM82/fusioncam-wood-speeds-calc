@@ -214,6 +214,18 @@ page reads `null`. The page's mapping notes a spread above a hundredth of a
 millimetre in the reading line, and a `null` height in a geometry mode names
 the mode in its refusal.
 
+A trace states no heights (read firsthand, 2026-09-25). It cuts along its
+selected curves (`curves`, a contour selection like `contours`), and its
+depth is where those curves sit plus `axialOffset`, a negative offset being
+deeper (Autodesk support, "Cannot control the Z height of a trace toolpath by
+changing the Feed Height"). So the add-in ships a contour's two heights for
+it. `top` is the setup's stock top, mode `from stock top`, source
+`"parameter"`. `bottom` is the lowest point of the curves in the setup frame
+plus the axial offset, mode `from contour`, offset the axial offset, source
+`"geometry"`, with the curves' Z extent as its spread. No field is new, so
+there is no protocol bump. The operation's `strategy` attribute reads
+`trace`, and its strategy parameter reads `path3d`.
+
 ### persist (page to add-in)
 
 Sent whenever the user confirms a choice worth keeping. The add-in stores the
@@ -419,6 +431,7 @@ export function mapOperation(op, choices) {}
 |---|---|---|
 | `contour2d` | Full diameter (a slot) | see the depth rule below |
 | `contour2d` marked finish | null (the core assumes the 1 mm skim) | see the depth rule below |
+| `trace` (also `path3d`) | exactly as `contour2d`, finish mark included (Scott, 2026-09-25) | as `contour2d`, from the heights the add-in gives it |
 | `pocket2d` | Full diameter (every level starts as a slot) | see the depth rule below |
 | `adaptive2d`, `adaptive` | `optimalLoadMm` | see the depth rule below |
 | `slot` | Full diameter | see the depth rule below |

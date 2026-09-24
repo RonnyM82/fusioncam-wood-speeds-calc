@@ -165,6 +165,17 @@ const GEOMETRY_HEIGHT_MODES = new Set(['from contour', 'from hole top', 'from ho
 // took.
 const SPREAD_NOTE = 'The selection is not all at one depth, so the deepest serves.';
 
+// Trace (Scott, 2026-09-25): it serves exactly as a 2D contour does, with
+// the beta tick on or off, so it is handed on as one before anything else
+// reads it. The add-in gives a trace a contour's two heights, because Fusion
+// states none for it: the stock top, and the lowest point of the traced
+// curves plus the axial offset (fusion-addin/protocol.md, heights). The
+// operation's strategy attribute reads "trace" and its strategy parameter
+// "path3d", read firsthand the same day, so both names count. Its default
+// sideways compensation is "center", which the contour path already serves
+// as climb with a note.
+export const TRACE_STRATEGIES = new Set(['trace', 'path3d']);
+
 // op is the job message operation shape in fusion-addin/protocol.md.
 // choices is { toolType, upcutLengthMm, finishing, beta }: the user-confirmed
 // tool geometry, the confirmed up-cut length, the finish-row mark, and the
@@ -175,6 +186,9 @@ const SPREAD_NOTE = 'The selection is not all at one depth, so the deepest serve
 // be the behaviour that has been live and proven, never the newer numbers.
 // A caller has to ask for beta by name to reach them.
 export function mapOperation(op, choices = {}) {
+  if (TRACE_STRATEGIES.has(op?.strategy)) {
+    return mapOperation({ ...op, strategy: 'contour2d' }, choices);
+  }
   if (choices.beta !== true) {
     return mapOperationStable(op, choices);
   }

@@ -121,7 +121,7 @@
     },
     {
      "id": "acrylic_extruded",
-     "label": "Acrylic, extruded"
+     "label": "Extruded acrylic"
     }
    ]
   },
@@ -198,7 +198,7 @@
    "picks": [
     {
      "id": "acrylic_cast",
-     "label": "Acrylic, cast"
+     "label": "Cast acrylic"
     },
     {
      "id": "nylon",

@@ -170,7 +170,7 @@ difference applied, so reading which page is loaded changed nothing in the files
 
 **Two more for the beta switch (Scott's ruling, 2026-09-24).** The ball nose, the two sizes
 added for its chart and the ball-nose sentences in two hints show only while the React page's
-"Show beta tools" box is ticked, and the box is new. Both are listed
+box is ticked (labelled "Use beta mode" since 2026-09-25), and the box is new. Both are listed
 in `accepted-differences.json` and rewritten in `tools/baseline.mjs`, in this order:
 
 - `beta-hides-ball-nose`: where the box is there and unticked, the ball nose option leaves
@@ -178,10 +178,14 @@ in `accepted-differences.json` and rewritten in `tools/baseline.mjs`, in this or
   1/16 in and 5/8 in sizes leave its diameter list, after checking each is there once and
   not shown; and the depth-per-pass and width-of-cut hints lose their ball-nose sentences,
   after checking each is exactly the wording the entry names.
-- `beta-checkbox`: the box leaves the React page's form, after checking it is there once in
-  a routing state and never in drilling, right after MATERIAL, with its hint, and ticked
-  exactly when the ball nose is chosen. A link naming the ball nose ticks it, so the seven
-  ball-nose states keep their whole list and are compared as before.
+- `beta-adds-plastics` (2026-09-24): where the box is ticked, the two plastic picks leave
+  the end of MATERIAL's options, after checking they are there once each, in order, and not
+  the material shown.
+- `beta-checkbox`: the box leaves the React page's form, after checking it is there once,
+  right before MATERIAL, with its hint, and ticked exactly when the ball nose is chosen. It
+  shows in both modes since 2026-09-25, when Scott moved it above the material. A link
+  naming the ball nose ticks it, so the seven ball-nose states keep their whole list and are
+  compared as before.
 
 Against `vite preview` on 2026-09-24 after that change: 52 identical, none of them without an
 accepted difference. Nothing was re-captured.

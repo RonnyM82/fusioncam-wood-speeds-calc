@@ -12,6 +12,8 @@ import { SURFACING_3D as SURFACING_3D_STRATEGIES } from './map-operation.js';
 // One short label per strategy, in the words a machinist uses in Fusion.
 export const STRATEGY_LABELS = {
   contour2d: '2D contour',
+  trace: 'Trace',
+  path3d: 'Trace',
   pocket2d: '2D pocket',
   slot: 'Slot',
   adaptive2d: '2D adaptive',

@@ -24,7 +24,7 @@ import {
   makeHello, makePersist, makeRefresh, makeApply, makePageError,
 } from '../fusion/protocol.js';
 import { identifyTool } from '../fusion/tool-identity.js';
-import { mapOperation } from '../fusion/map-operation.js';
+import { mapOperation, TRACE_STRATEGIES } from '../fusion/map-operation.js';
 import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/present.js';
 
 // Rides the hello message, so the add-in can log which page answered it. It
@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-24c';
+const PAGE_BUILD = '2026-09-25b';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -58,7 +58,7 @@ function adskReady(timeoutMs) {
 const NO_ANSWER = 'The add-in did not answer. Stop and re-run the add-in (Utilities > Add-Ins), then reopen this panel.';
 
 // Copied from js/ui/app.js, which is the source of truth for the seven wood
-// materials, and from src/form-state.js for the fourteen plastics
+// materials, and from src/form-state.js for the two plastics
 // (2026-09-24). The panel must serve exactly the site's materials, with the
 // same ids and the same data mapping, because the two surfaces are one
 // product. The plastics are offered only with the beta tick on, as on the
@@ -72,22 +72,28 @@ const MATERIALS = [
   { id: 'hpl', label: 'HPL-faced panel', hint: 'High-pressure laminate over a board core. If the edge chips, change the tool geometry before the feed.', data: ['hpl'], kcMaterial: 'hpl' },
   { id: 'hardwood', label: 'Hardwood', hint: 'Oak, beech, maple, ash and similar', data: ['hardwood'], kcMaterial: 'hardwood' },
   { id: 'softwood', label: 'Softwood', hint: 'Pine, radiata, spruce', data: ['softwood'], kcMaterial: 'softwood' },
-  ...[
-    ['abs', 'ABS'], ['polycarbonate', 'Polycarbonate'], ['polyethylene', 'Polyethylene'], ['hdpe', 'HDPE'],
-    ['uhmw', 'UHMW'], ['polypropylene', 'Polypropylene'], ['polystyrene', 'Polystyrene / HIPS'], ['petg', 'PETG'],
-    ['acrylic_extruded', 'Acrylic, extruded'],
-  ].map(([id, name]) => plasticPick(id, name, 'soft_plastic')),
-  ...[
-    ['acrylic_cast', 'Acrylic, cast'], ['nylon', 'Nylon'], ['pvc_rigid', 'Rigid PVC'], ['acetal', 'Acetal / Delrin'],
-    ['phenolic', 'Phenolic'],
-  ].map(([id, name]) => plasticPick(id, name, 'hard_plastic')),
+  // The plastics, beta only (Scott, 2026-09-24): one pick per Onsrud chart,
+  // hard first (Scott, 2026-09-25). The hint lists every plastic the family
+  // holds, from data/plastics.json, and test PL-PICKS holds the two equal.
+  // Cast and extruded acrylic sit in different families, so the labels say
+  // which acrylic.
+  {
+    id: 'hard_plastic',
+    label: 'Hard plastics (cast acrylic, nylon, acetal, phenolic, etc.)',
+    hint: "Onsrud's hard plastic chart: cast acrylic, nylon, rigid PVC, acetal / Delrin and phenolic.",
+    data: ['hard_plastic'],
+    kcMaterial: 'hard_plastic',
+    beta: true,
+  },
+  {
+    id: 'soft_plastic',
+    label: 'Soft plastics (ABS, UHMW, HDPE, polycarbonate, extruded acrylic, etc.)',
+    hint: "Onsrud's soft plastic chart: ABS, polycarbonate, polyethylene, HDPE, UHMW, polypropylene, polystyrene / HIPS, PETG and extruded acrylic.",
+    data: ['soft_plastic'],
+    kcMaterial: 'soft_plastic',
+    beta: true,
+  },
 ];
-
-// One plastic pick, as src/form-state.js builds it.
-function plasticPick(id, name, family) {
-  const words = family === 'soft_plastic' ? 'soft plastic' : 'hard plastic';
-  return { id, label: `${name} (${words})`, hint: `Served from Onsrud's ${words} chart.`, data: [family], kcMaterial: family, beta: true };
-}
 
 // The materials the setup picker offers: the plastics only with the beta tick.
 function materialsOffered() {
@@ -761,7 +767,7 @@ function renderSettings() {
       <div class="lt-field span-all">
         <label class="lt-check">
           <input type="checkbox" id="beta" aria-describedby="beta-hint">
-          <span>Use beta tools</span>
+          <span>Use beta mode</span>
         </label>
         <span class="lt-field__hint" id="beta-hint">Serves the ball nose and the bull nose, for 3D surfacing and carving, and adds soft and hard plastics to the material lists. Their numbers are new and less proven than the rest; start conservatively.</span>
       </div>
@@ -1307,8 +1313,9 @@ function opCard(op, setup, si, oi) {
   }
 
   // The finish mark is per contour: toggling it changes the reading and the
-  // numbers of this one card, so the tick sits in the card.
-  const finishToggle = op.strategy === 'contour2d'
+  // numbers of this one card, so the tick sits in the card. A trace takes it
+  // too, because it serves exactly as a 2D contour (Scott, 2026-09-25).
+  const finishToggle = op.strategy === 'contour2d' || TRACE_STRATEGIES.has(op.strategy)
     ? `<label class="lt-check op-card__finish">
         <input type="checkbox" id="${ids.finish}" data-finish="${escapeHtml(op.opId)}"
                ${state.finishRows.has(op.opId) ? 'checked' : ''}>

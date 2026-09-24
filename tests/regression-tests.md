@@ -44,4 +44,4 @@ Source: LMT Onsrud catalogue PCT-19, Soft Plastic p.120 and Hard Plastic p.121.
 - **PL10 No extrapolation**: 1.5, 19.1 and 25.4 mm refuse; 1/16 in and 3/4 in serve.
 - **PL11-PL17**: no power or hold-down check; no first-cut and no wood floor; the machine-cap warning names the defect; tool types; the maker's advice; Finishing on 60-200; drilling refuses.
 - **PL18 Wood unchanged**: 420 wood picks give identical results with and without the plastics data.
-- **PL-PICKS, PL19-PL21**: the page, panel and data agree on the 14 picks; the beta tick gates them and 3 mm; the advice banner and chart label; no PDF ships.
+- **PL-PICKS, PL19-PL21**: one pick per family, hard first, the same on the page and in the panel, each hint listing every plastic the data assigns. The beta tick gates them and 3 mm. The advice banner and the chart label. No PDF ships.

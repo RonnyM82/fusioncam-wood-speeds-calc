@@ -35,7 +35,7 @@
 // box still means the machine's own value.
 //
 // THE BETA SWITCH (Scott's ruling, 2026-09-24): the ball nose is offered only
-// while "Show beta tools" is ticked. It arrived in commit bc85559 and was never
+// while "Use beta mode" is ticked. It arrived in commit bc85559 and was never
 // live, so with the tick off the tool list, the diameter list and the depth
 // and width hints are the live site's (commit 1e6c265), word for word.
 // The tick is off by default; the page remembers it in the browser
@@ -46,9 +46,9 @@
 // page's default tool, and a diameter only the ball chart needed goes to the
 // nearest one left, as a drill diameter does when its family changes.
 //
-// THE PLASTICS (Scott, 2026-09-24) are behind the same tick. The fourteen
-// plastic picks join the material list only while it is on, and a link naming
-// one opens with it on, as a ball-nose link does. Unticking with a plastic
+// THE PLASTICS (Scott, 2026-09-24) are behind the same tick. The two plastic
+// picks, hard and soft (Scott, 2026-09-25), join the material list only while
+// it is on, and a link naming one opens with it on, as a ball-nose link does. Unticking with a plastic
 // chosen falls back to MDF, the page's default material. The 3 mm size is
 // offered only while a plastic is chosen, because only the plastics chart is
 // interpolated at it. Wood keeps the list it had.
@@ -92,38 +92,28 @@ export const MATERIALS = [
   { id: 'hpl', label: 'HPL-faced panel', hint: 'High-pressure laminate over a board core. If the edge chips, change the tool geometry before the feed.', data: ['hpl'], kcMaterial: 'hpl' },
   { id: 'hardwood', label: 'Hardwood', hint: 'Oak, beech, maple, ash and similar', data: ['hardwood'], kcMaterial: 'hardwood' },
   { id: 'softwood', label: 'Softwood', hint: 'Pine, radiata, spruce', data: ['softwood'], kcMaterial: 'softwood' },
-  // The plastics, beta only (Scott, 2026-09-24). Each pick serves its
-  // family's Onsrud chart. data/plastics.json records the same assignment, and
-  // test PL-PICKS holds the two equal. Acrylic is two picks, because cast and
-  // extruded acrylic sit in different families.
-  ...[
-    ['abs', 'ABS'], ['polycarbonate', 'Polycarbonate'], ['polyethylene', 'Polyethylene'], ['hdpe', 'HDPE'],
-    ['uhmw', 'UHMW'], ['polypropylene', 'Polypropylene'], ['polystyrene', 'Polystyrene / HIPS'], ['petg', 'PETG'],
-    ['acrylic_extruded', 'Acrylic, extruded'],
-  ].map(([id, name]) => plasticPick(id, name, 'soft_plastic')),
-  ...[
-    ['acrylic_cast', 'Acrylic, cast'], ['nylon', 'Nylon'], ['pvc_rigid', 'Rigid PVC'], ['acetal', 'Acetal / Delrin'],
-    ['phenolic', 'Phenolic'],
-  ].map(([id, name]) => plasticPick(id, name, 'hard_plastic')),
-];
-
-/**
- * One plastic material pick. The label names the family, so a beginner sees
- * which chart serves the plastic they chose.
- * @param {string} id @param {string} name @param {'soft_plastic' | 'hard_plastic'} family
- * @returns {MaterialPick}
- */
-function plasticPick(id, name, family) {
-  const words = family === 'soft_plastic' ? 'soft plastic' : 'hard plastic';
-  return {
-    id,
-    label: `${name} (${words})`,
-    hint: `Served from Onsrud's ${words} chart.`,
-    data: [family],
-    kcMaterial: family,
+  // The plastics, beta only (Scott, 2026-09-24): one pick per Onsrud chart,
+  // hard first (Scott, 2026-09-25). The hint lists every plastic the family
+  // holds, from data/plastics.json, and test PL-PICKS holds the two equal.
+  // Cast and extruded acrylic sit in different families, so the labels say
+  // which acrylic.
+  {
+    id: 'hard_plastic',
+    label: 'Hard plastics (cast acrylic, nylon, acetal, phenolic, etc.)',
+    hint: "Onsrud's hard plastic chart: cast acrylic, nylon, rigid PVC, acetal / Delrin and phenolic.",
+    data: ['hard_plastic'],
+    kcMaterial: 'hard_plastic',
     beta: true,
-  };
-}
+  },
+  {
+    id: 'soft_plastic',
+    label: 'Soft plastics (ABS, UHMW, HDPE, polycarbonate, extruded acrylic, etc.)',
+    hint: "Onsrud's soft plastic chart: ABS, polycarbonate, polyethylene, HDPE, UHMW, polypropylene, polystyrene / HIPS, PETG and extruded acrylic.",
+    data: ['soft_plastic'],
+    kcMaterial: 'soft_plastic',
+    beta: true,
+  },
+];
 
 /** The material picks offered only while the beta tick is on: the plastics. */
 export const BETA_MATERIALS = new Set(MATERIALS.filter((m) => m.beta).map((m) => m.id));

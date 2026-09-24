@@ -129,3 +129,7 @@ test('FR6', 'a 3D surfacing row names its own facts, and says which one did not 
   const flat = readFacts({ ...op, strategy: 'contour2d' });
   assert(flat.includes('stepdown 0.8 mm') && !flat.includes('corner radius'), `a 2D clause must keep its own shape: ${flat}`);
 });
+
+test('FR7', 'a Trace reads as Trace on the card, under either strategy name', () => {
+  assert(strategyLabel('trace') === 'Trace' && strategyLabel('path3d') === 'Trace', `${strategyLabel('trace')} ${strategyLabel('path3d')}`);
+});

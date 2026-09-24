@@ -274,6 +274,16 @@ PARAM_BOTTOM_REF = "bottomHeight_ref"
 # The geometry selections: contours on contour2d, pockets on pocket2d,
 # adaptive2d and slot, holeFaces on drill (section 12).
 PARAM_CONTOURS = "contours"
+# Trace (2026-09-25, read firsthand on a Fusion CAM operation that day).
+# A trace has no top or bottom height at all: it cuts along its selected
+# curves, and its depth is where those curves sit plus the axial offset. A
+# negative axial offset moves the tool into the part (Autodesk support,
+# "Cannot control the Z height of a trace toolpath by changing the Feed
+# Height"). The operation's strategy attribute reads "trace", and its
+# strategy parameter reads "path3d", so both names count.
+PARAM_CURVES = "curves"
+PARAM_AXIAL_OFFSET = "axialOffset"
+TRACE_STRATEGIES = ("trace", "path3d")
 PARAM_POCKETS = "pockets"
 PARAM_HOLE_FACES = "holeFaces"
 

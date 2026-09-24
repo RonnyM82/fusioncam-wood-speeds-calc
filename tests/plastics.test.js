@@ -360,31 +360,33 @@ test('PL18', 'no wood number can move: every wood result is identical with and w
 // The page and the panel
 // ---------------------------------------------------------------------------
 
-test('PL-PICKS', 'the material picks: the page, the panel and the data file agree, and acrylic is two picks in two families', () => {
-  const page = MATERIALS.filter((m) => m.beta).map((m) => `${m.id}:${m.kcMaterial}`).sort();
-  const file = Object.entries(data.plastics.families).flatMap(([fam, f]) => f.picks.map((p) => `${p.id}:${fam}`)).sort();
-  assert(JSON.stringify(page) === JSON.stringify(file), `page ${page} against data ${file}`);
-  assert(page.length === 14, `expected 14 plastic picks, got ${page.length}`);
-  assert(page.includes('acrylic_cast:hard_plastic') && page.includes('acrylic_extruded:soft_plastic'), 'cast acrylic is hard, extruded soft');
-  // The panel copies the same two lists, word for word.
-  const block = (src) => src.slice(src.indexOf("  ...[\n    ['abs'"), src.indexOf("'hard_plastic')),") + 17).replace(/\s+/g, ' ');
+test('PL-PICKS', 'the material picks: one per family, hard first, the page and the panel agree, and each hint lists every plastic the data assigns', () => {
+  const picks = MATERIALS.filter((m) => m.beta);
+  assert(picks.map((m) => `${m.id}:${m.kcMaterial}`).join(',') === 'hard_plastic:hard_plastic,soft_plastic:soft_plastic', `plastic picks: ${picks.map((m) => m.id)}`);
+  for (const m of picks) {
+    for (const p of data.plastics.families[m.kcMaterial].picks) {
+      assert(m.hint.toLowerCase().includes(p.label.toLowerCase()), `${m.id}: the hint does not list ${p.label}`);
+    }
+  }
+  assert(picks[0].label.includes('cast acrylic') && picks[1].label.includes('extruded acrylic'), 'the labels say which acrylic');
+  // The panel copies the same two picks, word for word.
+  const block = (src) => {
+    const from = src.indexOf('  // The plastics, beta only');
+    return src.slice(from, src.indexOf('\n];', from)).replace(/\s+/g, ' ');
+  };
   const pageSrc = readFileSync(join(root, 'src', 'form-state.js'), 'utf8');
   const panelSrc = readFileSync(join(root, 'js', 'ui', 'fusion-panel.js'), 'utf8');
   assert(block(pageSrc).length > 200 && block(pageSrc) === block(panelSrc), 'the panel\'s plastic picks must match the page\'s');
-  // The labels name the family.
-  for (const m of MATERIALS.filter((x) => x.beta)) {
-    assert(m.label.endsWith(m.kcMaterial === 'soft_plastic' ? '(soft plastic)' : '(hard plastic)'), m.label);
-  }
 });
 
 test('PL19', 'the page offers the plastics and 3 mm only with the beta tick on, and a plastic link ticks it', () => {
   const wood = MATERIALS.filter((m) => !m.beta).map((m) => m.id);
   assert(JSON.stringify(materialsFor(false).map((m) => m.id)) === JSON.stringify(wood), 'beta off: the seven wood picks only');
-  assert(materialsFor(true).length === 21, 'beta on: 21 picks');
-  assert(!diametersFor(true, 'mdf').includes(3) && diametersFor(true, 'abs').includes(3), '3 mm is for a plastic only');
+  assert(materialsFor(true).length === 9, 'beta on: nine picks');
+  assert(!diametersFor(true, 'mdf').includes(3) && diametersFor(true, 'soft_plastic').includes(3), '3 mm is for a plastic only');
 
-  const linked = createState(data, presets, '?m=abs&d=3&th=3&t=upcut', false);
-  assert(linked.beta === true && linked.material === 'abs' && linked.diameterMm === 3, 'a plastic link opens ticked, with its 3 mm');
+  const linked = createState(data, presets, '?m=soft_plastic&d=3&th=3&t=upcut', false);
+  assert(linked.beta === true && linked.material === 'soft_plastic' && linked.diameterMm === 3, 'a plastic link opens ticked, with its 3 mm');
   const woodLink = createState(data, presets, '?m=mdf&d=3', false);
   assert(woodLink.diameterMm === 12.7, 'a wood link naming 3 mm keeps the default size');
 
@@ -392,7 +394,7 @@ test('PL19', 'the page offers the plastics and 3 mm only with the beta tick on, 
   assert(off.material === DEFAULT_MATERIAL && off.diameterMm === 3.175, `unticking falls back to MDF and 1/8 in, got ${off.material} ${off.diameterMm}`);
   const toWood = update(linked, { type: 'material', value: 'hardwood' }, presets);
   assert(toWood.diameterMm === 3.175 && toWood.beta === true, 'leaving the plastics moves 3 mm to 1/8 in');
-  const pick = update(createState(data, presets, '', false), { type: 'material', value: 'acrylic_cast' }, presets);
+  const pick = update(createState(data, presets, '', false), { type: 'material', value: 'hard_plastic' }, presets);
   assert(pick.beta === true && isPlasticPick(pick.material), 'choosing a plastic keeps the tick on');
 
   const inp = currentInput(linked, data, presets);

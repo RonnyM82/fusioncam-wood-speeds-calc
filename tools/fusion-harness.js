@@ -191,6 +191,17 @@ function makeJob() {
             heights: makeHeights(18, 0, 0),
             currentFeeds: makeFeeds(),
           },
+          {
+            // A trace (2026-09-25): Fusion states no heights for one, so the
+            // add-in ships the stock top and the traced curve plus the axial
+            // offset, here a groove 3 mm below a curve on the top face.
+            opId: 'harness-op-trace', name: 'Groove trace',
+            strategy: 'trace', suppressed: false, isValid: true, hasToolpath: true,
+            tool: TOOL_DOWNCUT,
+            params: makeParams({ doMultipleDepths: false, compensation: 'center', rampAngleDeg: 2 }),
+            heights: { top: makeHeights(18, 0).top, bottom: { ...geometryHeight('from contour', 15), offsetMm: -3 } },
+            currentFeeds: makeFeeds(),
+          },
         ],
       },
       {

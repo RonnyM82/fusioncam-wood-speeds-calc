@@ -417,7 +417,9 @@ in to 2 in columns.
 
 **`families`** records, per sheet, the printed Good/Better/Best tables, the serving rule,
 the Finishing series, the printed depth rule, the printed formulas, the printed note, the
-defect the note names (knife marks for soft, cratering for hard) and the material picks.
+defect the note names (knife marks for soft, cratering for hard) and the plastics each
+family holds. The page and the panel offer one pick per family, "Hard plastics" and "Soft
+plastics" (Scott, 2026-09-25), and each pick's hint lists those plastics.
 **`series`** records the catalogue facts, and its `kind` separates the flat solid carbide
 router series, which the chart ladder may draw, from the HSS, engraving, V-bottom, ball
 nose, edge profile and taper tools, which are recorded and never drawn.

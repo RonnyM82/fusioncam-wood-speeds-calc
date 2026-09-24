@@ -99,7 +99,7 @@ const STATES = [
   // A plastic (2026-09-24): the maker's advice banner, the interpolation
   // note, a down-cut chart ladder and the plastic rows in the fold. The link
   // names a plastic, so the page opens with the beta tick on.
-  { name: 'soft plastic, a down-cut at 8 mm', query: 'm=abs&t=downcut&d=8&th=6&f=1', charts: true },
+  { name: 'soft plastic, a down-cut at 8 mm', query: 'm=soft_plastic&t=downcut&d=8&th=6&f=1', charts: true },
 ];
 const WIDTHS = [1280, 390];
 const WIDE = 1280;

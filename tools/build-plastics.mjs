@@ -98,10 +98,10 @@ const PICKS = {
     ['polypropylene', 'Polypropylene'],
     ['polystyrene', 'Polystyrene / HIPS'],
     ['petg', 'PETG'],
-    ['acrylic_extruded', 'Acrylic, extruded'],
+    ['acrylic_extruded', 'Extruded acrylic'],
   ],
   hard_plastic: [
-    ['acrylic_cast', 'Acrylic, cast'],
+    ['acrylic_cast', 'Cast acrylic'],
     ['nylon', 'Nylon'],
     ['pvc_rigid', 'Rigid PVC'],
     ['acetal', 'Acetal / Delrin'],

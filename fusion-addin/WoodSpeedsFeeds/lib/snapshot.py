@@ -770,14 +770,64 @@ def _read_height(operation, side, frame):
     return shape
 
 
-def read_heights(operation, frame=None):
+def _read_trace_heights(operation, frame):
+    """Return the heights of a trace, which Fusion does not state.
+
+    A trace cuts along its selected curves and has no top or bottom
+    height (read firsthand, 2026-09-25). Scott ruled it serves as a 2D
+    contour, so it ships the two heights a contour would carry. The top
+    is the stock top of the setup, in the same frame as every other
+    height. The bottom is the lowest point of the curves plus the axial
+    offset, a negative offset being deeper, with mode "from contour" so
+    the page treats a bottom that did not read as it treats a contour
+    bottom that did not read. zSpreadMm is the Z extent of the curves,
+    so a curve that climbs is reported and the deepest point serves.
+    """
+    top = {
+        "mode": "from stock top",
+        "offsetMm": 0.0,
+        "zMm": None,
+        "zSource": None,
+        "zSpreadMm": None,
+    }
+    setup = _read_attribute(operation, "parentSetup")
+    if setup is not None:
+        stock_top = read_length_mm(setup, constants.PARAM_STOCK_Z_HIGH)
+        if stock_top is not None:
+            top["zMm"] = stock_top
+            top["zSource"] = "parameter"
+    offset = read_length_mm(operation, constants.PARAM_AXIAL_OFFSET)
+    bottom = {
+        "mode": constants.HEIGHT_MODE_CONTOUR,
+        "offsetMm": offset,
+        "zMm": None,
+        "zSource": None,
+        "zSpreadMm": None,
+    }
+    if frame is None or offset is None:
+        return {"top": top, "bottom": bottom}
+    parameter = get_parameter(operation, constants.PARAM_CURVES)
+    entities = _selection_entities(parameter) if parameter is not None else []
+    found = _entities_z_range(entities, frame)
+    if found is None:
+        return {"top": top, "bottom": bottom}
+    bottom["zMm"] = round(units.internal_length_to_mm(found[0]) + offset, 6)
+    bottom["zSource"] = "geometry"
+    bottom["zSpreadMm"] = units.internal_length_to_mm(found[1] - found[0])
+    return {"top": top, "bottom": bottom}
+
+
+def read_heights(operation, frame=None, strategy=None):
     """Return the heights shape: mode, offset, resolved value and source.
 
     Fusion resolves a plane-mode height into a computed value and the
     add-in resolves a geometry-mode height through the setup frame
     (2026-09-02). The page does the depth arithmetic and Python does
-    none (plan, part 3, 2026-09-01).
+    none (plan, part 3, 2026-09-01). A trace states no heights, and
+    _read_trace_heights gives it a contour's two (2026-09-25).
     """
+    if strategy in constants.TRACE_STRATEGIES:
+        return _read_trace_heights(operation, frame)
     return {
         "top": _read_height(operation, "top", frame),
         "bottom": _read_height(operation, "bottom", frame),
@@ -828,7 +878,7 @@ def read_operation(operation, frame=None):
         "hasToolpath": _read_flag(operation, ("hasToolpath",)),
         "tool": read_tool(operation),
         "params": read_params(operation, strategy),
-        "heights": read_heights(operation, frame),
+        "heights": read_heights(operation, frame, strategy),
         "currentFeeds": read_current_feeds(operation),
     }
 
