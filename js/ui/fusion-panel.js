@@ -916,8 +916,22 @@ const KIND_NOTE = {
     note: 'A drill takes no spiral direction.',
   },
   ball: {
-    label: 'Ball-nose or form tool',
-    note: 'No published chart covers 3D surfacing yet, so the panel does not serve this tool\'s rows.',
+    label: 'Ball nose',
+    // A ball nose takes no question either: Fusion states the geometry, so
+    // the panel serves it unconfirmed (2026-09-02). This note renders only
+    // for a tool typed as a ball whose corner radius is not half its
+    // diameter, which the charts do not cover.
+    note: 'A ball nose takes no spiral direction. Fusion states the geometry.',
+  },
+  bullnose: {
+    label: 'Bull nose',
+    // A bull nose takes no question either. It reads the ball nose chart at
+    // its corner diameter (Scott, 2026-09-03).
+    note: 'A bull nose takes no spiral direction. Fusion states the geometry.',
+  },
+  form: {
+    label: 'Tapered or form tool',
+    note: 'No published chart covers this tool shape, so the panel does not serve its rows.',
   },
   chamfer: {
     label: 'Chamfer or engraving tool',
@@ -1268,22 +1282,28 @@ function opCard(op, setup, si, oi) {
     }
     return drillCard(op, setup, ids, tool);
   }
-  // A drill, a ball-nose or a chamfer tool takes no geometry question
-  // (2026-09-01). A routing strategy run with such a tool refuses here,
-  // because the charts cover router bits only and calculate() has no tool
-  // type to serve.
+  // A ball nose serves from 2026-09-02, and it takes no question: Fusion
+  // states the geometry, so mapOperation supplies the tool type itself and
+  // the panel has nothing to confirm. It goes down the served path with the
+  // router bits, and mapOperation refuses it where no chart covers the cut.
+  const ballNose = tool?.kind === 'ball' || tool?.kind === 'bullnose';
+  // A form tool, a chamfer tool or a drill on a routing strategy takes no
+  // geometry question (2026-09-01) and refuses below with the strategy's own
+  // reason, because the charts have no tool type to serve.
   const routerBit = !tool || tool.kind == null || tool.kind === 'router';
   if (routerBit && (!tool || !tool.confirmed || !tool.geometry)) {
     return stateCard(op, ids, 'confirm', 'Confirm the tool geometry first, in the tools section above.', finishToggle);
   }
-  if (!routerBit) {
+  if (!routerBit && !ballNose) {
+    // The mapping now refuses a tool shape no chart covers on every strategy,
+    // 2D and 3D alike, and its reason names the tool type, the diameter and
+    // the corner radius it read (2026-09-03). That is strictly better than
+    // the sentence the panel used to compose from the tool kind, so the probe
+    // reason is printed as it stands. The probe passes a null tool type
+    // because a non-router tool has no geometry answer to pass.
     const probe = mapOperation(op, { toolType: null, finishing: false });
-    const reason = probe.status === 'mapped'
-      ? `This operation runs a ${(KIND_NOTE[tool.kind]?.label ?? 'non-router').toLowerCase()} on a routing strategy. The charts cover router bits only.`
-      : probe.reason;
-    const stateKey = probe.status === 'mapped' ? 'refused' : probe.status;
-    return stateCard(op, ids, stateKey, reason, finishToggle,
-      { facts: stateKey === 'unreadable' ? readFacts(op) : null });
+    return stateCard(op, ids, probe.status, probe.reason, finishToggle,
+      { facts: probe.status === 'unreadable' ? readFacts(op) : null });
   }
 
   const mapped = mapOperation(op, {

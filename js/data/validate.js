@@ -6,10 +6,15 @@ import { bandAtRpm } from '../core/drilling.js';
 // Vocabulary mirrors data/schema.md. A typo in any of these fields silently
 // changes or deletes safety output, so the gate rejects unknown values.
 const MATERIALS = new Set(['mdf', 'particleboard', 'laminated_pb', 'laminated_chipboard', 'hardwood', 'softwood', 'plywood', 'softwood_ply', 'hpl']);
-const GEOMETRIES = new Set(['straight', 'spiral_upcut', 'spiral_downcut', 'compression_spiral', 'compression_chipbreaker_finisher', 'chipbreaker_finisher', 'hogger_low_helix_chipbreaker', 'hogger_high_helix_chipbreaker', 'finisher', 'straight_o_flute', 'unspecified']);
+const GEOMETRIES = new Set(['straight', 'spiral_upcut', 'spiral_downcut', 'compression_spiral', 'compression_chipbreaker_finisher', 'chipbreaker_finisher', 'hogger_low_helix_chipbreaker', 'hogger_high_helix_chipbreaker', 'finisher', 'straight_o_flute', 'ball_nose', 'unspecified']);
 const DIRECTIONS = new Set(['upcut', 'downcut']);
-const TOOL_TYPES = new Set(['upcut', 'downcut', 'compression', 'straight']);
+const TOOL_TYPES = new Set(['upcut', 'downcut', 'compression', 'straight', 'ball']);
 const MACHINE_CLASSES = new Set(['big_iron_10hp_plus']);
+// What a chart says about the cut its numbers are for. Every routing chart in
+// the file says nothing, which is why the field is optional; the ball nose
+// entries carry it explicitly, because there the silence is load-bearing
+// (2026-09-02, research session 6).
+const CUT_TYPES_PUBLISHED = new Set(['none']);
 
 // Drilling vocabulary. FACTOR_MATERIALS is deliberately its own namespace and does
 // not extend MATERIALS: Leitz names factor rows the calculator has no pick for
@@ -53,6 +58,47 @@ export function validateData({ chiploads, kc, machines, rules, drills }) {
     }
     if (e.source === 'ita' && !String(e.flute_basis).endsWith('user_switchable')) {
       errors.push(`${id}: ITA entry must carry the user-switchable flute basis`);
+    }
+    if (e.cut_type_published != null && !CUT_TYPES_PUBLISHED.has(e.cut_type_published)) {
+      errors.push(`${id}: unknown cut_type_published "${e.cut_type_published}"`);
+    }
+    // A ball nose entry carries the two facts that make it safe to serve: the
+    // chart's own silence about the cut type, and its printed feed band. The
+    // second is the gate that keeps a broken chart out. Amana's 2D/3D carving
+    // charts fail their own printed formula in five of twenty-five cells, and
+    // this check is what would catch that before a number reached a spindle.
+    if (e.tool_geometry === 'ball_nose') {
+      if (e.cut_type_published !== 'none') {
+        errors.push(`${id}: a ball nose entry must state cut_type_published`);
+      }
+      if (!(e.diameter_mm > 0)) errors.push(`${id}: a ball nose entry must carry a diameter`);
+      if (e.flutes !== 2) errors.push(`${id}: the ball nose chart is a two-flute chart`);
+      const pf = e.printed_feed_in_min;
+      if (!pf || !(pf.rpm > 0) || !(pf.min > 0) || !(pf.max > 0)) {
+        errors.push(`${id}: a ball nose entry must carry the chart's printed feed band`);
+      } else if (typeof e.fz_min_mm === 'number' && typeof e.fz_max_mm === 'number') {
+        // The maker's own formula, printed on the same page: feed rate equals
+        // rpm times flutes times chip load. Both edges must agree with the
+        // printed band, in the chart's own units.
+        //
+        // The tolerance is absolute AND relative, and a cell fails only when
+        // it breaks both. Amana prints its feed bands on a ladder of round
+        // tens, so a sound cell can sit a whole step out (180 computed
+        // against 190 printed) while agreeing perfectly in substance. A
+        // broken cell misses by far more than a rounding step: on Amana's
+        // 2D/3D carving chart the two-flute 1/16 in wood cell prints 55-90
+        // against a computed 108-180, which is a factor of two and fails
+        // both tests. Measured across this chart the worst sound cell is
+        // exactly one step out.
+        const inPerMm = 1 / 25.4;
+        const implied = [e.fz_min_mm, e.fz_max_mm].map((fz) => fz * inPerMm * pf.rpm * e.flutes);
+        const printed = [pf.min, pf.max];
+        const broken = implied.some((v, k) => Math.abs(v - printed[k]) > 10.0001
+          && Math.abs(v - printed[k]) / printed[k] > 0.05);
+        if (broken) {
+          errors.push(`${id}: the printed feed band ${pf.min}-${pf.max} in/min disagrees with rpm x flutes x chip load (${implied[0].toFixed(0)}-${implied[1].toFixed(0)}) by more than a rounding step`);
+        }
+      }
     }
   });
 

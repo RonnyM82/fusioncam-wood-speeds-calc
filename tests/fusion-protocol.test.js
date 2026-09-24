@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, assert } from './helpers.js';
+import { SURFACING_3D } from '../js/fusion/map-operation.js';
 import {
   PROTOCOL_VERSION, PROTOCOL_FLOOR, BAD_ADDIN_BUILDS,
   acceptsProtocol, isBadBuild, validateEnvelope, readJob,
@@ -356,4 +357,25 @@ test('FP16', 'a height carries its source and spread when the add-in sends them,
   const bad = readJob(msg);
   assert(!bad.ok && bad.job.setups[0].operations[0].heights.bottom.zSource === null, 'a wrong type reads null and is named');
   assert(bad.errors.some((e) => e.includes('zSource')), 'the error names the field');
+});
+
+test('FP17', 'the add-in and the page hold the same list of 3D surfacing strategies', () => {
+  // constants.py decides which stepover name the add-in reads and
+  // map-operation.js decides which strategies map, so a strategy in one list
+  // and not the other is a wrong number or a silent refusal on the real
+  // add-in. Nothing else would notice if they stopped matching.
+  //
+  // The twenty are Fusion's own is3DStrategy AND isFinishingStrategy, which
+  // is nineteen strategies, plus geodesic, which fails the 3D flag and is
+  // surfacing work by its own description (Scott, 2026-09-03).
+  const py = readFileSync(new URL('../fusion-addin/WoodSpeedsFeeds/lib/constants.py', import.meta.url), 'utf8');
+  const block = py.match(/SURFACING_3D_STRATEGIES = frozenset\(\s*\{([\s\S]*?)\}\s*\)/);
+  assert(block, 'SURFACING_3D_STRATEGIES not found in constants.py');
+  const fromPy = new Set([...block[1].matchAll(/"([a-z_0-9]+)"/g)].map((m) => m[1]));
+  const fromJs = SURFACING_3D;
+  const missing = [...fromJs].filter((s) => !fromPy.has(s));
+  const extra = [...fromPy].filter((s) => !fromJs.has(s));
+  assert(missing.length === 0, `in map-operation.js and not in constants.py: ${missing.join(', ')}`);
+  assert(extra.length === 0, `in constants.py and not in map-operation.js: ${extra.join(', ')}`);
+  assert(fromPy.size === 20, `expected the twenty surfacing strategies, got ${fromPy.size}`);
 });

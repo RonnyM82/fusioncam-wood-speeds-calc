@@ -149,11 +149,31 @@ def get_parameter(owner, name):
 
 
 def read_raw(owner, name):
-    """Return a parameter's raw value in internal units, or None."""
+    """Return a parameter's raw value in internal units, or None.
+
+    A DISABLED parameter reads None, not its stale value (2026-09-03).
+    Fusion greys a parameter out when the switch in front of it is off,
+    and the reading then reports 0.0 while the expression still holds
+    the last value the dialog showed. Read inside Fusion on the test
+    document: the 3D parallel with Multiple Depths off reports
+    maximumStepdown value 0.0, expression "1.0mm", isEnabled False.
+
+    Shipping that 0.0 made a disabled control look like a deliberate
+    zero, and the page cannot tell the two apart. isEnabled can, on
+    every parameter, so the whole class of stale and phantom readings
+    closes here rather than one gate at a time in the mapping.
+    """
     try:
         parameter = get_parameter(owner, name)
         if parameter is None:
             return None
+        try:
+            if parameter.isEnabled is False:
+                return None
+        except Exception:
+            # An older build with no isEnabled falls back to the reading,
+            # which is what every version before this one did.
+            pass
         return parameter.value.value
     except Exception:
         return None
@@ -353,6 +373,30 @@ def read_tool(operation):
     }
 
 
+def _read_widest(operation, names):
+    """Return (largest enabled length in mm, its parameter name).
+
+    A strategy can state more than one width of cut: the corner strategy
+    states four, steep and shallow by constant and by maximum, and which
+    pair is live depends on its mode (API read, 2026-09-03). A disabled
+    parameter already reads None through read_raw, so only live ones can
+    win here.
+
+    The largest wins because a wider cut thins the chip less and so serves
+    the lower feed, which is the safe number for every region of the pass.
+    """
+    best = None
+    best_name = None
+    for name in names:
+        value = read_length_mm(operation, name)
+        if value is None:
+            continue
+        if best is None or value > best:
+            best = value
+            best_name = name
+    return best, best_name
+
+
 def _read_first(reader, operation, names):
     """Return the first non-None reading among names, or None.
 
@@ -367,7 +411,7 @@ def _read_first(reader, operation, names):
     return None
 
 
-def read_params(operation):
+def read_params(operation, strategy=None):
     """Return the cut parameters shape. A missing parameter is None.
 
     Names confirmed 2026-09-01, spike-results-windows.md section 2.
@@ -375,17 +419,33 @@ def read_params(operation):
     on the 3D parallel. The finishing switch is
     doMultipleFinishingPasses on the contour and doFinishingPasses on
     the pocket. useStockToLeave is additive (protocol.md, no bump).
+
+    The stepover read order depends on the strategy (2026-09-02). A 3D
+    surfacing pass reads the 3D name first, because its stepover sets
+    the whole feed and a 2D-shaped name on an unverified strategy could
+    be something else entirely. Everything else keeps the 2D order.
+    Behaviour only, no wire change and no protocol bump.
     """
+    if strategy in constants.SURFACING_3D_STRATEGIES:
+        # Per strategy, from the firsthand API read of 2026-09-03. A
+        # surfacing strategy absent from the map states no stepover, so
+        # nothing is read and the page decides what to do with that.
+        stepover_names = constants.SURFACING_WIDTH_PARAM.get(strategy, ())
+        stepover_mm, stepover_param = _read_widest(operation, stepover_names)
+    else:
+        stepover_names = (constants.PARAM_STEPOVER, constants.PARAM_STEPOVER_3D)
+        stepover_mm = _read_first(read_length_mm, operation, stepover_names)
+        stepover_param = None
     return {
         "stepdownMm": read_length_mm(operation, constants.PARAM_MAX_STEPDOWN),
         "doMultipleDepths": read_bool(
             operation, constants.PARAM_DO_MULTIPLE_DEPTHS
         ),
-        "stepoverMm": _read_first(
-            read_length_mm,
-            operation,
-            (constants.PARAM_STEPOVER, constants.PARAM_STEPOVER_3D),
-        ),
+        "stepoverMm": stepover_mm,
+        # Which parameter that came from, so a reading line and a refusal can
+        # name it (additive, 2026-09-03). None on the 2D strategies, which
+        # have only ever had one name that mattered.
+        "stepoverParam": stepover_param,
         "optimalLoadMm": read_length_mm(
             operation, constants.PARAM_OPTIMAL_LOAD
         ),
@@ -755,10 +815,11 @@ def read_operation(operation, frame=None):
         name = operation.name
     except Exception:
         pass
+    strategy = read_strategy(operation)
     return {
         "opId": op_id(operation),
         "name": name,
-        "strategy": read_strategy(operation),
+        "strategy": strategy,
         "suppressed": _read_flag(operation, ("isSuppressed",)),
         # Confirmed 2026-09-01, spike-results-windows.md "Other
         # readings": isToolpathValid reports the toolpath. isValid is
@@ -766,7 +827,7 @@ def read_operation(operation, frame=None):
         "isValid": _read_flag(operation, ("isToolpathValid", "isValid")),
         "hasToolpath": _read_flag(operation, ("hasToolpath",)),
         "tool": read_tool(operation),
-        "params": read_params(operation),
+        "params": read_params(operation, strategy),
         "heights": read_heights(operation, frame),
         "currentFeeds": read_current_feeds(operation),
     }

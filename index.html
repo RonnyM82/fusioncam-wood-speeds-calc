@@ -57,7 +57,7 @@
                          measure="length" decimals="1" min="1" max="120" step="1" stepper></lt-number-field>
         <lt-number-field id="f-doc" input-id="doc" label="Depth per pass"
                          measure="length" decimals="1" min="0.1" step="0.5" stepper
-                         hint="Leave empty to cut the full board thickness."></lt-number-field>
+                         hint="Leave empty to cut the full board thickness. On a ball nose this is the stepdown, and it sets the cutting diameter."></lt-number-field>
       </div>
 
       <!-- Hole depth is its own field rather than a relabelled board thickness.
@@ -75,7 +75,7 @@
       <div class="lt-form-grid">
         <lt-number-field id="f-woc" input-id="woc" label="Width of cut"
                          measure="length" decimals="1" min="0.1" step="0.5" stepper
-                         hint="Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead."></lt-number-field>
+                         hint="Leave empty to cut a full slot, one tool diameter wide. On a ball nose this is the stepover. The Finishing profile assumes a 1 mm skim instead."></lt-number-field>
         <lt-number-field id="f-rpm" input-id="rpm" label="Spindle speed"
                          measure="rotation" min="1000" max="30000" step="500" stepper></lt-number-field>
       </div>

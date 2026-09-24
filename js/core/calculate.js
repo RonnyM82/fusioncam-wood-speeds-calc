@@ -5,6 +5,7 @@
 import {
   feedFromFz, surfaceSpeedMMin, depthDerate, chipThinningFactor,
   resolveBand, profileFz, chipFloorStatus, isPanelMaterial,
+  effectiveDiameterMm, scallopHeightMm,
 } from './chipload.js';
 import {
   selectKcModel, toolFamilyFor, powerFeedCapMmMin, availablePowerKw,
@@ -36,7 +37,43 @@ export function calculate(input, data) {
   const D = input.diameterMm;
   let rpm = input.rpm ?? rules.defaults.rpm;
   const zEff = input.flutesTotal ?? rules.defaults.flutes_total;
-  const ap = input.apMm ?? input.thicknessMm;
+  // A 3D surfacing pass with no stepdown states no depth of cut, and Fusion
+  // does not carry one: a scallop, a pencil or a blend pass has a stepover
+  // and nothing else, read firsthand through the Fusion API on 2026-09-03.
+  // The feed does not depend on the depth, so the cut still serves; the
+  // checks that DO depend on it are skipped and say so (Scott, 2026-09-03).
+  const depthUnstated = input.apMm === null && input.toolType === 'ball';
+  const ap = depthUnstated ? null : (input.apMm ?? input.thicknessMm);
+  // A ball nose (2026-09-02, research session 6). Its chart is one maker's,
+  // published at a depth of one tool diameter, which is a full-width groove.
+  // It is not published for a surfacing pass and the calculator says so.
+  const ballNose = input.toolType === 'ball';
+  // A round-ended tool cuts on its corner, and on a surfacing pass the corner
+  // is the whole story. A ball's corner radius is half its diameter, so the
+  // two are the same tool; a bull nose has a smaller corner and a flat across
+  // the middle. The site offers a ball only, so a missing corner radius means
+  // a full radius. The Fusion panel sends the real one.
+  const cornerR = ballNose
+    ? (input.cornerRadiusMm > 0 ? Math.min(input.cornerRadiusMm, D / 2) : D / 2)
+    : null;
+  // The diameter that indexes the chip-load chart and sets the chip geometry.
+  // On a bull nose it is the CORNER diameter, not the tool diameter (Scott,
+  // 2026-09-03): the corner is what cuts on a surfacing pass, and reading the
+  // chart there is conservative twice over, because it gives both the lower
+  // published chip load and the smaller thinning compensation. The cost is
+  // that a small corner radius falls off the bottom of the chart's ladder and
+  // refuses, which is the honest outcome for a geometry nobody publishes.
+  const bullNose = ballNose && cornerR < D / 2 - 1e-9;
+  const cutD = bullNose ? 2 * cornerR : D;
+  // The Finishing profile serves the finisher-series charts, and no finisher
+  // chart covers a ball nose. Refuse rather than borrow: every finisher row
+  // is a flat-edged tool and its chip load is not a ball number.
+  if (ballNose && input.profile === 'finishing') {
+    return {
+      status: 'refused',
+      refusal: { reason: 'No finisher chart covers a ball nose, so the Finishing profile gives no number for this tool. Use Gentle for the lightest published chip.' },
+    };
+  }
   // The Finishing profile models a wall skim: with no width of cut given it
   // assumes the rules.json skim instead of a full slot (research session 4).
   const finishing = input.profile === 'finishing';
@@ -47,7 +84,7 @@ export function calculate(input, data) {
 
   const bad = [];
   if (!(D > 0)) bad.push('a tool diameter');
-  if (!(ap > 0)) bad.push('a board thickness (or depth per pass)');
+  if (!depthUnstated && !(ap > 0)) bad.push('a board thickness (or depth per pass)');
   if (!(ae > 0)) bad.push('a width of cut');
   if (!(rpm > 0)) bad.push('a spindle speed');
   if (!(zEff > 0)) bad.push('a flute count');
@@ -91,9 +128,9 @@ export function calculate(input, data) {
   // at a light optimal load is standard adaptive practice. Light-radial
   // cuts therefore never block on depth. A pass deeper than the flutes
   // draws a hot chip below, never a block (Scott's call, same date).
-  const lightRadial = ae < D / 2;
+  const lightRadial = ae < cutD / 2;
   const maxRatio = rules.depth_limit?.max_ratio_of_d ?? 3;
-  if (!lightRadial && ap / D > maxRatio + 1e-9) {
+  if (!depthUnstated && !lightRadial && ap / D > maxRatio + 1e-9) {
     return {
       status: 'blocked',
       block: {
@@ -110,7 +147,7 @@ export function calculate(input, data) {
   // diameter-blind floor target, served a number a machinist rejected.
   const env = resolveBand(
     chiploads.entries,
-    { material: input.material, materials: input.materials, materialsFallback: input.materialsFallback, toolType: input.toolType, diameterMm: D, finishing },
+    { material: input.material, materials: input.materials, materialsFallback: input.materialsFallback, toolType: input.toolType, diameterMm: cutD, finishing },
     rules.envelope_rules,
   );
   if (!env.served) {
@@ -127,7 +164,7 @@ export function calculate(input, data) {
   chartNotes.push(...env.notes);
 
   const fzBase = profileFz(env, input.profile ?? 'standard');
-  const docRatio = ap / D;
+  const docRatio = depthUnstated ? 0 : ap / D;
   // The depth derate is the vendors' deep-slot rule: chip evacuation and
   // deflection at 2x and 3x diameter in a full-width cut. A light-radial
   // cut, below half the diameter, has neither: the chips escape sideways
@@ -156,8 +193,20 @@ export function calculate(input, data) {
   // chip thinning. Stacking the compensation on top scaled the chip with
   // diameter twice and reached the machine cap on a 3/4 in three-flute skim
   // (sweep review, 2026-08-29). The physical factor still reports.
-  const ctfPhysical = chipThinningFactor(D, ae);
-  const ctf = finishing ? 1 : ctfPhysical;
+  const ctfPhysical = chipThinningFactor(cutD, ae);
+  // The compensation is unbounded as the stepover falls, and on a ball nose
+  // that runs away inside the tool's normal working range: at a 2% stepover
+  // on a 3.175 mm ball it programs a chip ten times the width of cut. The
+  // thinning relation assumes the chip is small against the engagement, and
+  // there it is not. So a ball computes the compensation from the stepover or
+  // the rules.json floor, whichever is larger, and never extrapolates below
+  // it (2026-09-03). Same shape as the 3xD depth block: hold a correction at
+  // its anchor rather than run it past the point anybody checked.
+  const thinFloorAe = ballNose && rules.ball_nose
+    ? Math.max(ae, rules.ball_nose.thinning_stepover_floor_fraction * cutD)
+    : ae;
+  const thinFloored = thinFloorAe > ae + 1e-12;
+  const ctf = finishing ? 1 : chipThinningFactor(cutD, thinFloorAe);
   const fzProg = fzTarget * ctf;
 
   const kcModel = selectKcModel(kc, input.material, toolFamilyFor(input.toolType), direction);
@@ -172,12 +221,12 @@ export function calculate(input, data) {
   let availKw;
   if (machine.spindleKw > 0) {
     availKw = availablePowerKw(machine.spindleKw, breakpointRpm, rpm);
-    caps.pow = powerFeedCapMmMin(availKw, kcModel, ap, ae, D, rpm, zEff);
+    if (!depthUnstated) caps.pow = powerFeedCapMmMin(availKw, kcModel, ap, ae, D, rpm, zEff);
   }
   let gripN;
   if (input.footprintCm2 > 0 && machine.vacuum && machine.vacuum.mu > 0 && machine.vacuum.dPkPa > 0) {
     gripN = vacuumGripN(machine.vacuum.mu, machine.vacuum.dPkPa, input.footprintCm2);
-    caps.vac = vacuumFeedCapMmMin(gripN, kcModel, ap, ae, D, rpm, zEff);
+    if (!depthUnstated) caps.vac = vacuumFeedCapMmMin(gripN, kcModel, ap, ae, D, rpm, zEff);
   }
   if (input.featureMm > 0 && machine.accelMs2 > 0) {
     caps.corn = cornerFeedCapMmMin(input.featureMm, machine.accelMs2);
@@ -201,7 +250,39 @@ export function calculate(input, data) {
   // delivered feed loses an ulp on the round trip, which put a served 0.14
   // one ulp under the 0.14 floor boundary and fired a warning at the
   // profile's own number (review, 2026-08-29).
-  const fzEff = lim.binding === 'ideal' ? fzTarget : fzDeliv / ctf;
+  // Where the ball floor held the compensation, the programmed chip is lower
+  // than the physical engagement would need, so the chip the tool actually
+  // takes sits below the chart value. The floor check has to see that number,
+  // not the chart's. thinFloored is a ball-only state and a ball never reaches
+  // the Finishing branch, so neither reading changes for any other pick.
+  const fzEff = lim.binding === 'ideal'
+    ? fzTarget * (thinFloored ? ctf / ctfPhysical : 1)
+    : fzDeliv / (thinFloored ? ctfPhysical : ctf);
+
+  if (ballNose) {
+    // The one thing on this pick the user can act on: below the floor the
+    // feed stops rising, so a finer stepover buys surface finish and time
+    // and nothing else. That belongs in the rendered notes.
+    // The checks that need a depth did not run, and the user must know which.
+    // A finishing raster is not usually power or hold-down limited, but the
+    // calculator does not get to assume that on their behalf.
+    if (depthUnstated) {
+      notes.push('This toolpath states no depth of cut, so the spindle power and the hold-down checks did not run. The feed comes from the chip load and the stepover, which do not depend on the depth.');
+    }
+    if (thinFloored) {
+      const pct = Math.round(rules.ball_nose.thinning_stepover_floor_fraction * 100);
+      notes.push(`The stepover is under ${pct} per cent of the tool diameter. The calculator holds the chip-thinning compensation at ${pct} per cent and does not raise the feed further. Below that the correction runs past anything published or tested.`);
+    }
+    // The record of what the ball chart is and what was done to it. Kept out
+    // of the rendered notes with every other chart-selection sentence
+    // (2026-08-31); the page shows the numbers and the limit line.
+    chartNotes.push(`The ${env.contributors.join(', ')} chart states one condition, a depth of cut of one tool diameter. That is a full-width groove, not a surfacing pass, so the chip load is a full-engagement number and the calculator compensates it for radial chip thinning on the stepover, as it does for any other light-radial cut.`);
+    if (bullNose) {
+      chartNotes.push(`This is a bull nose, and no maker publishes a chip load for one in wood. The band is the ball nose chart read at the corner diameter, ${round1(cutD)} mm, because the corner is what cuts on a surfacing pass. That reads the lower published chip and applies the smaller thinning compensation. The scallop and the cutting diameter come from the tool's real corner radius, not from the ball the chart describes.`);
+    }
+    chartNotes.push('Charts for other tool shapes are not drawn beside this band. Their chip loads are for a flat cutting edge and do not apply to this cut.');
+    chartNotes.push('The calculator applies no second correction for the ball\'s effective cutting diameter. The two makers that publish that multiplier disagree about the base it starts from, and no wood source publishes one at all, so it renders as a number and moves nothing.');
+  }
 
   if (finishing) {
     chartNotes.push(`The finish chip comes from the ${env.contributors.join(', ')} finisher chart, the only published finishing chip loads. It is the chip you program on a finish pass, as the vendor intends, so the calculator does not compensate it for chip thinning.`);
@@ -276,7 +357,7 @@ export function calculate(input, data) {
   // the flute length is known (the Fusion panel always sends it, the site
   // has an optional advanced field) this warns hot and never blocks: the
   // machinist owns the call (Scott, 2026-09-02).
-  if (input.fluteLengthMm > 0 && ap > input.fluteLengthMm + 1e-9) {
+  if (!depthUnstated && input.fluteLengthMm > 0 && ap > input.fluteLengthMm + 1e-9) {
     warnings.push({ code: 'past_flutes', message: `The pass is ${round1(ap)} mm deep and the flutes are ${round1(input.fluteLengthMm)} mm long. The shank rubs the wall above the flutes. Use a longer tool or a shallower pass.` });
   }
   if (env.hasSwitchableBasis) {
@@ -289,9 +370,9 @@ export function calculate(input, data) {
     notes.push('The density does not change the served numbers yet.');
   }
 
-  const h = meanChipThicknessMm(fzDeliv, ae, D);
+  const h = meanChipThicknessMm(fzDeliv, ae, cutD);
   const kcUsed = kcOfH(kcModel, h);
-  const powerKw = cuttingPowerKw(kcUsed, ap * ae * final);
+  const powerKw = depthUnstated ? undefined : cuttingPowerKw(kcUsed, ap * ae * final);
 
   const sourceLabel = env.contributors.join(', ');
   const plungeRatio = rules.plunge_ramp.ratio_of_cutting_feed;
@@ -308,10 +389,39 @@ export function calculate(input, data) {
       leadOutFeedMmMin: final * leadRatio,
       rampFeedMmMin: final * plungeRatio,
       plungeFeedMmMin: final * plungeRatio,
+      // Ball nose geometry, display only. The three values below appear only
+      // for a ball tool, and the UI rows carry a `when` guard on them. None of
+      // them changes a served number: the effective diameter is what the tool
+      // is actually cutting on at this depth, and no wood source publishes a
+      // speed or feed correction from it.
+      ...(ballNose && !depthUnstated ? {
+        effectiveDiameterMm: effectiveDiameterMm(D, ap, cornerR),
+        effectiveSurfaceSpeedMMin: surfaceSpeedMMin(effectiveDiameterMm(D, ap, cornerR), rpm),
+      } : {}),
+      ...(ballNose ? {
+        // A scallop is the ridge between two passes a stepover apart, so it
+        // exists while the passes overlap on the corner: at or past the CORNER
+        // diameter they do not, and the arithmetic returns the full corner
+        // radius, which is right and reads as nonsense on a groove. The row
+        // then drops out on its `when` guard.
+        //
+        // The gate is the corner diameter, not light-radial engagement
+        // (corrected 2026-09-03). On a bull nose the corner is far smaller
+        // than the tool, so a stepover that is heavy against the corner is
+        // still light against the tool, and a light-radial gate hid a real
+        // and coarse ridge: 1.27 mm across a 1.5 mm corner leaves 0.23 mm.
+        ...(ae < 2 * cornerR ? { scallopHeightMm: scallopHeightMm(2 * cornerR, ae) } : {}),
+      } : {}),
     },
     outputNotes: {
       leadInOut: 'An arc lead-in enters at reduced engagement, so the full cutting feed is safe there.',
       plungeRamp: `Ramp and plunge at up to ${rules.plunge_ramp.angle_deg_max}° over ${rules.plunge_ramp.ramp_length_mm[0]}–${rules.plunge_ramp.ramp_length_mm[1]} mm at one third of the cutting feed.`,
+      ...(ballNose && ae < 2 * cornerR ? {
+        scallop: 'This is the ridge left standing between passes, from the stepover and the ball radius alone. Shops and CAM documentation run 8 to 12 per cent of the tool diameter for a 3D finish pass, and no tooling maker publishes a figure. Halving the stepover quarters the ridge and doubles the cutting time.',
+      } : {}),
+      ...(ballNose && !depthUnstated ? {
+        effectiveDiameter: 'A ball cuts on a smaller circle than its full diameter until the pass reaches half the diameter deep, and the speed falls to zero at the exact tip. Use a larger ball where the surface is flat.',
+      } : {}),
     },
     limit: {
       binding: lim.binding,
@@ -334,6 +444,10 @@ export function calculate(input, data) {
       fzBase, fzTarget, fzProg, fzDeliv, fzEff,
       docRatio, derate, chipThinningFactor: ctfPhysical, thinningCompensated: !finishing,
       finishing,
+      ballNose,
+      bullNose,
+      cornerRadiusMm: cornerR,
+      cuttingDiameterMm: cutD,
       lightRadial,
       fluteLengthMm: input.fluteLengthMm > 0 ? input.fluteLengthMm : undefined,
       fzPhysical: fzDeliv / ctfPhysical,
@@ -347,6 +461,7 @@ export function calculate(input, data) {
       gripN,
       zEff,
       apMm: ap,
+      depthUnstated,
       aeMm: ae,
       dMm: D,
       material: input.material,

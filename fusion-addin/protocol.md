@@ -14,6 +14,10 @@ unit. Both sides pin these shapes with tests.
 | 2026-09-01 | 1 | The Windows spike folded in, no bump: identity is `operationId`; feeds and angles are raw mm/min and degrees; the pocket reads `compensation`; the setup Z extents are `stockZHigh`, `stockZLow`, `surfaceZHigh`, `surfaceZLow`; pocket width is `maximumStepover`; the finishing names corrected; the write order is spindle then cutting feed with the feed per tooth never written; drill rows write the plunge feed; `params.useStockToLeave` and `setup.machine` added as optional fields; the panel address carries `build` and `theme`. |
 | 2026-09-02 | 1 | Heights corrected, no bump: a `from contour`, `from hole top`, `from hole bottom` or `from point` height never reaches Fusion's `_value` parameter, so the add-in resolves it from the selected geometry through the setup frame and ships `zSource` and `zSpreadMm` beside `zMm` (additive). Drilling serves: the `drill` row of the mapping table maps to the drilling core, the tool identity guesses a drill family, and a drill apply row carries `rpm` and `plungeMmMin` only. |
 | 2026-09-02 | 1 | A drill described as a brad point auto-confirms as a dowel drill (Scott's rule): `identifyTool` returns `guessCertain` and the panel skips that one confirmation. Page-side only, no wire change. |
+| 2026-09-02 | 1 | 3D surfacing serves, no bump: a full-radius ball nose on any 3D surfacing strategy maps to the routing core with the stepover as the width of cut and the stepdown as the depth of cut. `toolKind` splits `ball` (ball end mill alone) from a new `form` kind, a ball takes no confirmation question, and the parallel's `one way` / `other way` / `both ways` directions all read as ambiguous. The add-in reads `stepover` before `maximumStepover` on a surfacing strategy. Behaviour only, no field added or removed. |
+| 2026-09-03 | 1 | Corrected from a firsthand read of the Fusion API (Operations.compatibleStrategies and createInput(strategy).parameters, which expose a strategy's parameters without adding anything to an open design). Three changes, all behaviour: a parameter whose `isEnabled` is false now ships as `null` rather than as its stale reading, which closes the whole class of greyed-out control at the reader instead of one gate at a time; the surfacing strategy list is the real one, with `contour3d` where the spike guessed `contour` and eight strategies it missed; and the width and depth of cut are read per strategy, because a scallop carries a stepover and no stepdown anywhere while a 3D contour carries the reverse. |
+| 2026-09-03 | 1 | Scope corrected again, same day, after Scott read the first table. Fusion's own `OperationStrategy.is3DStrategy` and `isFinishingStrategy` decide the family now, not a hand list: geodesic, swarf, deburr and the multi-axis and rotary families all report `is3DStrategy` false and are out of scope, and `corner` reports true and is in. `flat` and `horizontal` report true and stay out anyway, because they machine flat areas, which is facing work. `corner` states four stepovers and the add-in ships the largest live one, with `params.stepoverParam` naming which (additive, no bump). |
+| 2026-09-03 | 1 | Scope corrected a third time, same day. The scope rule is Fusion's own `OperationStrategy.description`, not `is3DStrategy`: that flag reports false for `geodesic`, which its own description says machines freeform surfaces, and the `flow` description says outright that it is 3-axis by default with multi-axis optional. `geodesic` is in. `flat` and `horizontal` map to the ordinary routing path with the Finishing profile on the confirmed tool geometry, because they machine flat areas with a flat or bull nose tool (Scott). |
 
 ## Versioning rules
 
@@ -364,9 +368,15 @@ export function makeApply(jobId, rows) {}
 // Returns { key, kind, guess, guessSource, guessCertain, seriesMatches }.
 //   key:    "onsrud|60-123" when a product id exists, else a stable digest of
 //           type, diameter, flutes and description.
-//   kind:   "router" | "drill" | "ball" | "chamfer", from Fusion's tool type
-//           string (added 2026-09-01). Only a router bit takes the geometry
-//           question; the other kinds carry no guess.
+//   kind:   "router" | "drill" | "ball" | "form" | "chamfer", from Fusion's
+//           tool type string (added 2026-09-01; ball narrowed and form split
+//           out 2026-09-02). A router bit takes the geometry question and a
+//           drill takes the family question. A ball nose takes neither:
+//           Fusion states the geometry, so identifyTool returns guess "ball"
+//           with guessCertain true when the corner radius is half the
+//           diameter, and the panel serves it unconfirmed. A form tool, a
+//           chamfer tool and a ball whose radius fails that test carry no
+//           guess, and their rows refuse with the reason.
 //   guess:  the prefill for the one question the tool takes. A router bit:
 //           "upcut" | "downcut" | "compression" | "straight" | null. A drill
 //           (2026-09-02): "dowel" | "through" | "hinge" | "twist" | null,
@@ -424,15 +434,96 @@ stepdown is always active: the pass depth is `stepdownMm`, and a null
 set, which served a shallow-pass feed for a cut that runs the full depth in
 one pass, with no refusal.
 | `drill` | none: the drilling chart is a feed per revolution with every cutting edge counted | the hole, resolved hole top minus resolved hole bottom, from the hole faces (2026-09-02) |
-| `parallel`, `scallop`, `contour`, `pocket_clearing`, and the other 3D strategies | unsupported: no published chart covers 3D surfacing yet | |
-| anything else | unsupported, named in the reason | |
+
+The 3D surfacing rule (2026-09-02, rewritten 2026-09-03 from a firsthand read
+of the Fusion API). A full-radius ball nose maps on a 3D surfacing strategy,
+and every other tool shape refuses with a reason naming the tool type, the
+diameter and the corner radius the add-in read. Where the cut comes from
+depends on the strategy, because Fusion does not give them all the same
+controls:
+
+| The strategy states | Width of cut | Depth of cut | Strategies |
+|---|---|---|---|
+| a stepover and no stepdown | `stepoverMm` | none | `scallop`, `pencil`, `blend`, `flow`, `flow2`, `corner`, `geodesic` |
+| a stepover and a stepdown | `stepoverMm` | `stepdownMm` when set | `parallel`, `spiral`, `morphed_spiral`, `morph`, `steep_and_shallow` |
+| a stepdown and no stepover | `stepdownMm` | none | `contour3d`, `ramp`, `inclined_walls`, `radial` |
+| a width the add-in does not read | unsupported | | `project`, whose width is `angularStepover` and `projectionStepover` |
+
+**The scope rule is each strategy's own description and parameters, not its
+`is3DStrategy` flag.** The post-processor API has the classification this
+wants, and states it properly: `Section.checkGroup(groups)` against a set that
+includes `STRATEGY_3D`, `STRATEGY_MULTIAXIS` and `STRATEGY_SURFACE`. The
+design-time API exposes only a subset of those bits and no `checkGroup` at all,
+probed firsthand on 2026-09-03. Reaching the post groups needs a generated
+toolpath and a post run, which the add-in does not do; if that changes,
+`checkGroup` is the definitive answer and this list should come from it. That flag is undocumented beyond "is a 3D strategy" and
+it does not mean what it looks like: it reports false for `geodesic`, whose
+description reads "Creates a finishing operation to machine freeform surfaces
+and undercuts", and the `flow` description says plainly that "Flow is a 3-axis
+strategy by default, but multi-axis mode can be enabled". Most of these
+strategies support simultaneous multi-axis, and that is not what puts one in or
+out (Scott, 2026-09-03).
+
+A strategy whose own description calls it a multi-axis strategy is out, because
+a three-axis nesting router cannot run one and because the cut is not a ball
+walking a surface: `swarf` machines "with the side of the tool",
+`multi_axis_contour` and `multi_axis_morph` machine "with the tip of the tool"
+under lead, lag and sideways tilt, `multiaxis_finishing` is for barrel tools,
+`deburr` deburrs corners, and the rotary family turns the part. `adaptive` and
+`pocket_clearing` are the 3D roughing strategies and serve through the ordinary
+path.
+
+**`flat` and `horizontal` are facing work.** Both "automatically detect all the
+flat areas of the part" in Fusion's own words, so the tool cuts on its full
+diameter and the pass is run with a flat or a bull nose tool. They map to the
+ordinary routing path on the confirmed tool geometry with `profileOverride`
+"finishing", and the stepover is the width of cut. A ball nose on one of them
+maps and then refuses in the core, because no finisher chart covers a ball
+nose. Fusion computes the horizontal stepover itself unless Manual Stepover is
+on, and a greyed-out control arrives as null, so that case refuses and names
+the box to turn on.
+
+`corner` states four widths, steep and shallow by constant and by maximum, and
+which pair is live depends on its mode. The add-in reads every one and ships
+the largest live value, because a wider cut thins the chip less and so serves
+the lower feed, which is safe for every region of the pass. `params.stepoverParam`
+carries the parameter name it read, so the reading line and any refusal can say
+which (additive, no bump; an older add-in sends none and it reads null).
+
+Three things follow, and each is a decision rather than a mechanism.
+
+A pass with **no stated depth still serves** (Scott, 2026-09-03). The feed comes
+from the chip load and the width of cut, and neither depends on the depth. The
+checks that do depend on it, the spindle power and the hold-down, are skipped,
+and the page says they were skipped. `apMm` reaches the core as `null`, which
+is the core's own signal for a depth nobody stated.
+
+A **Z-level pass spends its stepdown as the width of cut** (Scott, 2026-09-03).
+Fusion states no stepover for one, and the stepdown is the closest thing it
+publishes to a radial engagement. It reads true on the steep walls those
+strategies are built for and understates a shallow surface, where the same
+stepdown engages far more of the tool.
+
+The width of cut is **never defaulted**. A surfacing pass has no full-slot
+fallback, a guessed width would set the whole feed, and a greyed-out control in
+Fusion now arrives as `null` rather than as a stale number, so a missing width
+refuses and names itself.
+
+The parameter each strategy states its width in is read per strategy in
+`constants.SURFACING_WIDTH_PARAM`: `stepover` for most, `maximumStepover` for
+the horizontal and the pocket clearing. `project` states its width as
+`angularStepover` and `projectionStepover`, which the add-in does not read, so
+it refuses.
 
 Climb or conventional: `params.direction` where the strategy has it (the
 2D adaptive), else `compensation` on a 2D contour or a 2D pocket, where
 `left` reads as climb. The spike confirmed the `left` reading on 2026-09-01
 from Fusion's own help text and the posted G-code (section 3). An ambiguous direction (`params.direction`
-"both", `compensation` "both" or "center") serves the climb cutting-force
-model, and the reading line says so. Climb is the conservative model here: in
+"both", or the 3D parallel's `one way`, `other way` and `both ways`, or
+`compensation` "both" or "center") serves the climb cutting-force
+model, and the reading line says so. None of the three raster words names a
+cut direction: a pass over a surface climbs on one side of a ridge and cuts
+conventionally on the other. Climb is the conservative model here: in
 every measured pair in kc.json the climb Ks is the higher value, so the climb
 model gives the lower power and hold-down caps (corrected 2026-09-01; the
 first draft said conventional and had the conservatism backwards). Any other
@@ -455,9 +546,9 @@ Nothing in this table rests on documentation alone any more.
 | `tool_feedPlunge` | plunge feed | all | 2 |
 | `tool_feedRamp`, `tool_feedEntry`, `tool_feedExit` | ramp, lead-in, lead-out feeds | all; not editable on a drill | 2 |
 | `maximumStepover` | pocket width of cut (default 0.6 × D) | `pocket2d`, and `contour2d` roughing | 2 |
-| `stepover` | 3D stepover | `parallel` only | 2 |
+| `stepover` | 3D width of cut | most 3D surfacing strategies; the horizontal and the pocket clearing use `maximumStepover`, and the 3D contour, ramp, inclined walls, radial and rotary contour state none at all (API read, 2026-09-03) | 2 |
 | `optimalLoad` | adaptive width (default 0.4 × D) | `adaptive2d` | 2 |
-| `maximumStepdown` | stepdown; raw reads 0.0 while `doMultipleDepths` is off | `contour2d`, `pocket2d`, `adaptive2d`, `slot`, `parallel` | 2 |
+| `maximumStepdown` | stepdown. Raw reads 0.0 while the control is greyed out, and the add-in ships `null` for a parameter whose `isEnabled` is false, so that stale reading no longer crosses the wire (2026-09-03) | `contour2d`, `pocket2d`, `adaptive2d`, `slot`, and the surfacing strategies that state one | 2 |
 | `doMultipleDepths` | multiple depths on | same five; absent on `drill` | 2 |
 | `useStockToLeave` | the switch in front of the stock-to-leave pair; both read 0.0 when off | all but `drill` | 2 |
 | `stockToLeave`, `verticalStockToLeave` | stock to leave | `slot` has the vertical one only | 2 |

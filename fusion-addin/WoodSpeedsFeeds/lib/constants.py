@@ -135,8 +135,87 @@ STRATEGY_DRILL = "drill"
 # Confirmed 2026-09-01, spike-results-windows.md section 2. The pocket
 # and contour width is maximumStepover. Only the 3D parallel has
 # stepover, so snapshot.read_params reads the first, then the second.
+#
+# Amended 2026-09-02, corrected 2026-09-03: a 3D surfacing strategy reads
+# the 3D name ALONE, with no fallback. Only the parallel was ever read
+# inside Fusion; the other fifteen surfacing strategies are unverified,
+# and several of them carry a maximumStepover-shaped name for something
+# that is not the surfacing stepover (the parallel's own dump also
+# carries cuspHeightStepover and steepMinimumStepover). Falling back to
+# maximumStepover there would return a plausible number from the wrong
+# parameter, and the stepover sets the whole feed on a ball pass. With no
+# fallback an unverified strategy either gives the right number or gives
+# None, and the page refuses a None by name. The 2D order is untouched
+# and keeps both names.
 PARAM_STEPOVER = "maximumStepover"
 PARAM_STEPOVER_3D = "stepover"
+
+# The 3D surfacing strategies, mirroring SURFACING_3D in
+# js/fusion/map-operation.js. FP17 fails if the two lists drift apart.
+#
+# Read firsthand through the Fusion API on 2026-09-03, from
+# Operations.compatibleStrategies and createInput(strategy).parameters.
+# The earlier list came from the spike, which had only ever seen the
+# parallel: it carried "contour" where Fusion says "contour3d" and it
+# missed eight real strategies.
+SURFACING_3D_STRATEGIES = frozenset(
+    {
+        "parallel",
+        "scallop",
+        "pencil",
+        "spiral",
+        "morphed_spiral",
+        "morph",
+        "steep_and_shallow",
+        "blend",
+        "flow",
+        "flow2",
+        "geodesic",
+        "flat",
+        "horizontal",
+        "chamfer",
+        "corner",
+        "contour3d",
+        "ramp",
+        "inclined_walls",
+        "radial",
+        "project",
+    }
+)
+
+# The parameter each surfacing strategy states its width of cut in, read
+# firsthand on 2026-09-03. A tuple means the strategy states more than one
+# and the reader takes the LARGEST enabled value: a wider cut thins the
+# chip less and so serves the lower feed, which is the safe number for
+# every region of the pass. That is the same "most conservative source
+# serves" rule the chip-load envelope already uses.
+#
+# corner states four, steep and shallow by constant and by maximum, and
+# which pair is live depends on its mode. A strategy absent from this map
+# states no stepover at all, and the page takes its stepdown as the width
+# or refuses, per strategy.
+SURFACING_WIDTH_PARAM = {
+    "parallel": ("stepover",),
+    "scallop": ("stepover",),
+    "pencil": ("stepover",),
+    "spiral": ("stepover",),
+    "morphed_spiral": ("stepover",),
+    "morph": ("stepover",),
+    "steep_and_shallow": ("stepover",),
+    "blend": ("stepover",),
+    "flow": ("stepover",),
+    "flow2": ("stepover",),
+    "geodesic": ("stepover",),
+    "flat": ("stepover",),
+    "horizontal": ("maximumStepover",),
+    "corner": (
+        "steepRestConstantStepover",
+        "steepRestMaximumStepover",
+        "shallowRestConstantStepover",
+        "shallowRestMaximumStepover",
+    ),
+}
+
 PARAM_OPTIMAL_LOAD = "optimalLoad"
 PARAM_MAX_STEPDOWN = "maximumStepdown"
 PARAM_DO_MULTIPLE_DEPTHS = "doMultipleDepths"

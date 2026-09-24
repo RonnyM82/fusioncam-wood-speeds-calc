@@ -100,3 +100,32 @@ test('FR5', 'drill chips: short badge text with the core sentence as detail, hot
   assert(!hot.some((c) => c.key === 'rev'), 'no cool feed chip beside a below-band warning');
   assert(drillChips({ status: 'refused' }).length === 0, 'a refused result has no chips');
 });
+
+test('FR6', 'a 3D surfacing row names its own facts, and says which one did not read', () => {
+  // A surfacing row refuses on different facts from a 2D row: the stepover
+  // sets the whole feed, the multiple-depths box decides whether a stepdown
+  // exists at all, and the corner radius decides whether the tool is a ball
+  // (2026-09-02, corrected 2026-09-03). Without this clause a refused row
+  // could not say what was missing.
+  const op = {
+    opId: 'op-1', name: 'Parallel finish', strategy: 'parallel',
+    tool: { typeString: 'ball end mill', diameterMm: 8, cornerRadiusMm: 4, flutes: 2 },
+    params: { stepoverMm: 1.2, stepdownMm: 0.8, doMultipleDepths: true, direction: 'one way' },
+    heights: { top: { mode: 'from stock top', zMm: 18 }, bottom: { mode: 'from surface bottom', zMm: 0 } },
+  };
+  assert(readFacts(op) === 'Read: top 18 mm, bottom 0 mm, stepover 1.2 mm, stepdown 0.8 mm, diameter 8 mm, corner radius 4 mm, 2 flutes, direction one way.',
+    readFacts(op));
+  // A greyed-out stepdown arrives as null, not as a stale number, so the
+  // clause simply says it did not read (2026-09-03).
+  const off = readFacts({ ...op, params: { ...op.params, stepdownMm: null } });
+  assert(off === 'Read: top 18 mm, bottom 0 mm, stepover 1.2 mm, stepdown not read, diameter 8 mm, corner radius 4 mm, 2 flutes, direction one way.', off);
+  const blank = readFacts({
+    ...op,
+    tool: { typeString: 'ball end mill', diameterMm: null, cornerRadiusMm: null, flutes: null },
+    params: { stepoverMm: null, stepdownMm: null, doMultipleDepths: null, direction: null },
+  });
+  assert(blank === 'Read: top 18 mm, bottom 0 mm, stepover not read, stepdown not read, diameter not read, corner radius not read, flutes not read.', blank);
+  // A 2D row is untouched by the surfacing branch.
+  const flat = readFacts({ ...op, strategy: 'contour2d' });
+  assert(flat.includes('stepdown 0.8 mm') && !flat.includes('corner radius'), `a 2D clause must keep its own shape: ${flat}`);
+});

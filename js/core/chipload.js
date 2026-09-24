@@ -37,19 +37,73 @@ export function chipThinningFactor(dMm, aeMm) {
   return dMm / (2 * Math.sqrt(aeMm * (dMm - aeMm)));
 }
 
+// Ball and bull nose geometry (2026-09-02, generalised 2026-09-03). All of
+// these are display values. None changes a served speed or feed, because no
+// wood source publishes a rule that does: every maker that prints an
+// effective-diameter correction works in metal, and the two that print a feed
+// multiplier disagree about the base it starts from
+// (research-session-6-ball-surfacing.md).
+//
+// The effective cutting diameter of a round-ended tool at an axial depth ap is
+// the flat across its tip plus the chord across the corner at the bottom of
+// the cut. Five makers print the ball case in four algebraic forms and all
+// four are the same expression. The toroidal form below covers a bull nose as
+// well, and it reduces EXACTLY to the ball case when the corner radius is half
+// the diameter: the flat term (D - 2R) goes to zero and the chord term becomes
+// 2*sqrt(ap*(D - ap)). Checked to the last digit at three sizes.
+//
+// Past the corner radius the corner is fully buried and the full diameter cuts.
+export function effectiveDiameterMm(dMm, apMm, cornerRadiusMm) {
+  const r = cornerRadiusMm > 0 ? cornerRadiusMm : dMm / 2;
+  if (!(dMm > 0) || !(apMm > 0)) return 0;
+  if (apMm >= r) return dMm;
+  return (dMm - 2 * r) + 2 * Math.sqrt(r * r - (r - apMm) * (r - apMm));
+}
+
+// Scallop (cusp) height left between two passes a stepover apart. The first
+// argument is the CORNER diameter, not the tool diameter: the ridge comes off
+// the rounded corner that touches the surface, so on a ball it is the tool
+// diameter and on a bull nose it is twice the corner radius. Treating a
+// 12.7 mm bull nose with a 1.5 mm corner as a 12.7 mm ball reports 0.032 mm
+// where the real ridge is 0.141 mm, four and a half times smoother than the
+// truth (2026-09-03).
+//
+// The exact form, not the parabolic ae^2/(8R) approximation, which understates
+// by up to 4% at a 40% stepover and costs nothing to avoid. A stepover at or
+// past the corner diameter leaves the full corner radius standing.
+export function scallopHeightMm(cornerDiameterMm, aeMm) {
+  const r = cornerDiameterMm / 2;
+  if (!(r > 0) || !(aeMm > 0)) return 0;
+  if (aeMm >= cornerDiameterMm) return r;
+  return r - Math.sqrt(r * r - (aeMm / 2) * (aeMm / 2));
+}
+
 // Beginner tool types map onto data geometry classes. Decision D1: the
 // geometry-unspecified generic charts (Freud, Rennie, Vortex, ITA) join the
 // spiral envelopes only — Rennie's own row is noted "up/down cut only, NOT
 // compression". Decision D5: down-cut is served by the spiral envelope
 // (Onsrud's chart row covers series 52-200 and 57-200 together).
+// A ball nose maps to its own geometry class and nothing else (2026-09-02,
+// research session 6). Only the Amana ball nose chart carries that class, so a
+// flat tool can never pick up a ball band and a ball can never pick up a flat
+// one. The generic geometry-unspecified charts do NOT join it either: they are
+// flat-tool charts that happen to name no tool type, and a ball's cut removes
+// stock along a curved edge whose engaged diameter changes with the depth.
 const GEOMETRY_FOR_TOOL = {
   upcut: ['spiral_upcut', 'spiral_downcut'],
   downcut: ['spiral_upcut', 'spiral_downcut'],
   compression: ['compression_spiral'],
   straight: ['straight'],
+  ball: ['ball_nose'],
 };
 
 const SPIRAL_TOOL_TYPES = new Set(['upcut', 'downcut']);
+
+// The tool types that never fall back to a generic chart or to another
+// material's chart. A ball nose is served by one chart in three materials, and
+// where that chart says nothing the honest answer is a refusal: no published
+// chart covers a ball nose in plywood, melamine, particleboard or HPL.
+const NO_FALLBACK_TOOL_TYPES = new Set(['ball']);
 
 // A spiral entry serves the opposite cutting direction only when its data row
 // says so (covers_directions, the D5 amendment) — an up-cut-only series must
@@ -66,6 +120,7 @@ function servesDirection(e, toolType) {
 
 const TOOL_PROSE = {
   upcut: 'up-cut spiral', downcut: 'down-cut spiral', compression: 'compression', straight: 'straight',
+  ball: 'ball nose',
 };
 
 const MATERIAL_PROSE = {
@@ -79,6 +134,17 @@ function matProse(material) {
 
 function inScope(e, toolType) {
   return !(e.excludes_tool_types ?? []).includes(toolType);
+}
+
+// The ball nose chart and the flat-tool charts never appear on each other's
+// ladders (2026-09-02). The exclusion runs both ways on purpose. A flat chip
+// load drawn beside a ball's reads as headroom the ball does not have, and a
+// ball's drawn beside a flat tool's reads as a chart the flat tool could use.
+// Neither is an alternative for the other's cut: the same material, the same
+// diameter and a different cutting edge is a different number entirely.
+function sameToolFamily(e, toolType) {
+  const isBallEntry = e.tool_geometry === 'ball_nose';
+  return isBallEntry === (toolType === 'ball');
 }
 
 export function selectEntries(entries, { material, materials, materialsFallback, toolType, finishing }) {
@@ -107,7 +173,7 @@ export function selectEntries(entries, { material, materials, materialsFallback,
         finNotes.push(`No finisher chart is published for ${matProse(material)}. The MDF finisher chart serves the finish chip as the nearest published finishing chip loads. It is the lowest of the three finisher charts.`);
       }
     }
-    const context = ofMaterial.filter((e) => e.tool_geometry !== 'finisher' && inScope(e, toolType));
+    const context = ofMaterial.filter((e) => e.tool_geometry !== 'finisher' && inScope(e, toolType) && sameToolFamily(e, toolType));
     return { entries: finisherRows, primary: finisherRows, context, notes: finNotes };
   }
   const exact = ofMaterial.filter((e) => wanted.includes(e.tool_geometry) && servesDirection(e, toolType));
@@ -116,9 +182,31 @@ export function selectEntries(entries, { material, materials, materialsFallback,
   if (exact.length) {
     // Everything of the material that is not serving renders as named context
     // (D11), except charts whose own source excludes this tool type.
+    // A ball nose is the exception (2026-09-02). The other charts for the
+    // material are flat-tool chip loads, and a flat tool's number drawn on the
+    // same scale as a ball's is not an alternative for this cut: it is three
+    // to five times higher and reads as headroom the tool does not have. The
+    // ladder shows the ball chart alone.
     const serving = new Set(exact);
-    const context = ofMaterial.filter((e) => !serving.has(e) && inScope(e, toolType));
+    // The ladder record for a ball nose is NOT pushed here (corrected
+    // 2026-09-03). calculate() rebuilds a refusal reason from these notes
+    // minus the coverage notes, so a sentence pushed on the serving branch
+    // becomes the whole refusal when the chart later drops out on diameter
+    // coverage. A 1 inch ball then refused with a sentence about other tool
+    // shapes and never mentioned the diameter. The record now lives in
+    // calculate()'s chartNotes, where it cannot become a reason.
+    const context = NO_FALLBACK_TOOL_TYPES.has(toolType)
+      ? []
+      : ofMaterial.filter((e) => !serving.has(e) && inScope(e, toolType) && sameToolFamily(e, toolType));
     return { entries: exact, primary: exact, context, notes };
+  }
+  // A ball nose never borrows. No generic chart and no other material's chart
+  // may set a ball number, so a pick with no ball chart refuses here with the
+  // reason (2026-09-02, research session 6: no maker publishes a ball nose
+  // chip load for plywood, melamine, particleboard or HPL).
+  if (NO_FALLBACK_TOOL_TYPES.has(toolType)) {
+    notes.push(`No published chart covers a ${TOOL_PROSE[toolType]} in ${matProse(material)}. The calculator gives no number without a source.`);
+    return { entries: [], primary: [], context: [], notes };
   }
   // Material-level fallback for a geometry gap: soft plywood publishes no
   // spiral row, so spiral picks ride the hard-plywood chart (conservative for
@@ -130,7 +218,7 @@ export function selectEntries(entries, { material, materials, materialsFallback,
     if (fbExact.length) {
       const from = [...new Set(fbExact.map((e) => matProse(e.material)))].join(', ');
       notes.push(`No ${matProse(material)} chart covers ${TOOL_PROSE[toolType]} tools. The ${from} chart serves as the nearest match, and it reads conservative for this board.`);
-      const context = ofMaterial.filter((e) => inScope(e, toolType));
+      const context = ofMaterial.filter((e) => inScope(e, toolType) && sameToolFamily(e, toolType));
       return { entries: fbExact, primary: fbExact, context, notes };
     }
   }
@@ -139,7 +227,7 @@ export function selectEntries(entries, { material, materials, materialsFallback,
     notes.push('No chart for this material is resolved by tool geometry. Generic vendor values serve instead.');
     notes.push('These charts do not separate tool types, so the tool-type choice does not change these numbers.');
     const serving = new Set(scopedGeneric);
-    const context = ofMaterial.filter((e) => !serving.has(e) && inScope(e, toolType));
+    const context = ofMaterial.filter((e) => !serving.has(e) && inScope(e, toolType) && sameToolFamily(e, toolType));
     return { entries: scopedGeneric, primary: scopedGeneric, context, notes };
   }
   if (generic.length) {
@@ -208,6 +296,7 @@ const GEO_PROSE = {
   compression_chipbreaker_finisher: 'compression chipbreaker', chipbreaker_finisher: 'chipbreaker finisher',
   hogger_low_helix_chipbreaker: 'low-helix hogger', hogger_high_helix_chipbreaker: 'high-helix hogger',
   finisher: 'finisher', straight: 'straight', straight_o_flute: 'O-flute', unspecified: 'generic chart',
+  ball_nose: 'ball nose',
 };
 
 export function resolveBand(entries, { material, materials, materialsFallback, toolType, diameterMm, finishing }, envRules) {

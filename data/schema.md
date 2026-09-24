@@ -246,3 +246,137 @@ than the flutes, which never blocks: the machinist owns that call. The depth
 chip now speaks per regime, because "Depth 2.2xD gives 100% chip load" in
 amber read as a contradiction on a finish skim. Pinned by SC36, and SC33's
 finishing case flipped from blocked to served with the reason in the test.
+
+## chiploads.json amendment 2026-09-02: the ball nose
+
+A fifth tool type, `ball`, and a new geometry class, `ball_nose`. Twenty-one
+entries from the Amana spiral ball nose chart under source key
+`amana-ball-nose` (research/sources/amana-spiral-ball-nose-v7.pdf, retrieved
+2026-09-02): three materials, softwood, hardwood and MDF, across seven
+diameters from 1.5875 to 19.05 mm. The research is
+`research/research-session-6-ball-surfacing.md`.
+
+**The chart states one condition and no others: a depth of cut of one tool
+diameter.** That is a full-width groove with a round bottom. It is not
+published for a surfacing pass, and no maker anywhere publishes a chip load
+for a ball nose cutting wood on a 3D pass. Two makers do publish a 3D stepover,
+PreciseBits and IDC Woodcraft, and neither publishes a feed to go with it.
+Nobody publishes a scallop rule or an effective-diameter correction for a ball
+nose in wood at all. Every ball entry therefore carries `cut_type_published: "none"`, a new
+field, so no later code path can treat a groove number as a surfacing number
+by accident.
+
+**The chart value is a full-engagement number, so the existing radial
+chip-thinning compensation is what serves it.** A surfacing pass takes a
+stepover as its width of cut, the compensation lifts the programmed feed, and
+the chip the tool actually takes is the chart value unchanged, down to the
+stepover floor below. That is the
+opposite of the Finishing profile, where the vendor already has the light
+engagement inside the number. IMCO, the one maker that prints a feed
+multiplier with its base named, states that base as the slot value, which is
+what this chart is. Scott judged the resulting feeds sound against his own
+production surfacing experience on 2026-09-02.
+
+**No second correction is applied.** The result reports the ball's effective
+cutting diameter and the surface speed at it, and those numbers move nothing.
+The two makers that publish a feed multiplier from the effective diameter
+disagree about the base it starts from, and no wood source publishes one at
+all. Applying both a radial and an axial correction is the double-scaling the
+Finishing profile was rebuilt twice to remove.
+
+**Three ball-only display values ride in `outputs`**, guarded by a `when` row
+in the UI the same way the drilling peck row is: the scallop height, from the
+exact `R - sqrt(R^2 - (ae/2)^2)` rather than the parabolic approximation, the
+effective cutting diameter `2*sqrt(ap*(D - ap))`, and the surface speed at that
+diameter. All three are geometry, five makers print the effective diameter in
+four algebraically identical forms, and all three are marked as display in
+`js/core/chipload.js`.
+
+**A ball nose never borrows and is never borrowed from.** `ball` maps to
+`ball_nose` alone, so a flat tool cannot pick up a ball band and a ball cannot
+pick up a flat one. The generic geometry-unspecified charts do not join it
+either. Where the chart says nothing the pick refuses: plywood, soft plywood,
+melamine, particleboard and HPL have no ball nose chip load from any maker.
+The exclusion also runs on the context ladder, in both directions
+(`sameToolFamily`), because a flat chip load drawn beside a ball's reads as
+headroom the tool does not have.
+
+**The Finishing profile refuses for a ball**, because every finisher row is a
+flat-edged tool and no finisher chart covers a ball nose.
+
+**The validator gate is the maker's own printed formula.** Every ball entry
+carries the chart's printed feed band in `printed_feed_in_min`, and the
+validator checks it against rpm times flutes times chip load. A cell fails
+only when it misses by more than ten inches per minute AND more than five per
+cent, because Amana prints its feed ladder on round tens and a sound cell can
+sit one step out. That gate is why Amana's separate 2D/3D carving charts are
+out of scope: five of their twenty-five ball nose cells fail it, three of them
+wood rows, the worst by a factor of two.
+
+**Onsrud's 77-100 taper tools are a cross-check, not data.** They carry a ball
+nose point and publish .003-.005 in per tooth at 1/8 in and .005-.007 at 1/4
+in, the same in soft wood, hard wood and MDF, and those values equal Amana's
+hardwood column exactly at both diameters. They stay in the research file:
+Scott's call is a straight ball nose only (2026-09-02).
+
+Behaviour is pinned by `BALLDATA` and `BALLFENCE` (data), `SC37` to `SC41`
+(scenario, including the served-grid sweep and the machine-cap check), and the
+`ball` rows added to the `SC30` warning-ceiling sweep and the `SC35` narration
+sweep.
+
+**The compensation has a floor, added 2026-09-03 after the adversarial review.**
+Chip thinning is unbounded as the stepover falls, and on a ball that runs away
+inside the tool's normal working range: at a 2 per cent stepover on a 3.175 mm
+ball it programmed 0.636 mm per tooth against a 0.064 mm stepover, a chip ten
+times the width of cut, and served 22,886 mm/min. The relation assumes the chip
+is small against the engagement, and there it is not. `rules.ball_nose`
+therefore holds the compensation at a stepover of 8 per cent of the diameter and
+never extrapolates below it, and the page says so when that bites. Below the
+floor the served feed stops rising and the physical chip falls under the chart
+value, which is the conservative side. Every number Scott approved, at 8 per
+cent and above, is unchanged. The figure comes from the one 3D finishing
+stepover any maker publishes, PreciseBits at 0.08 x tip diameter, and from the
+sight table Scott read, which is computed at that stepover; choosing it as the
+floor is the calculator's decision and it is recorded as one. This is the same
+shape as the 3xD depth block of 2026-08-29: a correction is held at its anchor
+rather than run past the point anybody checked.
+
+**A surfacing pass with no stated depth serves, added 2026-09-03.** A firsthand
+read of the Fusion API showed that a scallop, a pencil or a blend pass carries a
+stepover and no stepdown anywhere, and a 3D contour or a ramp carries the
+reverse. `calculate()` therefore accepts `apMm: null` from a ball nose, meaning
+the toolpath states no depth of cut. The feed still serves, because the chip
+load and the width of cut set it and neither depends on the depth. What is
+skipped is skipped explicitly: the spindle power cap, the hold-down cap, the
+power figure, the past-flutes warning and the effective cutting diameter all
+drop out, `meta.powerKw` comes back undefined, and a rendered note says the
+power and hold-down checks did not run. Nothing is assumed on the user's behalf
+(Scott, 2026-09-03).
+
+**A bull nose reads the ball chart at its corner, added 2026-09-03.** A bull
+nose is a surfacing tool too, and no maker publishes a chip load for one in
+wood anywhere, so the ball nose chart is borrowed for it. The chart is indexed
+on the **corner diameter**, twice the corner radius, not on the tool diameter
+(Scott's call): on a surfacing pass the corner is what cuts, and reading the
+chart there is conservative twice over, because it gives both the lower
+published chip load and the smaller thinning compensation. A 12 mm tool with a
+3 mm corner reads as a 6 mm ball. The cost is that a small corner falls off the
+bottom of the chart's ladder and refuses, which is the honest outcome for a
+geometry nobody publishes: a 12.7 mm tool with a 0.5 mm corner refuses.
+
+The borrow is recorded in `meta.chartNotes` and renders nowhere, with the other
+chart-selection sentences (Scott, 2026-09-03).
+
+Two geometry values do **not** come from the chart's ball. The scallop is taken
+off the corner radius, because the ridge comes from the rounded corner that
+touches the surface: a 12.7 mm bull nose with a 1.5 mm corner at a 1.27 mm
+stepover leaves 0.141 mm, and calling it a 12.7 mm ball would report 0.032 mm,
+four and a half times smoother than the truth. The cutting diameter uses the
+toroidal form `(D - 2R) + 2*sqrt(R^2 - (R - ap)^2)`, which reduces exactly to
+the ball formula when the corner radius is half the diameter, so a ball is the
+special case of one formula rather than a second code path.
+
+The scallop is reported while the stepover is under the corner diameter, not
+while the cut is light-radial. On a bull nose the corner is far smaller than
+the tool, so a stepover that is heavy against the corner is still light against
+the tool, and the light-radial gate hid a real and coarse ridge.

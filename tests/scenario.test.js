@@ -414,7 +414,7 @@ test('SC34', 'the ITA chart contributes only near its 12 mm nesting tools', () =
 // meta.chartNotes for tests and headless callers, and on the page only the
 // limit line and the chart ladder name a chart.
 test('SC35', 'chart narration never reaches the rendered notes', () => {
-  const NARRATION = /publishes no|publishes nothing|chart serves|charts? do not|contributes|disagree by more than|does not compensate|Generic (vendor|chart) values|nearest match|flat kc estimate/;
+  const NARRATION = /publishes no|publishes nothing|chart serves|charts? do not|contributes|disagree by more than|does not compensate|Generic (vendor|chart) values|nearest match|flat kc estimate|not drawn beside|states one condition|no second correction/;
   const picks = [
     {},
     { profile: 'finishing' },
@@ -424,6 +424,11 @@ test('SC35', 'chart narration never reaches the rendered notes', () => {
     { material: 'hardwood', materials: ['hardwood'], direction: 'conventional', densityKgM3: 600 },
     { diameterMm: 3.175, thicknessMm: 3 },
     { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'], diameterMm: 6.35, thicknessMm: 6 },
+    // A ball nose, which carries its own chart-selection sentences
+    // (2026-09-02). None of them may reach the page.
+    { toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27 },
+    { toolType: 'ball', material: 'hardwood', materials: ['hardwood'], diameterMm: 3.175, apMm: 0.3, aeMm: 0.3, profile: 'gentle' },
+    { toolType: 'ball', material: 'softwood', materials: ['softwood'], diameterMm: 19.05, apMm: 7.6, aeMm: 7.6, profile: 'aggressive' },
   ];
   for (const pick of picks) {
     const r = run(pick);
@@ -460,15 +465,22 @@ test('SC30', 'no input stacks more than four warnings, and four fold into one ba
   ];
   let worst = 0;
   for (const mat of sweepMaterials)
-    for (const toolType of ['upcut', 'downcut', 'compression', 'straight'])
-      for (const diameterMm of [3.175, 6, 6.35, 12, 12.7, 19.05, 25.4])
+    for (const toolType of ['upcut', 'downcut', 'compression', 'straight', 'ball'])
+      for (const diameterMm of [1.5875, 3.175, 6, 6.35, 12, 12.7, 15.875, 19.05, 25.4])
         for (const rpm of [8000, 18000, 30000])
           for (const profile of ['gentle', 'standard', 'aggressive', 'finishing'])
             for (const flutesTotal of [1, 4])
               for (const preset of presets) {
+                // A ball nose is a surfacing tool: it never cuts a full slot at
+                // 18 mm, so the sweep gives it a stepover and a stepdown,
+                // which is the path its feed actually takes (2026-09-02).
+                const ballCut = toolType === 'ball'
+                  ? { apMm: diameterMm * 0.1, aeMm: diameterMm * 0.1 }
+                  : {};
                 const r = calculate({
                   ...mat, toolType, diameterMm, rpm, profile, flutesTotal,
                   thicknessMm: 18, firstCut: false, machine: preset.machine,
+                  ...ballCut,
                 }, data);
                 if (r.status !== 'ok') continue;
                 worst = Math.max(worst, r.warnings.length);
@@ -477,4 +489,205 @@ test('SC30', 'no input stacks more than four warnings, and four fold into one ba
                   `for ${mat.material} ${toolType} D${diameterMm} ${rpm}rpm ${profile} Z${flutesTotal} on ${preset.id}`);
               }
   assert(worst === 4, `the sweep must reach the known ceiling of 4 warnings, found ${worst}`);
+});
+
+// SC37 to SC41 cover the ball nose tool type (2026-09-02, research session
+// 6). The chart is Amana's, published at a depth of one tool diameter, which
+// is a full-width groove. It serves through the routing engine unchanged: the
+// stepover is the width of cut, so the existing chip-thinning compensation is
+// what lifts the programmed feed, and no second correction is applied.
+
+test('SC37', 'a ball nose serves from its own chart alone, and the geometry rows come with it', () => {
+  const r = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27 });
+  assert(r.status === 'ok', `expected ok, got ${r.status}: ${r.refusal?.reason ?? r.block?.reason}`);
+  assert(r.meta.contributors.length === 1 && r.meta.contributors[0].includes('Amana'),
+    `only the ball chart may serve a ball, got ${r.meta.contributors}`);
+  assert(r.meta.ballNose === true, 'the result must record that this is a ball nose');
+  // The flat-tool charts must not be drawn beside it: their chip loads are
+  // three to five times higher and read as headroom the tool does not have.
+  assert(r.meta.contextBands.length === 0, `a ball ladder shows the ball chart alone, got ${r.meta.contextBands.map((b) => b.label)}`);
+  // Geometry, exact forms. A 12.7 mm ball at a 1.27 mm stepdown cuts on a
+  // 7.62 mm circle, and a 1.27 mm stepover leaves a 0.0318 mm ridge.
+  approx(r.outputs.effectiveDiameterMm, 7.62, { abs: 0.001 });
+  approx(r.outputs.scallopHeightMm, 0.03183, { abs: 0.0001 });
+  approx(r.outputs.effectiveSurfaceSpeedMMin, (Math.PI * 7.62 * 18000) / 1000, { abs: 0.1 });
+  assert(r.outputs.effectiveSurfaceSpeedMMin < r.outputs.surfaceSpeedMMin,
+    'the effective surface speed must sit below the nominal one at a shallow stepdown');
+  // One compensation, on the radial engagement, and no second one: the chip
+  // the tool actually takes is the chart value, unchanged.
+  approx(r.meta.chipThinningFactor, 12.7 / (2 * Math.sqrt(1.27 * (12.7 - 1.27))), { abs: 1e-9 });
+  approx(r.meta.fzPhysical, r.meta.fzTarget, { rel: 1e-9 });
+  // The stepdown feeds the cutting diameter and the stepover feeds the
+  // scallop, and they are different physical inputs. Every other ball case
+  // here passes them equal, so this one pins them apart: swapping the two
+  // arguments would give 9.2520 mm and 0.00492 mm instead (2026-09-03).
+  const uneven = run({ toolType: 'ball', diameterMm: 12.7, apMm: 0.5, aeMm: 2.0 });
+  assert(uneven.status === 'ok', `expected ok, got ${uneven.status}`);
+  approx(uneven.outputs.effectiveDiameterMm, 4.9396, { abs: 0.0005 });
+  approx(uneven.outputs.scallopHeightMm, 0.07923, { abs: 0.00002 });
+  // A full-width cut has no stepover, so it reports no scallop at all. The
+  // arithmetic would return half the tool diameter, which is right and reads
+  // as nonsense on a groove.
+  const slot = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1 });
+  assert(slot.status === 'ok', `expected ok, got ${slot.status}`);
+  assert(!('scallopHeightMm' in slot.outputs), 'a full-width ball cut must report no scallop');
+  assert(!('scallop' in slot.outputNotes), 'and no scallop note either');
+  assert(slot.outputs.effectiveDiameterMm != null, 'the cutting diameter still applies to a groove');
+});
+
+test('SC38', 'a ball nose never picks up a flat chart, and a flat tool never picks up the ball chart', () => {
+  const ball = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27 });
+  assert(ball.meta.contributors.every((c) => c.includes('ball nose')),
+    `a ball must read the ball chart only, got ${ball.meta.contributors}`);
+  for (const toolType of ['upcut', 'downcut', 'compression', 'straight']) {
+    const r = run({ toolType, diameterMm: 12.7 });
+    if (r.status !== 'ok') continue;
+    assert(!r.meta.contributors.some((c) => c.includes('ball nose')),
+      `${toolType} must never read the ball chart, got ${r.meta.contributors}`);
+    assert(!r.meta.contextBands.some((b) => b.geometry === 'ball_nose'),
+      `${toolType} must not draw the ball chart as context either`);
+  }
+});
+
+test('SC39', 'a ball nose refuses every material and every profile the chart does not cover', () => {
+  // The chart publishes softwood, hardwood and MDF. Every panel refuses, and
+  // it must refuse rather than borrow a generic chart: no maker publishes a
+  // ball nose chip load for plywood, melamine, particleboard or HPL.
+  const panels = [
+    { material: 'plywood', materials: ['plywood'] },
+    { material: 'softwood_ply', materials: ['softwood_ply'], materialsFallback: ['plywood'] },
+    { material: 'laminated_pb', materials: ['laminated_pb', 'laminated_chipboard'] },
+    { material: 'hpl', materials: ['hpl'] },
+  ];
+  for (const mat of panels) {
+    const r = run({ ...mat, toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27 });
+    assert(r.status === 'refused', `${mat.material}: expected refused, got ${r.status}`);
+    assert(/No published chart covers a ball nose/.test(r.refusal.reason), `${mat.material}: ${r.refusal.reason}`);
+  }
+  // No finisher chart covers a ball nose, so that profile refuses too.
+  const fin = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27, profile: 'finishing' });
+  assert(fin.status === 'refused', `expected refused, got ${fin.status}`);
+  assert(/No finisher chart covers a ball nose/.test(fin.refusal.reason), fin.refusal.reason);
+  // Outside the chart's diameter coverage the existing rule refuses.
+  // The reason must name the diameter. Until 2026-09-03 it printed a sentence
+  // about other tool shapes and never mentioned the size, because a ladder
+  // note pushed on the serving branch became the whole refusal.
+  const big = run({ toolType: 'ball', diameterMm: 25.4, apMm: 2.5, aeMm: 2.5 });
+  assert(big.status === 'refused', `25.4 mm sits past the chart's coverage, got ${big.status}`);
+  assert(big.refusal.reason.includes('25.4 mm'), `the reason must name the diameter: ${big.refusal.reason}`);
+  assert(!/other tool shapes/.test(big.refusal.reason), `ladder narration must never become a refusal: ${big.refusal.reason}`);
+});
+
+test('SC40', 'the ball nose feeds land where research session 6 says, and the sweep never hits the cap', () => {
+  // The sight sweep in research-session-6-ball-surfacing.md, reproduced here
+  // so a change to the serving policy fails against the numbers Scott read.
+  // 12.7 mm ball, 10 per cent stepover, 18,000 rpm, two flutes.
+  const common = { toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27, rpm: 18000, flutesTotal: 2 };
+  const expected = { mdf: [12192, 15240], hardwood: [10668, 13716], softwood: [13716, 16764] };
+  for (const [material, band] of Object.entries(expected)) {
+    const g = run({ ...common, materials: [material], material, profile: 'gentle' });
+    const a = run({ ...common, materials: [material], material, profile: 'aggressive' });
+    approx(g.outputs.cuttingFeedMmMin, band[0], { rel: 0.005 });
+    approx(a.outputs.cuttingFeedMmMin, band[1], { rel: 0.005 });
+  }
+  // Across the whole served grid nothing reaches the 30,000 mm/min cap, so
+  // the machine limit never silently sets a ball feed.
+  let capped = 0;
+  let worst = 0;
+  for (const material of ['softwood', 'hardwood', 'mdf'])
+    for (const diameterMm of [1.5875, 3.175, 6.35, 9.525, 12.7, 15.875, 19.05])
+      for (const stepover of [0.05, 0.08, 0.1, 0.12, 0.4])
+        for (const profile of ['gentle', 'standard', 'aggressive']) {
+          const r = run({
+            material, materials: [material], toolType: 'ball', diameterMm,
+            apMm: diameterMm * stepover, aeMm: diameterMm * stepover, profile,
+          });
+          if (r.status !== 'ok') continue;
+          worst = Math.max(worst, r.outputs.cuttingFeedMmMin);
+          if (r.limit.binding === 'vmax') capped += 1;
+        }
+  assert(capped === 0, `${capped} ball cuts hit the machine feed cap; the sweep found none on 2026-09-02`);
+  assert(worst < 30000, `the fastest ball feed in the sweep was ${Math.round(worst)} mm/min`);
+});
+
+test('SC41', 'the chip floor still fires on the smallest ball tools, and the chart value stands', () => {
+  // Five of the sixty-three published cells put the physical chip under the
+  // 0.08 mm rubbing floor, all at the two smallest diameters. Those are the
+  // maker's own minimums, so the calculator warns and must not raise them.
+  // MDF takes the panel floor, so the smallest ball at the low edge of the
+  // band ploughs: 0.076 mm against the 0.08 mm figure in rules.json.
+  const panel = run({
+    material: 'mdf', materials: ['mdf'], toolType: 'ball',
+    diameterMm: 1.5875, apMm: 0.16, aeMm: 0.16, profile: 'gentle',
+  });
+  assert(panel.status === 'ok', `expected ok, got ${panel.status}`);
+  assert(panel.warnings.some((w) => w.code === 'chip_plough'),
+    `expected the ploughing warning, got ${panel.warnings.map((w) => w.code).join(', ') || 'none'}`);
+  approx(panel.meta.fzPhysical, 0.076, { abs: 0.0006 });
+  // Solid timber has its own wording and its own branch, and the smallest
+  // hardwood cell is thinner still at 0.051 mm.
+  const thin = run({
+    material: 'hardwood', materials: ['hardwood'], toolType: 'ball',
+    diameterMm: 1.5875, apMm: 0.16, aeMm: 0.16, profile: 'gentle',
+  });
+  assert(thin.status === 'ok', `expected ok, got ${thin.status}`);
+  assert(thin.warnings.some((w) => w.code === 'chip_thin' || w.code === 'chip_plough' || w.code === 'chip_below_min'),
+    `expected a thin-chip warning, got ${thin.warnings.map((w) => w.code).join(', ') || 'none'}`);
+  approx(thin.meta.fzPhysical, 0.051, { abs: 0.0006 });
+  // The warning never lifts the served chip: the chart's own low edge is the
+  // maker's minimum for that tool, and raising it would invent a number.
+  approx(thin.meta.fzTarget, thin.meta.band.fzMin, { rel: 1e-9 });
+  const fat = run({
+    material: 'softwood', materials: ['softwood'], toolType: 'ball',
+    diameterMm: 19.05, apMm: 1.9, aeMm: 1.9, profile: 'aggressive',
+  });
+  assert(!fat.warnings.some((w) => w.code === 'chip_plough'), 'a big ball at the top of the band must not read as ploughing');
+});
+
+test('SC42', 'the chip-thinning compensation is held at the stepover floor and never extrapolated below it', () => {
+  // Chip thinning is unbounded as the stepover falls. Below about 8 per cent
+  // of the diameter it stopped describing the cut: at 2 per cent on a
+  // 3.175 mm ball it programmed 0.636 mm per tooth against a 0.064 mm
+  // stepover, a chip ten times the width of cut, and served 22,886 mm/min.
+  // rules.ball_nose holds the compensation at the floor (2026-09-03).
+  const floor = data.rules.ball_nose.thinning_stepover_floor_fraction;
+  approx(floor, 0.08, { abs: 1e-9 });
+  assert(data.rules.ball_nose.source === 'session-6-ball-surfacing', 'the floor must cite the research file');
+  assert(data.rules.ball_nose.data_class === 'project_decision', 'choosing the floor is the calculator decision, not a maker figure');
+
+  const D = 3.175;
+  const at = (pct) => run({ toolType: 'ball', diameterMm: D, apMm: 0.5, aeMm: D * pct, profile: 'aggressive' });
+  const atFloor = at(floor);
+  // Everything at or below the floor serves the floor's feed, exactly.
+  for (const pct of [0.02, 0.03, 0.05, floor]) {
+    const r = at(pct);
+    assert(r.status === 'ok', `${pct}: expected ok, got ${r.status}`);
+    approx(r.outputs.cuttingFeedMmMin, atFloor.outputs.cuttingFeedMmMin, { rel: 1e-9 });
+  }
+  // Above the floor the compensation is untouched, so every number Scott
+  // approved is unchanged.
+  for (const pct of [0.1, 0.12, 0.4]) {
+    const r = at(pct);
+    approx(r.meta.chipThinningFactor, D / (2 * Math.sqrt(D * pct * (D - D * pct))), { abs: 1e-9 });
+    assert(r.outputs.cuttingFeedMmMin < atFloor.outputs.cuttingFeedMmMin + 1e-6,
+      `${pct}: a wider stepover must never serve more feed than the floor`);
+  }
+  // Below the floor the physical chip falls under the chart value, which is
+  // the conservative side, and the floor check must see that number.
+  const fine = at(0.02);
+  const held = D / (2 * Math.sqrt(D * floor * (D - D * floor)));
+  const real = D / (2 * Math.sqrt(D * 0.02 * (D - D * 0.02)));
+  approx(fine.meta.fzPhysical, fine.meta.fzTarget * (held / real), { rel: 1e-9 });
+  assert(fine.meta.fzPhysical < fine.meta.fzTarget * 0.6,
+    `the physical chip must fall well below the chart value when the floor bites, got ${fine.meta.fzPhysical} against ${fine.meta.fzTarget}`);
+  // And the page says so, because a finer stepover then buys finish and time
+  // and nothing else.
+  assert(fine.notes.some((n) => /holds the chip-thinning compensation/.test(n)),
+    `the floor must be stated on the page: ${fine.notes.join(' | ')}`);
+  assert(!atFloor.notes.some((n) => /holds the chip-thinning compensation/.test(n)),
+    'the note must not fire at or above the floor');
+  // No other tool type is touched.
+  const flat = run({ toolType: 'upcut', diameterMm: 12.7, apMm: 5, aeMm: 12.7 * 0.02 });
+  approx(flat.meta.chipThinningFactor, 12.7 / (2 * Math.sqrt(12.7 * 0.02 * (12.7 - 12.7 * 0.02))), { abs: 1e-9 });
+  approx(flat.meta.fzPhysical, flat.meta.fzTarget, { rel: 1e-9 });
 });

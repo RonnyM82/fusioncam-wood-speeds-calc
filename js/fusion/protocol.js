@@ -144,6 +144,11 @@ function readParams(raw, path, errors) {
     stepdownMm: readNumber(part.stepdownMm, `${path}.stepdownMm`, errors),
     doMultipleDepths: readBoolean(part.doMultipleDepths, `${path}.doMultipleDepths`, errors),
     stepoverMm: readNumber(part.stepoverMm, `${path}.stepoverMm`, errors),
+    // Which parameter the width of cut came from (additive, 2026-09-03). A
+    // surfacing strategy can state more than one, so a reading line and a
+    // refusal name the one the add-in read. An older add-in sends none and
+    // this reads null.
+    stepoverParam: readString(part.stepoverParam, `${path}.stepoverParam`, errors),
     optimalLoadMm: readNumber(part.optimalLoadMm, `${path}.optimalLoadMm`, errors),
     stockToLeaveMm: readNumber(part.stockToLeaveMm, `${path}.stockToLeaveMm`, errors),
     verticalStockToLeaveMm: readNumber(part.verticalStockToLeaveMm, `${path}.verticalStockToLeaveMm`, errors),

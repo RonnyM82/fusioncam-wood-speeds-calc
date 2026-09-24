@@ -4,6 +4,11 @@
 // prints so a screenshot shows what the add-in sent. The module is pure, and
 // the fence in tests/run.js holds it there: no DOM, no I/O, no clock.
 
+// The 3D surfacing strategies, read from the mapping module so the two
+// cannot drift apart. A surfacing row's facts clause names different
+// parameters from a 2D row's (2026-09-02).
+import { SURFACING_3D as SURFACING_3D_STRATEGIES } from './map-operation.js';
+
 // One short label per strategy, in the words a machinist uses in Fusion.
 export const STRATEGY_LABELS = {
   contour2d: '2D contour',
@@ -97,6 +102,23 @@ export function readFacts(op) {
   // cut: the clause names the hole and the drill (2026-09-02).
   if (op.strategy === 'drill') {
     parts.push(tool.diameterMm == null ? 'diameter not read' : `diameter ${mmText(tool.diameterMm)} mm`);
+    return `Read: ${parts.join(', ')}.`;
+  }
+  // A 3D surfacing pass names its own facts (2026-09-02, corrected
+  // 2026-09-03 from a firsthand read of the Fusion API). Which of the
+  // stepover and the stepdown exists depends on the strategy: a scallop
+  // carries a stepover and no stepdown anywhere, a 3D contour the reverse.
+  // The clause names both, so a refused row shows which one was missing, and
+  // the corner radius, which decides whether the tool is a ball at all.
+  // The multiple-depths box is not named: the add-in now ships nothing at all
+  // for a greyed-out control, so a missing stepdown already reads as missing.
+  if (SURFACING_3D_STRATEGIES.has(op.strategy)) {
+    parts.push(p.stepoverMm == null ? 'stepover not read' : `stepover ${mmText(p.stepoverMm)} mm`);
+    parts.push(p.stepdownMm == null ? 'stepdown not read' : `stepdown ${mmText(p.stepdownMm)} mm`);
+    parts.push(tool.diameterMm == null ? 'diameter not read' : `diameter ${mmText(tool.diameterMm)} mm`);
+    parts.push(tool.cornerRadiusMm == null ? 'corner radius not read' : `corner radius ${mmText(tool.cornerRadiusMm)} mm`);
+    parts.push(tool.flutes == null ? 'flutes not read' : `${tool.flutes} ${tool.flutes === 1 ? 'flute' : 'flutes'}`);
+    if (p.direction != null) parts.push(`direction ${p.direction}`);
     return `Read: ${parts.join(', ')}.`;
   }
   if (op.strategy === 'adaptive' || p.doMultipleDepths === true) {

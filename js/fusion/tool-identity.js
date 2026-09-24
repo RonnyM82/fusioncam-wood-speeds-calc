@@ -179,17 +179,60 @@ function guessFromText(rawTool, patterns) {
 //            router bit is the only kind the charts serve today
 //   drill:   drill, spot drill, centre drill, counter bore, counter sink,
 //            reamer, tap, bore bar
-//   ball:    ball end mill, bull nose end mill, lollipop mill, radius mill,
-//            form mill, tapered mill, dovetail mill, slot mill, thread mill
+//   ball:    ball end mill, and nothing else (2026-09-02). Fusion carries its
+//            own tapered mill type with a ball-end setting, so a tapered ball
+//            arrives as a taper mill and lands in form below (Scott,
+//            2026-09-02); the panel therefore asks the user nothing about it.
+//   bullnose: bull nose end mill (2026-09-03). Also a surfacing tool, and it
+//            reads the ball chart at its corner diameter, so it is its own
+//            kind rather than one of the form tools no chart covers.
+//   form:    lollipop mill, radius mill, form mill, tapered mill, dovetail
+//            mill, slot mill, thread mill. No chart covers any of them.
 //   chamfer: chamfer mill, engrave chamfer mill
 export function toolKind(typeString) {
   const t = String(typeString ?? '').trim().toLowerCase();
   if (!t) return 'router';
   if (/\b(drill|counter bore|counter sink|reamer|tap|bore bar)\b/.test(t)) return 'drill';
-  if (/\b(ball end mill|bull nose end mill|lollipop|radius mill|form mill|tapered mill|dovetail|slot mill|thread mill)\b/.test(t)) return 'ball';
+  // Order matters. A type string reading "tapered ball end mill" contains
+  // "ball end mill", so the taper words are tested first. Without this a
+  // tapered ball, which Fusion carries as its own type, would be handed the
+  // straight ball chart, whose chip loads run up to three times higher
+  // (2026-09-03).
+  if (/\btaper(ed)?\b/.test(t)) return 'form';
+  if (/\bball end mill\b/.test(t)) return 'ball';
+  // A bull nose is a surfacing tool too (Scott, 2026-09-03), so it gets its
+  // own kind rather than sitting with the form tools no chart covers.
+  if (/\bbull ?nose\b/.test(t)) return 'bullnose';
+  if (/\b(lollipop|radius mill|form mill|dovetail|slot mill|thread mill)\b/.test(t)) return 'form';
   if (/\bchamfer\b/.test(t)) return 'chamfer';
   return 'router';
 }
+
+// The geometric gate on a round-ended tool. The type string alone is not
+// proof: the Windows spike found Fusion's own library typing a tool named
+// "9.5dia Bullnose" as a ball end mill whose corner radius was in fact half
+// its diameter, so it really was a ball. The measurements decide.
+//
+// A surfacing tool is one with a real rounded corner, anywhere from a small
+// bull nose up to a full ball. Above half the diameter is not a tool shape,
+// it is a bad reading, and it refuses. The tolerance is a micron, which is
+// finer than any tool library records.
+export function isFullRadiusBall(rawTool) {
+  const d = rawTool?.diameterMm;
+  const r = rawTool?.cornerRadiusMm;
+  if (!(d > 0) || !(r > 0)) return false;
+  return Math.abs(r - d / 2) <= 0.001;
+}
+
+// Any round-ended tool the surfacing path can serve: a ball, or a bull nose
+// with a corner radius between nothing and a full radius (Scott, 2026-09-03).
+export function isRoundEndedTool(rawTool) {
+  const d = rawTool?.diameterMm;
+  const r = rawTool?.cornerRadiusMm;
+  if (!(d > 0) || !(r > 0)) return false;
+  return r <= d / 2 + 0.001;
+}
+
 
 // rawTool is the job message tool shape in fusion-addin/protocol.md.
 // Returns { key, kind, guess, guessSource, guessCertain, seriesMatches }.
@@ -216,6 +259,17 @@ export function identifyTool(rawTool, chiploads) {
         guess = textGuess;
         guessSource = 'description';
       }
+    }
+  } else if (kind === 'ball' || kind === 'bullnose') {
+    // A ball nose takes no question. Fusion states the geometry, so the pick
+    // is a fact about the tool rather than a choice the user has to make, and
+    // the panel serves it unconfirmed (2026-09-02). The chart covers a full
+    // round tip only, so a tool that fails the radius test carries no guess
+    // and mapOperation refuses it with the numbers it read.
+    if (isRoundEndedTool(rawTool)) {
+      guess = 'ball';
+      guessSource = 'tool_type';
+      guessCertain = true;
     }
   } else if (kind === 'drill') {
     // No chart row names a drill by product id yet, so the description is

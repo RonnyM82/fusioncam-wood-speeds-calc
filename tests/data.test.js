@@ -408,3 +408,116 @@ test('CORRUPT', 'the validator rejects stripped provenance, bad vocabulary, and 
   const { errors } = validateData(corrupted);
   assert(errors.length >= 7, `expected at least 7 errors, got ${errors.length}:\n${errors.join('\n')}`);
 });
+
+// A valid ball nose entry, built here rather than read from the file, so the
+// gate is provable independently of what the file happens to hold. The
+// numbers are the Amana chart's 1/4 inch MDF row: .006-.008 in per tooth,
+// 220-290 in/min at 18,000 rpm on two flutes.
+function ballFixture() {
+  return {
+    source: 'amana-ball-nose',
+    vendor: 'Amana',
+    series: 'spiral ball nose',
+    tool_geometry: 'ball_nose',
+    flutes: 2,
+    material: 'mdf',
+    diameter_mm: 6.35,
+    diameter_display: '1/4"',
+    fz_min_mm: 0.152,
+    fz_max_mm: 0.203,
+    original: { unit: 'in/tooth', value: '.006-.008' },
+    printed_feed_in_min: { min: 220, max: 290, rpm: 18000 },
+    doc_basis: '1xD',
+    cut_type_published: 'none',
+    flute_basis: 'per_tooth_total',
+    data_class: 'vendor',
+  };
+}
+
+function withBall(entry) {
+  const clone = JSON.parse(JSON.stringify(data));
+  clone.chiploads.entries = [entry];
+  return clone;
+}
+
+test('BALLDATA', 'the ball nose entries match the chart, and each one agrees with the maker\'s own formula', () => {
+  const ball = data.chiploads.entries.filter((e) => e.tool_geometry === 'ball_nose');
+  assert(ball.length === 21, `expected 21 ball nose entries, three materials by seven diameters, got ${ball.length}`);
+  const byMaterial = new Map();
+  for (const e of ball) {
+    if (!byMaterial.has(e.material)) byMaterial.set(e.material, []);
+    byMaterial.get(e.material).push(e);
+  }
+  assert([...byMaterial.keys()].sort().join(',') === 'hardwood,mdf,softwood',
+    `the chart publishes softwood, hardwood and MDF only, got ${[...byMaterial.keys()].sort()}`);
+  const ladder = [1.5875, 3.175, 6.35, 9.525, 12.7, 15.875, 19.05];
+  for (const [material, rows] of byMaterial) {
+    const dias = rows.map((r) => r.diameter_mm).sort((a, b) => a - b);
+    assert(dias.length === 7 && dias.every((d, i) => Math.abs(d - ladder[i]) < 1e-9),
+      `${material}: expected the chart's 1/16 to 3/4 inch ladder, got ${dias}`);
+    // The chart's chip load rises with diameter in every material. A row out
+    // of order is a transcription slip, not a published value.
+    const sorted = rows.slice().sort((a, b) => a.diameter_mm - b.diameter_mm);
+    for (let i = 1; i < sorted.length; i += 1) {
+      assert(sorted[i].fz_min_mm >= sorted[i - 1].fz_min_mm - 1e-9,
+        `${material}: the chip load falls from ${sorted[i - 1].diameter_display} to ${sorted[i].diameter_display}`);
+    }
+  }
+  for (const e of ball) {
+    assert(e.cut_type_published === 'none', `${e.material} ${e.diameter_display}: the chart publishes no cut type and the entry must say so`);
+    assert(e.doc_basis === '1xD', `${e.material} ${e.diameter_display}: the chart's only condition is a cut one diameter deep`);
+    // The maker's own formula, printed on the same page as the numbers.
+    const implied = [e.fz_min_mm, e.fz_max_mm].map((fz) => (fz / 25.4) * e.printed_feed_in_min.rpm * e.flutes);
+    const printed = [e.printed_feed_in_min.min, e.printed_feed_in_min.max];
+    implied.forEach((v, k) => {
+      assert(Math.abs(v - printed[k]) <= 10.0001,
+        `${e.material} ${e.diameter_display}: ${v.toFixed(0)} in/min computed against ${printed[k]} printed, more than the chart's rounding step`);
+    });
+  }
+  // Pinned against silent drift, the three cells research session 6 quotes.
+  const pin = (material, dMm, lo, hi) => {
+    const e = ball.find((x) => x.material === material && Math.abs(x.diameter_mm - dMm) < 1e-9);
+    assert(e, `no ${material} row at ${dMm} mm`);
+    approx(e.fz_min_mm, lo, { abs: 0.0005 });
+    approx(e.fz_max_mm, hi, { abs: 0.0005 });
+  };
+  pin('mdf', 12.7, 0.203, 0.254);
+  pin('hardwood', 3.175, 0.076, 0.127);
+  pin('softwood', 19.05, 0.279, 0.330);
+});
+
+test('BALLFENCE', 'a sound ball nose entry passes, and each way of breaking one is caught', () => {
+  const clean = validateData(withBall(ballFixture())).errors;
+  assert(clean.length === 0, `the fixture entry must validate clean, got:\n${clean.join('\n')}`);
+
+  const breaks = {
+    'stripped source': (e) => { delete e.source; },
+    'stripped data_class': (e) => { delete e.data_class; },
+    'unknown geometry': (e) => { e.tool_geometry = 'ballnose'; },
+    'unknown cut type': (e) => { e.cut_type_published = 'surfacing'; },
+    'cut type dropped': (e) => { delete e.cut_type_published; },
+    'stringified band value': (e) => { e.fz_min_mm = '0.152'; },
+    'inverted band': (e) => { e.fz_min_mm = 0.3; },
+    'no diameter': (e) => { e.diameter_mm = null; },
+    'wrong flute count for this chart': (e) => { e.flutes = 3; },
+    'printed feed band dropped': (e) => { delete e.printed_feed_in_min; },
+    'a feed that fails the maker\'s own formula': (e) => { e.printed_feed_in_min.max = 100; },
+    'a chip load that fails the maker\'s own formula': (e) => { e.fz_max_mm = 0.5; },
+  };
+
+  for (const [name, breakIt] of Object.entries(breaks)) {
+    const entry = ballFixture();
+    breakIt(entry);
+    const { errors } = validateData(withBall(entry));
+    assert(errors.length > 0, `the gate let "${name}" through`);
+  }
+
+  // The rounding step must still pass: 180 computed against 190 printed is a
+  // sound cell on this chart, and a tighter gate would reject the real data.
+  const rounded = ballFixture();
+  rounded.fz_min_mm = 0.127;
+  rounded.fz_max_mm = 0.178;
+  rounded.printed_feed_in_min = { min: 190, max: 260, rpm: 18000 };
+  assert(validateData(withBall(rounded)).errors.length === 0,
+    'a cell one rounding step out is what the chart prints and must pass');
+});

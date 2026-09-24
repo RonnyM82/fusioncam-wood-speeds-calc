@@ -11,4 +11,13 @@
 # byte-for-byte what was published. Rewriting it to pass would destroy
 # the one property that makes it worth keeping. Scott Moyse, 2026-08-18,
 # moved out of the vendored conformance.py 2026-08-20.
+#
+# The second entry is a vendored research source under research/sources/,
+# saved 2026-09-02 in session 6. It is the only maker page found that
+# publishes a 3D finishing stepover for a ball tool in wood, so the exact
+# wording is the evidence. Every other source in that directory is a PDF,
+# which conformance does not scan; this one is HTML only because the maker
+# publishes it as a web page. Same reasoning as the reference doc above:
+# it is worth keeping only while it stays what was published.
 cnc-router-speeds-feeds-reference_4.html: archived third-party source; rewriting it would break provenance
+precisebits-tapered-ballnose.html: archived third-party source; rewriting it would break provenance

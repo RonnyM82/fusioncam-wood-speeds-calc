@@ -4,7 +4,7 @@ import { machinePresets } from '../data/presets.js';
 import { calculate } from '../core/calculate.js';
 import { calculateDrilling } from '../core/drilling.js';
 import { buildChips } from '../core/diagnostics.js';
-import { feedPair, rpmPair, surfacePair, fzPair, diameterLabel } from './format.js';
+import { feedPair, rpmPair, surfacePair, fzPair, scallopPair, diaPair, diameterLabel } from './format.js';
 import { DRILL_TOOLS, DRILL_DIAMETERS, DRILL_OUTPUT_ROWS, drillSubfamilyFor } from './drill-tables.js';
 
 // Beginner picks. Each material merges the vendor naming synonyms for the same
@@ -26,9 +26,13 @@ const TOOL_TYPES = [
   { id: 'downcut', label: 'Down-cut spiral', hint: 'Presses chips down. Leaves a clean top face, but clears chips poorly.' },
   { id: 'compression', label: 'Compression', hint: 'Up-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts.' },
   { id: 'straight', label: 'Straight', hint: 'Simple straight flutes. General purpose, but harder on the faces than a spiral.' },
+  { id: 'ball', label: 'Ball nose', hint: 'Round tip for 3D surfacing and carving. Softwood, hardwood and MDF only.' },
 ];
 
-const DIAMETERS = [3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 16, 19.05, 25.4];
+// The ball nose ladder is the chart's own: 1/16 through 3/4 inch. 15.875 is
+// there for that chart alone and sits between two metric sizes nothing else
+// publishes (2026-09-02).
+const DIAMETERS = [1.5875, 3.175, 4, 5, 6, 6.35, 8, 9.525, 10, 12, 12.7, 15.875, 16, 19.05, 25.4];
 
 const PROFILES = [
   { id: 'gentle', label: 'Gentle' },
@@ -51,6 +55,14 @@ const OUTPUT_ROWS = [
   { key: 'leadOutFeedMmMin', label: 'Lead-out feedrate', fmt: feedPair },
   { key: 'rampFeedMmMin', label: 'Ramp feedrate', fmt: feedPair, noteKey: 'plungeRamp' },
   { key: 'plungeFeedMmMin', label: 'Plunge feedrate', fmt: feedPair },
+  // Ball nose geometry. The core returns these three for a ball tool only, so
+  // the `when` guard drops the whole row for every other tool, the same way
+  // the drilling peck row works. They are geometry, not vendor data: no maker
+  // publishes a stepover, a scallop rule or an effective-diameter correction
+  // for a ball nose in wood (research-session-6-ball-surfacing.md).
+  { key: 'scallopHeightMm', label: 'Scallop height', fmt: scallopPair, when: (o) => o.scallopHeightMm != null, noteKey: 'scallop' },
+  { key: 'effectiveDiameterMm', label: 'Cutting diameter at this depth', fmt: diaPair, secondary: true, when: (o) => o.effectiveDiameterMm != null, noteKey: 'effectiveDiameter' },
+  { key: 'effectiveSurfaceSpeedMMin', label: 'Surface speed at that diameter', fmt: surfacePair, secondary: true, when: (o) => o.effectiveSurfaceSpeedMMin != null },
 ];
 
 // One glyph per severity, for the whole app, kept in one place so a meaning

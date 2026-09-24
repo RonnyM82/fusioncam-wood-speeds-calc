@@ -55,6 +55,11 @@
    "retrieved": "2026-08-26",
    "machine_class_note": "chart assumes a rigid 10+ hp industrial machine (session-1 practitioner evidence); Onsrud is the conservative floor",
    "notes": "The chart formula counts total flutes. The chart recommends 18,000 rpm for tools 3/8 in and smaller, and 16,000 rpm for larger tools. Softwood and plywood share one column, as do MDF and particleboard. The largest row is published as 1/2 in and up. The phenolic/paperstone column has no matching material and is not ingested. Supersedes the secondhand vortex source; the firsthand read confirms both of its values."
+  },
+  "amana-ball-nose": {
+   "document": "Amana Tool, 2 Flute Solid Carbide CNC Spiral Ball Nose Router Bits, speed chart (research/sources/amana-spiral-ball-nose-v7.pdf; https://www.amanatool.com/pub/media/productattachments/Spiral-Ball-Nose-Speed-Chart-v7.pdf)",
+   "retrieved": "2026-09-02",
+   "notes": "The chart states two conditions and no others: a spindle speed of 18,000 rpm and a depth of cut of one times the tool diameter. It publishes no cut type, no stepover and no effective-diameter rule, so cut_type_published is \"none\" on every entry. Softwood, hardwood and MDF are separate columns; aluminium, soft plastic, hard plastic and sign foam are not ingested. Version 6 and version 7 carry identical numbers and differ only by two added tool reference numbers. Every printed feed band on the softwood, hardwood and MDF rows equals rpm x flutes x the printed chip load to within 10 in/min, which is the chart's own rounding step. Three cells outside those rows do not, and none of them is ingested: Aluminium 3/4 in (504 computed against 430 printed) and both edges of Sign Foam 1/8 in (180 and 252 against 110 and 190). So this chart is sound where it is read and carries broken cells elsewhere, the same defect that keeps Amana's separate 2D/3D carving charts out of scope. research-session-6-ball-surfacing.md records the check."
   }
  },
  "analysis_notes": [
@@ -7422,6 +7427,552 @@
    "doc_basis": "1xD",
    "flute_basis": "per_tooth_total",
    "data_class": "vendor"
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 1.5875,
+   "diameter_display": "1/16\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "printed_feed_in_min": {
+    "min": 110,
+    "max": 190,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "printed_feed_in_min": {
+    "min": 190,
+    "max": 260,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "printed_feed_in_min": {
+    "min": 260,
+    "max": 330,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "printed_feed_in_min": {
+    "min": 290,
+    "max": 360,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "printed_feed_in_min": {
+    "min": 330,
+    "max": 400,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "printed_feed_in_min": {
+    "min": 360,
+    "max": 430,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "softwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.279,
+   "fz_max_mm": 0.33,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".011-.013"
+   },
+   "printed_feed_in_min": {
+    "min": 400,
+    "max": 470,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 1.5875,
+   "diameter_display": "1/16\"",
+   "fz_min_mm": 0.051,
+   "fz_max_mm": 0.102,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".002-.004"
+   },
+   "printed_feed_in_min": {
+    "min": 70,
+    "max": 150,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "printed_feed_in_min": {
+    "min": 110,
+    "max": 190,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "printed_feed_in_min": {
+    "min": 190,
+    "max": 260,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "printed_feed_in_min": {
+    "min": 220,
+    "max": 290,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "printed_feed_in_min": {
+    "min": 260,
+    "max": 330,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "printed_feed_in_min": {
+    "min": 290,
+    "max": 360,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "hardwood",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "printed_feed_in_min": {
+    "min": 330,
+    "max": 400,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 1.5875,
+   "diameter_display": "1/16\"",
+   "fz_min_mm": 0.076,
+   "fz_max_mm": 0.127,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".003-.005"
+   },
+   "printed_feed_in_min": {
+    "min": 110,
+    "max": 190,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 3.175,
+   "diameter_display": "1/8\"",
+   "fz_min_mm": 0.127,
+   "fz_max_mm": 0.178,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".005-.007"
+   },
+   "printed_feed_in_min": {
+    "min": 190,
+    "max": 260,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 6.35,
+   "diameter_display": "1/4\"",
+   "fz_min_mm": 0.152,
+   "fz_max_mm": 0.203,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".006-.008"
+   },
+   "printed_feed_in_min": {
+    "min": 220,
+    "max": 290,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 9.525,
+   "diameter_display": "3/8\"",
+   "fz_min_mm": 0.178,
+   "fz_max_mm": 0.229,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".007-.009"
+   },
+   "printed_feed_in_min": {
+    "min": 260,
+    "max": 330,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 12.7,
+   "diameter_display": "1/2\"",
+   "fz_min_mm": 0.203,
+   "fz_max_mm": 0.254,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".008-.010"
+   },
+   "printed_feed_in_min": {
+    "min": 290,
+    "max": 360,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 15.875,
+   "diameter_display": "5/8\"",
+   "fz_min_mm": 0.229,
+   "fz_max_mm": 0.279,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".009-.011"
+   },
+   "printed_feed_in_min": {
+    "min": 330,
+    "max": 400,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
+  },
+  {
+   "source": "amana-ball-nose",
+   "vendor": "Amana",
+   "series": "spiral ball nose",
+   "tool_geometry": "ball_nose",
+   "flutes": 2,
+   "material": "mdf",
+   "diameter_mm": 19.05,
+   "diameter_display": "3/4\"",
+   "fz_min_mm": 0.254,
+   "fz_max_mm": 0.305,
+   "original": {
+    "unit": "in/tooth",
+    "value": ".010-.012"
+   },
+   "printed_feed_in_min": {
+    "min": 360,
+    "max": 430,
+    "rpm": 18000
+   },
+   "doc_basis": "1xD",
+   "cut_type_published": "none",
+   "flute_basis": "per_tooth_total",
+   "data_class": "vendor",
+   "notes": "The chart's only stated condition is a depth of cut of one tool diameter, which is a full-width groove with a round bottom. It is not published for a surfacing pass."
   }
  ]
 }

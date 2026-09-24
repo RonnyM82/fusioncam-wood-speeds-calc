@@ -11,6 +11,7 @@ import { loadData } from './load-node.js';
 import { calculate } from '../js/core/calculate.js';
 import { calculateDrilling } from '../js/core/drilling.js';
 import { mapOperation } from '../js/fusion/map-operation.js';
+import { readFacts } from '../js/fusion/present.js';
 
 const data = loadData();
 
@@ -141,12 +142,190 @@ test('FM7', 'drill maps to the drilling calc from the diameter and the resolved 
   assert(!('toolType' in m.calc) && !('flutesTotal' in m.calc) && !('aeMm' in m.calc), 'a drill calc carries no router field');
 });
 
-test('FM8', '3D surfacing strategies refuse with the no-chart wording', () => {
-  for (const strategy of ['parallel', 'scallop', 'morphed_spiral', 'contour']) {
+test('FM8', 'a 3D surfacing strategy refuses every tool that is not a full-radius ball, and names what it read', () => {
+  // Until 2026-09-02 every 3D strategy refused outright. The ball nose chart
+  // now serves one tool shape, so the refusal moved from the strategy to the
+  // tool, and it prints the two measurements that decided it.
+  for (const strategy of ['parallel', 'scallop', 'morphed_spiral', 'contour3d']) {
     const m = mapOperation(op(strategy), CHOICES);
     assert(m.status === 'unsupported', `${strategy}: expected unsupported, got ${m.status}`);
-    assert(m.reason === 'No published chart covers 3D surfacing yet. The data arrives from research.', `${strategy}: ${m.reason}`);
+    assert(m.reason.startsWith('No published chip load covers this tool shape.'), `${strategy}: ${m.reason}`);
+    // The sentence must never imply a chart exists for a surfacing pass.
+    // None does, and the corrected wording says the chart's condition
+    // instead (2026-09-03).
+    assert(m.reason.includes('published for a cut one tool diameter deep'),
+      `${strategy}: the reason must state what the chart is published for: ${m.reason}`);
+    assert(!/covers .*on a 3D surfacing pass/.test(m.reason),
+      `${strategy}: no sentence may imply a chart covers a surfacing pass: ${m.reason}`);
+    assert(m.reason.includes('flat end mill') && m.reason.includes('corner radius 0 mm'),
+      `${strategy}: the reason must name the tool type and the corner radius it read: ${m.reason}`);
   }
+  // A corner radius past half the diameter is a bad reading, not a tool.
+  const over = mapOperation(ballOp('parallel', { tool: { cornerRadiusMm: 8 } }), CHOICES);
+  assert(over.status === 'unsupported', `a corner past a full radius must refuse, got ${over.status}`);
+  assert(over.reason.includes('corner radius 8 mm'), `the reason must name the radius: ${over.reason}`);
+  // A tapered ball: Fusion types it as a taper mill, so the kind alone stops it.
+  const taper = mapOperation(ballOp('parallel', { tool: { typeString: 'tapered mill', diameterMm: 6.35, cornerRadiusMm: 3.175 } }), CHOICES);
+  assert(taper.status === 'unsupported', `a tapered mill must refuse, got ${taper.status}`);
+  assert(taper.reason.includes('tapered mill'), `the reason must name the type: ${taper.reason}`);
+});
+
+// A full-radius ball on a 3D surfacing pass, the shape every FM34-onward test
+// starts from: 8 mm ball, 4 mm corner radius, 1.2 mm stepover, 0.8 stepdown.
+function ballOp(strategy = 'parallel', { tool = {}, params = {} } = {}) {
+  return op(strategy, {
+    tool: { typeString: 'ball end mill', diameterMm: 8, cornerRadiusMm: 4, flutes: 2, ...tool },
+    params: { stepoverMm: 1.2, stepdownMm: 0.8, doMultipleDepths: true, direction: 'one way', ...params },
+  });
+}
+
+test('FM34', 'a surfacing pass takes its width of cut from whichever parameter the strategy states', () => {
+  // Read firsthand through the Fusion API on 2026-09-03. A scallop or a
+  // pencil pass carries a stepover and no stepdown anywhere. A 3D contour or
+  // a ramp carries a stepdown and no stepover, and the stepdown then serves
+  // as the width of cut (Scott's call): it reads true on the steep walls
+  // those strategies are built for.
+  for (const strategy of ['parallel', 'scallop', 'morph', 'steep_and_shallow', 'blend', 'pencil', 'flow2', 'geodesic']) {
+    const m = mapOperation(ballOp(strategy), CHOICES);
+    assert(m.status === 'mapped', `${strategy}: expected mapped, got ${m.status} — ${m.reason}`);
+    assert(m.calc.toolType === 'ball', `${strategy}: got tool type ${m.calc.toolType}`);
+    assert(m.calc.aeMm === 1.2, `${strategy}: the stepover is the width of cut, got ${m.calc.aeMm}`);
+    assert(m.reading.includes('1.2 mm stepover as the width of cut'), `${strategy}: ${m.reading}`);
+  }
+  // Only the strategies that state a stepdown carry a depth of cut.
+  const withDepth = mapOperation(ballOp('parallel'), CHOICES);
+  assert(withDepth.calc.apMm === 0.8, `a parallel states a stepdown, got ${withDepth.calc.apMm}`);
+  const noDepth = mapOperation(ballOp('scallop'), CHOICES);
+  assert(noDepth.calc.apMm === null, `a scallop states no stepdown at all, got ${noDepth.calc.apMm}`);
+  assert(noDepth.reading.includes('states no depth of cut'), `the reading must say so: ${noDepth.reading}`);
+  // A Z-level pass spends its stepdown as the width and states no depth.
+  for (const strategy of ['contour3d', 'ramp', 'radial', 'inclined_walls']) {
+    const m = mapOperation(ballOp(strategy), CHOICES);
+    assert(m.status === 'mapped', `${strategy}: expected mapped, got ${m.status} — ${m.reason}`);
+    assert(m.calc.aeMm === 0.8, `${strategy}: the stepdown is the width, got ${m.calc.aeMm}`);
+    assert(m.calc.apMm === null, `${strategy}: the stepdown is spent on the width, got ${m.calc.apMm}`);
+    assert(m.reading.includes('0.8 mm stepdown as the width of cut'), `${strategy}: ${m.reading}`);
+  }
+  // Fusion calls the 3D contour "contour3d". The old list said "contour",
+  // which Fusion never sends, so a real 3D contour never matched.
+  assert(mapOperation(ballOp('contour'), CHOICES).reason.includes('contour'),
+    'a strategy id Fusion does not send must fall through to the unknown-strategy refusal');
+  // project states its width in parameters the add-in does not read.
+  const proj = mapOperation(ballOp('project'), CHOICES);
+  assert(proj.status === 'unsupported', `project: expected unsupported, got ${proj.status}`);
+  assert(proj.reason.includes('no width of cut'), `project: ${proj.reason}`);
+  // Scope comes from Fusion's own description of each strategy, not from its
+  // is3DStrategy flag, which reports false for geodesic even though geodesic
+  // "machines freeform surfaces and undercuts" and reports true for the
+  // facing strategies. A strategy whose description calls it a multi-axis
+  // strategy is out: a three-axis nesting router cannot run one, and the cut
+  // is the side or the tilted tip of the tool, not a ball walking a surface.
+  for (const strategy of ['swarf', 'deburr', 'multi_axis_contour', 'rotary_finishing', 'multi_axis_morph']) {
+    const m = mapOperation(ballOp(strategy), CHOICES);
+    assert(m.status === 'unsupported', `${strategy}: expected unsupported, got ${m.status}`);
+    assert(m.reason.includes(strategy), `${strategy}: the reason must name the strategy: ${m.reason}`);
+  }
+  // corner is 3D finishing and it states four stepovers, steep and shallow
+  // by constant and by maximum. The add-in reads the largest live one,
+  // because a wider cut thins the chip less and so serves the lower feed.
+  const corner = mapOperation(ballOp('corner', { params: { stepoverMm: 0.9, stepoverParam: 'shallowRestMaximumStepover' } }), CHOICES);
+  assert(corner.status === 'mapped', `corner: expected mapped, got ${corner.status} — ${corner.reason}`);
+  assert(corner.calc.aeMm === 0.9, `corner: got ${corner.calc.aeMm}`);
+  assert(corner.calc.apMm === null, 'corner states no stepdown');
+});
+
+test('FM35', 'a surfacing pass never guesses the stepover or the stepdown', () => {
+  const noStepover = mapOperation(ballOp('parallel', { params: { stepoverMm: null } }), CHOICES);
+  assert(noStepover.status === 'unreadable', `expected unreadable, got ${noStepover.status}`);
+  assert(noStepover.reason.includes('stepover') && noStepover.reason.includes('8 mm'),
+    `the reason must name the missing fact and what it read: ${noStepover.reason}`);
+  assert(noStepover.reason.includes('greyed-out'), `and must say what a greyed-out control means: ${noStepover.reason}`);
+  // A null stepdown on a strategy that states one is not a refusal any more:
+  // the add-in ships null for a greyed-out control, and a parallel with
+  // Multiple Depths off is a single pass with no depth (2026-09-03).
+  const noStepdown = mapOperation(ballOp('parallel', { params: { stepdownMm: null } }), CHOICES);
+  assert(noStepdown.status === 'mapped', `expected mapped, got ${noStepdown.status} — ${noStepdown.reason}`);
+  assert(noStepdown.calc.apMm === null, 'no stepdown means no depth of cut, not a refusal');
+  for (const bad of [{ stepoverMm: 0 }, { stepoverMm: -1 }]) {
+    const m = mapOperation(ballOp('parallel', { params: bad }), CHOICES);
+    assert(m.status === 'unreadable', `${JSON.stringify(bad)}: expected unreadable, got ${m.status}`);
+  }
+  const zeroWidth = mapOperation(ballOp('contour3d', { params: { stepdownMm: 0 } }), CHOICES);
+  assert(zeroWidth.status === 'unreadable', 'a Z-level pass with no stepdown has no width of cut');
+  const noFlutes = mapOperation(ballOp('parallel', { tool: { flutes: null } }), CHOICES);
+  assert(noFlutes.status === 'unreadable', 'the ball chart is a chip load per tooth, so the flute count is required');
+});
+
+test('FM37', 'a greyed-out control reads as not set, and a single-pass finish still serves', () => {
+  // Fusion greys a parameter out when the switch in front of it is off, and
+  // the reading then reports 0.0 while the expression holds the last value
+  // the dialog showed. Read inside Fusion on 2026-09-03: a 3D parallel with
+  // Multiple Depths off reports maximumStepdown value 0.0, expression
+  // "1.0mm", isEnabled False. The add-in now ships null for that, so the
+  // mapping never sees the stale number and a single-pass finish, which is
+  // the normal case, serves with no depth of cut.
+  const single = mapOperation(ballOp('parallel', { params: { stepdownMm: null, doMultipleDepths: false } }), CHOICES);
+  assert(single.status === 'mapped', `expected mapped, got ${single.status} — ${single.reason}`);
+  assert(single.calc.apMm === null, `expected no depth of cut, got ${single.calc.apMm}`);
+  assert(single.calc.aeMm === 1.2, 'the stepover still sets the width of cut');
+  assert(single.reading.includes('states no depth of cut'), `the reading must say so: ${single.reading}`);
+  assert(readFacts(ballOp('parallel', { params: { stepdownMm: null } })).includes('stepdown not read'),
+    'the facts clause must show the stepdown did not read');
+});
+
+test('FM38', 'a tool shape no chart covers refuses on a 2D strategy too, not only on a surfacing pass', () => {
+  // Until 2026-09-03 a bull nose that Fusion types as a ball end mill fell
+  // through the 2D path and was served whatever geometry the caller passed.
+  // The Windows spike found Fusion's own library typing a tool named
+  // "9.5dia Bullnose" as a ball end mill, so this is a real tool.
+  const form = { typeString: 'dovetail mill', diameterMm: 12.7, cornerRadiusMm: 0, flutes: 2 };
+  for (const strategy of ['contour2d', 'pocket2d', 'slot', 'adaptive2d']) {
+    const m = mapOperation(op(strategy, {
+      tool: form,
+      params: { stepdownMm: 6, doMultipleDepths: true, optimalLoadMm: 3 },
+    }), CHOICES);
+    assert(m.status === 'unsupported', `${strategy}: a form tool must refuse, got ${m.status} with toolType ${m.calc?.toolType}`);
+    assert(m.reason.includes('dovetail mill'), `${strategy}: the reason must name the tool: ${m.reason}`);
+  }
+  // A bull nose serves on a 2D strategy too, at its corner diameter.
+  const bull = mapOperation(op('contour2d', {
+    tool: { typeString: 'bull nose end mill', diameterMm: 12.7, cornerRadiusMm: 1.5, flutes: 2 },
+    params: { stepdownMm: 6, doMultipleDepths: true },
+  }), CHOICES);
+  assert(bull.status === 'mapped', `a bull nose must map, got ${bull.status} — ${bull.reason}`);
+  assert(bull.calc.toolType === 'ball' && bull.calc.cornerRadiusMm === 1.5,
+    `the corner radius must ride through: ${JSON.stringify(bull.calc)}`);
+  // A full-radius ball on a 2D strategy is the cut the chart IS published for,
+  // and its own geometry decides the type whatever the caller passes.
+  const ball = mapOperation(op('contour2d', {
+    tool: { typeString: 'ball end mill', diameterMm: 12.7, cornerRadiusMm: 6.35, flutes: 2 },
+    params: { stepdownMm: 6, doMultipleDepths: true },
+  }), CHOICES);
+  assert(ball.status === 'mapped', `a full-radius ball on a contour must serve, got ${ball.status}`);
+  assert(ball.calc.toolType === 'ball', `the tool's own geometry decides the type, got ${ball.calc.toolType}`);
+  assert(ball.calc.aeMm === 12.7, 'a 2D contour with a ball is a full-width groove, which is the chart condition');
+  // A chamfer or form tool refuses the same way, and the panel prints that
+  // reason directly (it probes with toolType null).
+  const chamfer = mapOperation(op('contour2d', {
+    tool: { typeString: 'chamfer mill', diameterMm: 12.7, cornerRadiusMm: 0, flutes: 2 },
+    params: { stepdownMm: 6, doMultipleDepths: true },
+  }), { toolType: null, finishing: false });
+  assert(chamfer.status === 'unsupported', `a chamfer mill must refuse, got ${chamfer.status}`);
+  assert(chamfer.reason.includes('chamfer mill'), `the reason must name the tool: ${chamfer.reason}`);
+});
+
+test('FM36', 'the 3D parallel direction words all read as ambiguous and serve the climb model', () => {
+  // Fusion gives the parallel "one way", "other way" and "both ways" (spike
+  // section 2). A raster pass climbs on one side of a ridge and cuts
+  // conventionally on the other, so none of the three is a cut direction.
+  for (const direction of ['one way', 'other way', 'both ways']) {
+    const m = mapOperation(ballOp('parallel', { params: { direction } }), CHOICES);
+    assert(m.status === 'mapped', `${direction}: expected mapped, got ${m.status} — ${m.reason}`);
+    assert(m.calc.direction === 'climb', `${direction}: the conservative model is climb, got ${m.calc.direction}`);
+    assert(m.reading.includes('both directions'), `${direction}: the reading must say so: ${m.reading}`);
+  }
+  const odd = mapOperation(ballOp('parallel', { params: { direction: 'sideways' } }), CHOICES);
+  assert(odd.status === 'unreadable', 'an unrecognised direction is still unreadable, never defaulted');
 });
 
 test('FM9', 'an unknown strategy refuses and is named in the reason', () => {
@@ -458,4 +637,74 @@ test('FM33', 'a routing calc names its mode, and an unresolved geometry-mode hei
   const served = mapOperation(op('slot', { heights: { bottom: geometry('from contour', -7) } }), CHOICES);
   assert(served.status === 'mapped', `expected mapped, got ${served.status}: ${served.reason}`);
   approx(served.calc.apMm, 25, { abs: 1e-9 });
+});
+
+test('FM39', 'flat and horizontal are facing work and serve the Finishing profile on the confirmed tool', () => {
+  // Fusion classes both as 3D finishing, and both "automatically detect all
+  // the flat areas of the part" in its own words. On a flat area the tool
+  // cuts on its full diameter, so it is facing work run with a flat or bull
+  // nose tool, not a ball walking a curved surface (Scott, 2026-09-03).
+  for (const strategy of ['flat', 'horizontal']) {
+    const m = mapOperation(op(strategy, {
+      params: { stepoverMm: 4.2, stepdownMm: null, doMultipleDepths: false },
+    }), CHOICES);
+    assert(m.status === 'mapped', `${strategy}: expected mapped, got ${m.status} — ${m.reason}`);
+    assert(m.calc.profileOverride === 'finishing', `${strategy}: this is the pass that leaves the face, got ${m.calc.profileOverride}`);
+    assert(m.calc.toolType === 'upcut', `${strategy}: the user's confirmed geometry serves, got ${m.calc.toolType}`);
+    assert(m.calc.aeMm === 4.2, `${strategy}: the stepover is the width of cut, got ${m.calc.aeMm}`);
+    assert(m.calc.apMm === null, `${strategy}: no stepdown set means no depth of cut, got ${m.calc.apMm}`);
+    assert(m.reading.includes('Finishing pass over the flat areas'), `${strategy}: ${m.reading}`);
+  }
+  // Fusion computes the horizontal stepover itself unless Manual Stepover is
+  // on, and a greyed-out control now arrives as null, so it refuses and says
+  // why rather than guessing a width that sets the whole feed.
+  const auto = mapOperation(op('horizontal', { params: { stepoverMm: null } }), CHOICES);
+  assert(auto.status === 'unreadable', `expected unreadable, got ${auto.status}`);
+  assert(auto.reason.includes('manual stepover box'), `the reason must say what to turn on: ${auto.reason}`);
+  // A ball nose on a flat area refuses in the core: no finisher chart covers
+  // one. The mapping still maps it, and the core carries the reason.
+  const ball = mapOperation(op('flat', {
+    tool: { typeString: 'ball end mill', diameterMm: 12.7, cornerRadiusMm: 6.35, flutes: 2 },
+    params: { stepoverMm: 2 },
+  }), CHOICES);
+  assert(ball.status === 'mapped' && ball.calc.toolType === 'ball', 'a ball maps, and the core refuses the profile');
+  const r = calculate({
+    material: 'mdf', materials: ['mdf'], ...ball.calc, profile: 'finishing', thicknessMm: 18, rpm: 18000,
+    firstCut: false, machine: { spindleKw: 10, breakpointRpm: 12000, feedMaxMmMin: 30000, accelMs2: 3, vacuum: { mu: 0.4, dPkPa: 5 } },
+  }, data);
+  assert(r.status === 'refused' && /No finisher chart covers a ball nose/.test(r.refusal.reason), `${r.status}: ${r.refusal?.reason}`);
+});
+
+test('FM40', 'a bull nose reads the ball chart at its corner, and its scallop comes off the corner', () => {
+  // No maker publishes a chip load for a bull nose in wood, so the ball chart
+  // is borrowed and indexed on the CORNER diameter, which is what cuts on a
+  // surfacing pass and which reads the lower published chip (Scott,
+  // 2026-09-03). The borrow is recorded in the chart notes and renders
+  // nowhere.
+  const bull = mapOperation(ballOp('scallop', {
+    tool: { typeString: 'bull nose end mill', diameterMm: 12.7, cornerRadiusMm: 1.5, flutes: 2 },
+    params: { stepoverMm: 1.27 },
+  }), CHOICES);
+  assert(bull.status === 'mapped', `expected mapped, got ${bull.status} — ${bull.reason}`);
+  assert(bull.calc.cornerRadiusMm === 1.5, `got ${bull.calc.cornerRadiusMm}`);
+  const machine = { spindleKw: 10, breakpointRpm: 12000, feedMaxMmMin: 30000, accelMs2: 3, vacuum: { mu: 0.4, dPkPa: 5 } };
+  const r = calculate({ material: 'mdf', materials: ['mdf'], ...bull.calc, thicknessMm: 18, rpm: 18000, profile: 'standard', firstCut: false, machine }, data);
+  assert(r.status === 'ok', `expected ok, got ${r.status}: ${r.refusal?.reason}`);
+  assert(r.meta.bullNose === true, 'the result must record that this is a bull nose');
+  approx(r.meta.cuttingDiameterMm, 3.0, { abs: 1e-9 });
+  // The ridge comes off the 1.5 mm corner, not off a 6.35 mm ball radius.
+  approx(r.outputs.scallopHeightMm, 1.5 - Math.sqrt(1.5 * 1.5 - (1.27 / 2) * (1.27 / 2)), { abs: 1e-9 });
+  assert(r.outputs.scallopHeightMm > 0.13, `a bull nose ridge is far coarser than a ball's, got ${r.outputs.scallopHeightMm}`);
+  // The borrow is on the record and never on the page.
+  assert(r.meta.chartNotes.some((n) => /bull nose/.test(n) && /corner diameter/.test(n)), 'the borrow must be recorded');
+  assert(!r.notes.some((n) => /bull nose/.test(n)), 'and it must not render');
+  // A ball of the same diameter reads the chart at 12.7 mm and is smoother.
+  const ballR = calculate({
+    material: 'mdf', materials: ['mdf'], toolType: 'ball', diameterMm: 12.7, cornerRadiusMm: 6.35,
+    apMm: null, aeMm: 1.27, thicknessMm: 18, rpm: 18000, flutesTotal: 2, profile: 'standard', firstCut: false, machine,
+  }, data);
+  approx(ballR.meta.cuttingDiameterMm, 12.7, { abs: 1e-9 });
+  assert(ballR.outputs.scallopHeightMm < r.outputs.scallopHeightMm / 4,
+    'the same stepover on a full ball leaves a far finer ridge');
+  assert(ballR.meta.bullNose === false, 'a full radius is a ball, not a bull nose');
 });

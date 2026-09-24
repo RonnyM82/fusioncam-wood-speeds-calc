@@ -185,14 +185,49 @@ test('FI18', 'a drill is kind drill, guesses a drill family from its description
   assert(spot.guess === null && spot.guessSource === null, 'a drill with no family word guesses nothing');
 });
 
-test('FI19', 'a ball-nose or bull-nose is kind ball, a chamfer mill is kind chamfer', () => {
-  const ball = identifyTool(tool({ typeString: 'ball end mill', description: '9.5dia Bullnose up cut', productId: '' }), chiploads);
+test('FI19', 'a round-ended tool is ball or bullnose, every other form tool is form, a chamfer mill is chamfer', () => {
+  // The bucket narrowed on 2026-09-02 when the ball nose chart landed, and
+  // widened again on 2026-09-03: a bull nose is a surfacing tool too, and it
+  // reads the same chart at its corner diameter (Scott). Fusion carries its
+  // own tapered mill type with a ball-end setting, so a tapered ball arrives
+  // as a taper mill and lands in form.
+  const ball = identifyTool(tool({ typeString: 'ball end mill', diameterMm: 9.5, cornerRadiusMm: 4.75, description: '9.5dia Bullnose up cut', productId: '' }), chiploads);
   assert(ball.kind === 'ball', `expected kind ball, got ${ball.kind}`);
-  assert(ball.guess === null, 'a ball-nose must carry no geometry guess');
-  const bull = identifyTool(tool({ typeString: 'bull nose end mill', productId: '' }), chiploads);
-  assert(bull.kind === 'ball', 'a bull nose is kind ball');
+  assert(ball.guess === 'ball' && ball.guessCertain === true, 'a round-ended tool takes no question: Fusion states the geometry');
+  assert(ball.guessSource === 'tool_type', `expected the guess to come from the tool type, got ${ball.guessSource}`);
+  const bull = identifyTool(tool({ typeString: 'bull nose end mill', diameterMm: 12.7, cornerRadiusMm: 1.5, productId: '' }), chiploads);
+  assert(bull.kind === 'bullnose', `expected kind bullnose, got ${bull.kind}`);
+  assert(bull.guess === 'ball' && bull.guessCertain === true, 'a bull nose serves the ball chart at its corner and takes no question');
+  for (const typeString of ['tapered mill', 'taper mill', 'dovetail mill', 'lollipop mill', 'radius mill', 'form mill', 'slot mill', 'thread mill']) {
+    const r = identifyTool(tool({ typeString, productId: '' }), chiploads);
+    assert(r.kind === 'form', `${typeString}: expected kind form, got ${r.kind}`);
+    assert(r.guess === null && r.guessCertain === false, `${typeString}: no chart covers it, so it carries no guess`);
+  }
   const chamfer = identifyTool(tool({ typeString: 'chamfer mill', productId: '' }), chiploads);
   assert(chamfer.kind === 'chamfer', `expected kind chamfer, got ${chamfer.kind}`);
+});
+
+test('FI23', 'a round-ended tool needs real measurements, and a radius past half the diameter is a bad reading', () => {
+  // The corner radius is what indexes the chart, so it has to be there and it
+  // has to make sense. Above half the diameter is not a tool shape.
+  const over = identifyTool(tool({ typeString: 'ball end mill', diameterMm: 12.7, cornerRadiusMm: 8, productId: '' }), chiploads);
+  assert(over.kind === 'ball', 'the kind still comes from the type string');
+  assert(over.guess === null && over.guessCertain === false, 'a corner radius past half the diameter must not guess');
+  for (const t2 of [{ cornerRadiusMm: 0 }, { cornerRadiusMm: null }, { diameterMm: null, cornerRadiusMm: 4 }]) {
+    const r = identifyTool(tool({ typeString: 'ball end mill', diameterMm: 12.7, productId: '', ...t2 }), chiploads);
+    assert(r.guess === null, `a missing or zero measurement must not guess: ${JSON.stringify(t2)}`);
+  }
+});
+
+test('FI24', 'every corner from a small bull nose up to a full ball is served', () => {
+  // A 12.7 mm tool at 0.5, 1.5, 3 and 6.35 mm of corner is a real ladder of
+  // surfacing tools, and all of them read the same chart at their corner.
+  for (const cornerRadiusMm of [0.5, 1.5, 3, 6.35, 6.3505]) {
+    const r = identifyTool(tool({ typeString: 'bull nose end mill', diameterMm: 12.7, cornerRadiusMm, productId: '' }), chiploads);
+    assert(r.guess === 'ball', `corner ${cornerRadiusMm} mm must serve, got ${r.guess}`);
+  }
+  const past = identifyTool(tool({ typeString: 'bull nose end mill', diameterMm: 12.7, cornerRadiusMm: 6.36, productId: '' }), chiploads);
+  assert(past.guess === null, 'ten microns past a full radius is a bad reading, not a tool');
 });
 
 test('FI20', 'a flat end mill, an empty type and an unknown type are kind router and still guess', () => {
@@ -236,4 +271,19 @@ test('FI22', 'only the brad point auto-confirms: dowel by word still asks, and a
   assert(hinge.guessCertain === false, 'every other family guess waits for the user');
   const router = identifyTool(tool({ description: 'brad point cutter', productId: '' }), chiploads);
   assert(router.kind === 'router' && router.guessCertain === false, 'a router bit never auto-confirms');
+});
+
+test('FI25', 'a taper word beats the ball words, whatever else the type string says', () => {
+  // "tapered ball end mill" contains "ball end mill". Reading the ball words
+  // first would hand a tapered tool the straight ball chart, whose chip loads
+  // run up to three times higher (2026-09-03). Fusion carries a tapered mill
+  // as its own type with a ball-end setting, so this is the live case.
+  for (const typeString of ['tapered ball end mill', 'taper ball end mill', 'tapered mill', 'Tapered Ball End Mill']) {
+    const r = identifyTool(tool({ typeString, diameterMm: 6.35, cornerRadiusMm: 3.175, productId: '' }), chiploads);
+    assert(r.kind === 'form', `${typeString}: expected kind form, got ${r.kind}`);
+    assert(r.guess === null, `${typeString}: a tapered tool must carry no ball guess`);
+  }
+  // A plain ball still reads as a ball.
+  const plain = identifyTool(tool({ typeString: 'ball end mill', diameterMm: 6.35, cornerRadiusMm: 3.175, productId: '' }), chiploads);
+  assert(plain.kind === 'ball' && plain.guess === 'ball', 'a plain ball end mill must still serve');
 });

@@ -20,6 +20,10 @@
   "session-5-drilling": {
    "document": "research/research-session-5-drilling.md (drilling and boring sweep, 1-35 mm, and Scott's decisions 1-11)",
    "retrieved": "2026-09-02"
+  },
+  "session-6-ball-surfacing": {
+   "document": "research/research-session-6-ball-surfacing.md (manufacturer, geometry, wood-science and practitioner sweeps for ball-nose 3D surfacing)",
+   "retrieved": "2026-09-02"
   }
  },
  "plunge_ramp": {
@@ -150,6 +154,13 @@
   "reports_power": false,
   "note": "a drill bank is a fixed-speed geared head on the same machining centre, with its own drive. When the user says the drills run on a bank (a check box in the advanced panel, Scott's call 2026-09-02, decision 11), the router spindle's rated minimum speed no longer applies and the low-speed warning is suppressed, because the bank is not the spindle being warned about. No power figure is reported either: no source in session 5 publishes a drill-bank drive power, and reporting the router spindle's power for a cut the spindle is not making would be a number with nothing behind it. This replaced a drill-bank machine preset, which would have had to be appended rather than inserted, because the share link writes the machine preset as a positional index.",
   "source": "session-5-drilling",
+  "data_class": "project_decision"
+ },
+ "ball_nose": {
+  "thinning_stepover_floor_fraction": 0.08,
+  "behaviour": "hold the compensation, do not extrapolate below it",
+  "note": "The ball chart publishes a chip load for a cut one tool diameter deep and full width, so the radial chip-thinning compensation is the correction that carries it onto a surfacing pass. That compensation is unbounded as the stepover falls, and below about 8% of the diameter it stops describing the cut: at a 2% stepover on a 3.175 mm ball it programs 0.636 mm per tooth against a 0.064 mm stepover, a chip ten times the width of cut, and serves 22,886 mm/min. The thinning relation assumes the chip is small against the engagement, and there it is not. The calculator therefore computes the compensation from the stepover or 8% of the diameter, whichever is larger, and says on the page when that holds it. Below the floor the served feed stops rising and the physical chip falls below the chart value, which is the conservative side. The figure is 0.08 because PreciseBits publishes 0.08 x tip diameter as the finishing-pass stepover for its tapered ball nose carving tools in softwood and hardwood, the only 3D finishing stepover any maker publishes, and because the sight table Scott approved on 2026-09-02 is computed at that stepover. Choosing it as the floor is the calculator's decision, not the maker's. This is the same shape as the depth_limit decision of 2026-08-29: a correction is held at its anchor rather than extrapolated past it, because past the anchor it serves a number nobody published and nobody checked.",
+  "source": "session-6-ball-surfacing",
   "data_class": "project_decision"
  }
 }
