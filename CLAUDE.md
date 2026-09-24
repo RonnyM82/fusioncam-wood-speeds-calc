@@ -3,11 +3,11 @@
 A public, deployed calculator at wood.fusioncam.co. A wrong number here goes to someone's
 spindle, so a data or behaviour regression is worse than any styling gap.
 
-This file describes the `react-conversion` branch, rewritten on 2026-09-24 at step 5 of
-`docs/CONVERSION_PLAN.md`. On this branch the public page is a Vite and React app built on
-the Livetools design system's React parts. `main` is still the live site, the static page
-from before the conversion, unchanged, and nothing reaches the public site until Scott says
-to swap it over (step 6 of the plan, still to come).
+The public page is a Vite and React app built on the Livetools design system's React parts,
+converted on the `react-conversion` branch (`docs/CONVERSION_PLAN.md`) and live since
+2026-09-24. Every push to `main` builds, runs the gate and publishes to wood.fusioncam.co
+(`.github/workflows/pages.yml`), so `main` is the live site: do not push to it without
+Scott's word.
 
 ## What the page is built with
 
@@ -234,18 +234,22 @@ a regression until explained. Re-capture the baseline only when Scott has ruled 
 behaviour right, and say so in the commit. `legacy.html` is the old `index.html` renamed with
 not a byte changed; it, `js/ui/app.js` and `styles.css` go when the conversion is done.
 
-## Still to come
+## Go-live, and what is left
 
-Step 6 of the plan. Done on 2026-09-24: the design system's package published as 0.2.0,
-swapped in here with the lockfile updated, the baseline run against that build (52
-identical with the four accepted differences), and the GitHub Pages workflow added
+Step 6 of the plan, done on 2026-09-24. The design system's package was published as 0.2.0
+and swapped in here with the lockfile updated. The GitHub Pages workflow was added
 (`.github/workflows/pages.yml`: every push builds and runs `npm run check:site`, the gate
-without the paint step; only a push to `main` publishes). Waiting on Scott's word: the
-Pages source switched from the `main` branch to the workflow, which must happen before
-`main` moves, because the branch-served site would otherwise serve the unbuilt source;
-then `main` fast-forwarded to this branch and pushed, the first deploy, the baseline run
-against wood.fusioncam.co, and the Fusion add-in opened against the live site. Until then
-`main` is the live site.
+without the paint step; only a push to `main` publishes). The ball nose and 3D surfacing
+went behind the beta tick (Scott's ruling that day). The Pages source was switched from the
+`main` branch to the workflow before `main` moved, then `main` was fast-forwarded to this
+branch (`a77b008`) and the first deploy ran. Against wood.fusioncam.co itself the baseline
+was 52 identical with the accepted differences, the paint measurement passed, and the Fusion
+panel's harness rendered a job with the beta tick present. `legacy.html` is not published
+(it is not in `SITE_FILES`); it stays in the repo for the baseline.
+
+Left for Scott: opening the Fusion add-in against the live site, and trying the page on a
+phone. Left for later: removing `legacy.html`, `js/ui/app.js` and `styles.css` once the
+conversion is settled, since the baseline compares against `legacy.html`.
 
 ## TODO
 
