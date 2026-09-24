@@ -15,7 +15,10 @@ import { readFacts } from '../js/fusion/present.js';
 
 const data = loadData();
 
-const CHOICES = { toolType: 'upcut', upcutLengthMm: null, finishing: false };
+// beta: true throughout this file, which pins the mapping as it is with the
+// panel's beta tick on (Scott's ruling, 2026-09-24). The tick off is the live
+// mapping of commit 1e6c265, pinned in tests/fusion-beta.test.js.
+const CHOICES = { toolType: 'upcut', upcutLengthMm: null, finishing: false, beta: true };
 
 // One operation in the exact protocol.md shape. tool, params and heights
 // merge over the base per level, so a test names only what it changes.
@@ -309,7 +312,7 @@ test('FM38', 'a tool shape no chart covers refuses on a 2D strategy too, not onl
   const chamfer = mapOperation(op('contour2d', {
     tool: { typeString: 'chamfer mill', diameterMm: 12.7, cornerRadiusMm: 0, flutes: 2 },
     params: { stepdownMm: 6, doMultipleDepths: true },
-  }), { toolType: null, finishing: false });
+  }), { toolType: null, finishing: false, beta: true });
   assert(chamfer.status === 'unsupported', `a chamfer mill must refuse, got ${chamfer.status}`);
   assert(chamfer.reason.includes('chamfer mill'), `the reason must name the tool: ${chamfer.reason}`);
 });

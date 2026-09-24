@@ -34,6 +34,16 @@
 // value in its place, the stand-in the ruling above ended. An EMPTY advanced
 // box still means the machine's own value.
 //
+// THE BETA SWITCH (Scott's ruling, 2026-09-24): the ball nose is offered only
+// while "Show beta tools" is ticked. It arrived in commit bc85559 and was never
+// live, so with the tick off the tool list is the live site's (commit 1e6c265).
+// The tick is off by default; the page remembers it in the browser
+// (useCalculatorState.ts), which this file never touches, so createState()
+// is handed what was remembered. A link naming the ball nose opens with the
+// tick on, so a shared ball-nose link still works, and the address carries no
+// key of its own for it. Unticking with the ball nose chosen falls back to the
+// page's default tool.
+//
 // THE BOX AND THE STATE ARE KEPT APART. `boxes` holds what each number field
 // holds (its metric base, or null for empty or unreadable), which is what the
 // field part is handed back as its value. The calculation state holds what
@@ -68,6 +78,8 @@ export const MATERIALS = [
   { id: 'softwood', label: 'Softwood', hint: 'Pine, radiata, spruce', data: ['softwood'], kcMaterial: 'softwood' },
 ];
 
+// Every routing tool type the page knows, beta ones included. What the picker
+// offers is toolTypesFor(state.beta).
 export const TOOL_TYPES = [
   { id: 'upcut', label: 'Up-cut spiral', hint: 'Pulls chips up and out. Clears chips best, but it can fray the top face.' },
   { id: 'downcut', label: 'Down-cut spiral', hint: 'Presses chips down. Leaves a clean top face, but clears chips poorly.' },
@@ -75,6 +87,16 @@ export const TOOL_TYPES = [
   { id: 'straight', label: 'Straight', hint: 'Simple straight flutes. General purpose, but harder on the faces than a spiral.' },
   { id: 'ball', label: 'Ball nose', hint: 'Round tip for 3D surfacing and carving. Softwood, hardwood and MDF only.' },
 ];
+
+// The tool types offered only while the beta tick is on.
+export const BETA_TOOL_TYPES = new Set(['ball']);
+
+// The routing tool the page opens on, and the one it falls back to when the
+// beta tick goes off with a beta tool chosen.
+export const DEFAULT_TOOL_TYPE = 'compression';
+
+/** The routing tool types the picker offers. @param {boolean} beta */
+export const toolTypesFor = (beta) => (beta ? TOOL_TYPES : TOOL_TYPES.filter((t) => !BETA_TOOL_TYPES.has(t.id)));
 
 // The ball nose ladder is the chart's own: 1/16 through 3/4 inch. 15.875 is
 // there for that chart alone and sits between two metric sizes nothing else
@@ -272,6 +294,7 @@ export function numberFieldsShown(s) {
  *   drillTool: string, drillDiameterMm: number, holeDepthMm: number | null,
  *   drillRpm: number | null, drillBank: boolean,
  *   profileByMode: Record<string, string>,
+ *   beta: boolean,
  *   boxes: Record<string, number | null>,
  *   faults: Record<string, 'unreadable' | 'empty'>,
  * }} FormState
@@ -291,16 +314,18 @@ const copy = (s) => ({
  * machine, the first-cut default from the data), then readUrlState(), then
  * what buildForm() settles (the drill diameter snapped, the profile checked
  * against the mode, the machine's values filled into the advanced fields
- * that the link did not set).
+ * that the link did not set). `betaRemembered` is the beta tick as the
+ * browser remembered it; a link naming a beta tool turns it on regardless.
  * @param {CalcData} data @param {Preset[]} presets @param {string} search
+ * @param {boolean} [betaRemembered]
  * @returns {FormState}
  */
-export function createState(data, presets, search) {
+export function createState(data, presets, search, betaRemembered = false) {
   /** @type {FormState} */
   const s = {
     mode: 'rout',
     material: 'mdf',
-    toolType: 'compression',
+    toolType: DEFAULT_TOOL_TYPE,
     diameterMm: 12.7,
     flutes: 2,
     thicknessMm: 18,
@@ -321,6 +346,7 @@ export function createState(data, presets, search) {
     // Drilling offers no Finishing profile, so switching modes has to park the
     // choice rather than lose it.
     profileByMode: { rout: 'standard', drill: 'standard' },
+    beta: betaRemembered,
     boxes: {},
     faults: {},
   };
@@ -328,6 +354,7 @@ export function createState(data, presets, search) {
   s.machineIdx = genericIdx >= 0 ? genericIdx : 0;
   s.firstCut = data.rules.first_cut?.default_on ?? false;
   readUrlState(s, search, presets);
+  if (BETA_TOOL_TYPES.has(s.toolType)) s.beta = true;
   snapDrillDiameter(s);
   if (!profilesFor(s.mode).some((p) => p.id === s.profile)) s.profile = 'standard';
   applyMachineToAdvanced(s, presets, { keepExisting: true });
@@ -542,6 +569,7 @@ export function currentDrillInput(s, data, presets) {
  *   | { type: 'profile', value: string }
  *   | { type: 'firstCut', value: boolean }
  *   | { type: 'drillBank', value: boolean }
+ *   | { type: 'beta', value: boolean }
  *   | { type: 'advSelect', id: string, value: string }
  *   | { type: 'number', field: string, value: number | null, state: 'ok' | 'warn' | 'error' }
  * )} FormAction
@@ -579,6 +607,8 @@ export function update(prev, action, presets) {
         snapDrillDiameter(s);
       } else {
         s.toolType = action.value;
+        // A beta tool is only on offer with the tick on; keep the two agreeing.
+        if (BETA_TOOL_TYPES.has(action.value)) s.beta = true;
       }
       return s;
     case 'diameter': {
@@ -600,6 +630,12 @@ export function update(prev, action, presets) {
       return s;
     case 'drillBank':
       s.drillBank = action.value;
+      return s;
+    case 'beta':
+      s.beta = action.value;
+      // Unticked with a beta tool chosen: the page's default tool, and the
+      // results follow as for any other tool change.
+      if (!s.beta && BETA_TOOL_TYPES.has(s.toolType)) s.toolType = DEFAULT_TOOL_TYPE;
       return s;
     case 'advSelect':
       s.adv[action.id] = action.value;

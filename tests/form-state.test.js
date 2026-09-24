@@ -20,6 +20,7 @@ import { DRILL_OUTPUT_ROWS } from '../js/ui/drill-tables.js';
 import {
   createState, update, writeUrlState, currentInput, currentDrillInput,
   blockers, blockingMessage, advKey, aboveWords, NUMBER_FIELDS,
+  toolTypesFor, DEFAULT_TOOL_TYPE,
 } from '../src/form-state.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -228,4 +229,50 @@ test('FS9', "an advanced box at 0 or below holds the results back; empty still m
 test('FS8', 'the baseline files FS1 and FS3 read are all present', () => {
   const missing = states.filter((st) => !existsSync(join(baselineDir, `${st.name}.json`))).map((st) => st.name);
   assert(!missing.length, `missing: ${missing.join(', ')}`);
+});
+
+test('FS10', 'the beta tick: off hides the ball nose, a ball link turns it on, unticking falls back to the default tool', () => {
+  // Scott's ruling, 2026-09-24. With the tick off the tool list is the live
+  // site's at commit 1e6c265, which had no ball nose.
+  const ids = (beta) => toolTypesFor(beta).map((t) => t.id).join(',');
+  assert(ids(false) === 'upcut,downcut,compression,straight', `beta off offers ${ids(false)}`);
+  assert(ids(true) === 'upcut,downcut,compression,straight,ball', `beta on offers ${ids(true)}`);
+  assert(DEFAULT_TOOL_TYPE === 'compression', `the default tool is ${DEFAULT_TOOL_TYPE}`);
+  // Off by default, with nothing remembered and no link.
+  const fresh = createState(data, presets, '');
+  assert(fresh.beta === false && fresh.toolType === 'compression', `a fresh page: beta ${fresh.beta}, tool ${fresh.toolType}`);
+  // Remembered on, the page opens ticked on its usual tool.
+  const remembered = createState(data, presets, '', true);
+  assert(remembered.beta === true && remembered.toolType === 'compression', 'remembered beta opens ticked');
+  // A link naming the ball nose opens ticked with the ball nose chosen,
+  // whatever was remembered, so a shared ball-nose link still works.
+  const link = createState(data, presets, '?t=ball&d=12.7&ap=0.5&ae=1.3');
+  assert(link.beta === true && link.toolType === 'ball', `a ball link: beta ${link.beta}, tool ${link.toolType}`);
+  assert(currentInput(link, data, presets).toolType === 'ball', 'the engine is handed the ball nose');
+  // The address carries no key for the tick: a link reads as it always did.
+  const known = new Set(['k', 'm', 'mc', 'p', 't', 'd', 'f', 'th', 'r', 'fc', 'ap', 'ae']);
+  for (const st of [link, remembered, update(remembered, { type: 'beta', value: false }, presets)]) {
+    const q = new URLSearchParams(writeUrlState(st));
+    const extra = [...q.keys()].filter((k) => !known.has(k) && !k.startsWith('a_'));
+    assert(!extra.length, `the address gained ${extra.join(', ')}`);
+  }
+  assert(new URLSearchParams(writeUrlState(link)).get('t') === 'ball', 'the ball link keeps t=ball');
+  // A link naming another tool leaves the tick as remembered.
+  assert(createState(data, presets, '?t=upcut').beta === false, 'an up-cut link does not tick beta');
+  // Unticking with the ball nose chosen: the default tool, and the engine
+  // input follows as for any tool change.
+  const off = update(link, { type: 'beta', value: false }, presets);
+  assert(off.beta === false && off.toolType === 'compression', `unticked: beta ${off.beta}, tool ${off.toolType}`);
+  assert(currentInput(off, data, presets).toolType === 'compression', 'the engine is handed the default tool');
+  const viaTool = update(link, { type: 'tool', value: 'compression' }, presets);
+  assert(JSON.stringify(currentInput(update(viaTool, { type: 'beta', value: false }, presets), data, presets))
+    === JSON.stringify(currentInput(off, data, presets)), 'unticking gives the same input as picking the default tool');
+  // Unticking with any other tool chosen changes nothing else.
+  const upcut = update(createState(data, presets, '?t=upcut', true), { type: 'beta', value: false }, presets);
+  assert(upcut.beta === false && upcut.toolType === 'upcut', `an up-cut stays: ${upcut.toolType}`);
+  // Ticking changes no tool; picking the ball nose keeps the tick on.
+  const on = update(fresh, { type: 'beta', value: true }, presets);
+  assert(on.beta === true && on.toolType === 'compression', 'ticking changes no tool');
+  const ball = update(on, { type: 'tool', value: 'ball' }, presets);
+  assert(ball.beta === true && ball.toolType === 'ball', 'the ball nose chosen with the tick on');
 });

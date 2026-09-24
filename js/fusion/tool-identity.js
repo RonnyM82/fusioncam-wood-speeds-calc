@@ -234,14 +234,32 @@ export function isRoundEndedTool(rawTool) {
 }
 
 
+// The tool kind as the live site read it at commit 1e6c265, copied verbatim,
+// for the panel with its beta tick off (Scott's ruling, 2026-09-24; see the
+// beta switch in map-operation.js). Every round-ended and form tool is one
+// kind, "ball", which the panel labels a ball-nose or form tool and does not
+// serve. It goes when the ball and bull nose come out of beta.
+export function stableToolKind(typeString) {
+  const t = String(typeString ?? '').trim().toLowerCase();
+  if (!t) return 'router';
+  if (/\b(drill|counter bore|counter sink|reamer|tap|bore bar)\b/.test(t)) return 'drill';
+  if (/\b(ball end mill|bull nose end mill|lollipop|radius mill|form mill|tapered mill|dovetail|slot mill|thread mill)\b/.test(t)) return 'ball';
+  if (/\bchamfer\b/.test(t)) return 'chamfer';
+  return 'router';
+}
+
 // rawTool is the job message tool shape in fusion-addin/protocol.md.
 // Returns { key, kind, guess, guessSource, guessCertain, seriesMatches }.
 // guessCertain is true only for the certain brad point above. The guess
 // prefills the one question the tool takes: a geometry for a router bit
 // (upcut, downcut, compression, straight), a family for a drill (dowel,
 // through, hinge, twist; 2026-09-02), nothing for the other kinds.
-export function identifyTool(rawTool, chiploads) {
-  const kind = toolKind(rawTool?.typeString);
+//
+// options.beta is the panel's beta tick. Missing means off, for the reason
+// mapOperation gives: a caller that forgets it gets the live behaviour of
+// 1e6c265, the old kinds and no ball guess, never the beta one.
+export function identifyTool(rawTool, chiploads, { beta = false } = {}) {
+  const kind = beta ? toolKind(rawTool?.typeString) : stableToolKind(rawTool?.typeString);
   const { matches, idGuess } = matchSeries(rawTool, chiploads);
 
   // The series matches return for every kind: the match is a fact about
@@ -260,7 +278,7 @@ export function identifyTool(rawTool, chiploads) {
         guessSource = 'description';
       }
     }
-  } else if (kind === 'ball' || kind === 'bullnose') {
+  } else if (beta && (kind === 'ball' || kind === 'bullnose')) {
     // A ball nose takes no question. Fusion states the geometry, so the pick
     // is a fact about the tool rather than a choice the user has to make, and
     // the panel serves it unconfirmed (2026-09-02). The chart covers a full

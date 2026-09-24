@@ -699,6 +699,42 @@ const REWRITES = {
     }
     return named.length;
   },
+  // The beta switch (Scott's ruling, 2026-09-24). While the React page's
+  // "Show beta tools" box is unticked its tool list has no ball nose: the
+  // option leaves the old side. Reads the box, so it runs before
+  // beta-checkbox removes it (the order of accepted-differences.json).
+  'beta-hides-ball-nose'(entry, was, now, where) {
+    const box = now.form.fields.find((f) => f.checkLabel === 'Show beta tools');
+    if (!box || box.checked) return 0;
+    const opts = was.form.toolPicker.options;
+    const at = opts.indexOf(entry.option);
+    if (at < 0 || opts.lastIndexOf(entry.option) !== at || at !== opts.length - 1) {
+      throw new Error(`${where}: ${entry.id}: the baseline's tool list does not end in the ball nose once`);
+    }
+    if (was.form.toolPicker.chosen.includes(entry.option)) throw new Error(`${where}: ${entry.id}: the ball nose is chosen but the beta box is unticked`);
+    opts.splice(at, 1);
+    return 1;
+  },
+  // The "Show beta tools" box leaves the React side's form, after checking it
+  // is where and what the ruling says: once in routing, never in drilling,
+  // right after MATERIAL, ticked exactly when the ball nose is chosen.
+  'beta-checkbox'(entry, was, now, where) {
+    const hits = now.form.fields.filter((f) => f.checkLabel === entry.checkLabel);
+    const routing = was.form.toolPicker.legend === 'TOOL TYPE';
+    if (!routing) {
+      if (hits.length) throw new Error(`${where}: ${entry.id}: the beta box shows outside routing`);
+      return 0;
+    }
+    if (hits.length !== 1) throw new Error(`${where}: ${entry.id}: ${hits.length} beta boxes, not 1`);
+    const box = hits[0];
+    const at = now.form.fields.indexOf(box);
+    if (at < 1 || now.form.fields[at - 1].label !== 'MATERIAL') throw new Error(`${where}: ${entry.id}: the beta box is not right after MATERIAL`);
+    if (box.label !== null || box.hint !== entry.hint || box.message !== null) throw new Error(`${where}: ${entry.id}: the beta box reads ${JSON.stringify(box)}`);
+    const ball = now.form.toolPicker.chosen.some((c) => c.startsWith('Ball nose\n'));
+    if (box.checked !== ball) throw new Error(`${where}: ${entry.id}: the beta box is ${box.checked ? 'ticked' : 'unticked'} with the ball nose ${ball ? '' : 'not '}chosen`);
+    now.form.fields.splice(at, 1);
+    return 1;
+  },
 };
 for (const e of accepted) {
   if (!REWRITES[e.id]) {

@@ -168,6 +168,20 @@ unaccepted differences**, charts included; 48 matched through the accepted diffe
 states, in those four kinds only. Against `legacy.html` all 52 still match with no accepted
 difference applied, so reading which page is loaded changed nothing in the files.
 
+**Two more for the beta switch (Scott's ruling, 2026-09-24).** The ball nose is offered only
+while the React page's "Show beta tools" box is ticked, and the box is new. Both are listed
+in `accepted-differences.json` and rewritten in `tools/baseline.mjs`, in this order:
+
+- `beta-hides-ball-nose`: where the box is there and unticked, the ball nose option leaves
+  the baseline's tool list, after checking it is there once, last, and not chosen.
+- `beta-checkbox`: the box leaves the React page's form, after checking it is there once in
+  a routing state and never in drilling, right after MATERIAL, with its hint, and ticked
+  exactly when the ball nose is chosen. A link naming the ball nose ticks it, so the seven
+  ball-nose states keep their whole list and are compared as before.
+
+Against `vite preview` on 2026-09-24 after that change: 52 identical, none of them without an
+accepted difference. Nothing was re-captured.
+
 `--compare` prints `same` or `DIFF` per state, with the paths that differ, the old value
 and the new one, and exits 1 on any difference. Without `--base` it starts
 `tools/serve.js` itself and stops it afterwards. A full run takes under a minute.

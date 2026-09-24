@@ -7,7 +7,7 @@
 // change goes through update(), and every state is written back to the
 // address, as js/ui/app.js did after each recalculation, so a shared link
 // opens to exactly what the sender saw.
-import { useEffect, useMemo, useReducer } from "react";
+import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { machinePresets } from "../js/data/presets.js";
 import { data } from "./data";
 import {
@@ -31,13 +31,45 @@ export function getPresets(): Preset[] {
   return built;
 }
 
+// The beta tick (Scott's ruling, 2026-09-24; form-state.js says what it
+// gates) is remembered in this browser under one key, shared with the Fusion
+// panel, "1" when on. Storage can throw (a private window, blocked site data)
+// or come back empty, so every read and write is guarded: the page then opens
+// unticked, and the tick still works until the page closes.
+const BETA_KEY = "wood-beta";
+
+function readBeta(): boolean {
+  try {
+    return window.localStorage.getItem(BETA_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeBeta(on: boolean): void {
+  try {
+    if (on) window.localStorage.setItem(BETA_KEY, "1");
+    else window.localStorage.removeItem(BETA_KEY);
+  } catch {
+    // Not remembered; nothing else is lost.
+  }
+}
+
 export function useCalculatorState() {
   const presets = getPresets();
-  const [state, dispatch] = useReducer(
+  const [state, send] = useReducer(
     (s: FormState, a: FormAction) => update(s, a, presets),
     undefined,
-    () => createState(data, presets, window.location.search),
+    () => createState(data, presets, window.location.search, readBeta()),
   );
+
+  // Only a tick or an untick by the person is remembered. A ball-nose link
+  // turns the tick on for that visit, and does not change what the next
+  // visit opens with.
+  const dispatch = useCallback((a: FormAction) => {
+    if (a.type === "beta") writeBeta(a.value);
+    send(a);
+  }, []);
 
   // app.js wrote the address after every recalculation, the first one at load
   // included, so a link with no query at all is rewritten in full.

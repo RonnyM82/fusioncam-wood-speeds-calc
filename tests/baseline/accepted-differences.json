@@ -79,6 +79,29 @@
       "now": "role=\"alert\" on a warning or danger banner and role=\"status\" on a success or info banner, given by the Alert part to a banner mounted after load. Only these two states have clicks, so only here are banners mounted after load.",
       "rewrite": "On the old side, each banner named in 'blocks' has its ariaRole changed from null to the role given, after checking it is a banner and its role was null.",
       "ruling": "The plan's ruling on the double announcement (Claude's, 2026-09-24), carried out in step 3 (docs/CONVERSION_PLAN.md, \"How the results announce themselves to a screen reader\")."
+    },
+    {
+      "id": "beta-hides-ball-nose",
+      "field": "form.toolPicker.options: the routing tool list.",
+      "states": "all",
+      "statesNote": "Every routing state whose \"Show beta tools\" box is unticked: the routing states that do not name the ball nose. A state that names it (the four ball-* states, tool-ball-12.7-mdf-depth-empty and the two ball-nose refusals) opens with the box ticked and the list whole, so this rewrites nothing there; drilling shows the drill list, which never had the ball nose.",
+      "was": "Five tool types, the last \"Ball nose\" with its hint.",
+      "now": "The four flat tools only, while the box is unticked. The ball nose arrived in commit bc85559 and was never live; wood.fusioncam.co serves commit 1e6c265, which had no ball nose.",
+      "option": "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only.",
+      "rewrite": "Only where the React page's \"Show beta tools\" box is there and unticked: on the old side, the ball nose option is taken out of the tool list after checking it is there exactly once, last, and not the chosen tool. Listed before beta-checkbox, which removes the box this one reads.",
+      "ruling": "Scott's ruling, 2026-09-24: the ball nose, the bull nose and 3D surfacing go live behind a beta switch, off by default, and with it off the page offers what the live site offers."
+    },
+    {
+      "id": "beta-checkbox",
+      "field": "form.fields: a checkbox under the tool list.",
+      "states": "all",
+      "statesNote": "Every routing state (the React page shows the box in routing only). Unticked in all of them except the seven that name the ball nose, where a ball-nose link ticks it.",
+      "was": "No such field.",
+      "now": "A \"Show beta tools\" checkbox directly after the material, where the tool list sits, with its hint; ticked exactly when the chosen tool is the ball nose (the baseline runs in a fresh browser, so nothing is remembered).",
+      "checkLabel": "Show beta tools",
+      "hint": "Adds the ball nose, for 3D surfacing and carving. Its numbers are new and less proven than the rest; start conservatively.",
+      "rewrite": "On the React side, the one field whose checkbox reads \"Show beta tools\" is taken out after checking it is there exactly once in a routing state (and not at all in drilling), directly after MATERIAL, with no label of its own, this hint, no message, and ticked exactly when the chosen tool is the ball nose.",
+      "ruling": "Scott's ruling, 2026-09-24: the beta switch is a checkbox beside the tool type, off by default and remembered in the browser; a link naming the ball nose opens with it ticked."
     }
   ]
 }

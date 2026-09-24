@@ -19,6 +19,19 @@
 // the type-string list, so the kinds cannot drift apart (2026-09-02).
 import { toolKind, isRoundEndedTool } from './tool-identity.js';
 
+// THE BETA SWITCH (Scott's ruling, 2026-09-24). The ball nose, the bull nose
+// and 3D surfacing arrived in commit bc85559 and had never been live. They go
+// live behind a beta switch, off by default, and with it off the panel maps
+// every operation exactly as the live site did at commit 1e6c265: the same
+// status and the same refusal words, 3D surfacing refused outright, a ball on
+// a 2D strategy handed back for the panel to refuse, Flat and Horizontal
+// refused as surfacing. map-operation-stable.js is that commit's
+// map-operation.js, byte for byte (tests/fusion-beta.test.js checks its git
+// blob id against 1e6c265's), so beta off is that code rather than a
+// reconstruction of it. Promoting a feature out of beta is Scott's call; when
+// he makes it, this delegation and the stable copy go.
+import { mapOperation as mapOperationStable } from './map-operation-stable.js';
+
 // contour2d, pocket2d and slot cut a full-width slot: the width of cut is
 // the tool diameter. Every pocket level starts as a slot, so the slot
 // number serves the whole level.
@@ -153,9 +166,18 @@ const GEOMETRY_HEIGHT_MODES = new Set(['from contour', 'from hole top', 'from ho
 const SPREAD_NOTE = 'The selection is not all at one depth, so the deepest serves.';
 
 // op is the job message operation shape in fusion-addin/protocol.md.
-// choices is { toolType, upcutLengthMm, finishing }: the user-confirmed tool
-// geometry, the confirmed up-cut length, and the finish-row mark.
+// choices is { toolType, upcutLengthMm, finishing, beta }: the user-confirmed
+// tool geometry, the confirmed up-cut length, the finish-row mark, and the
+// panel's beta tick.
+//
+// A missing beta means OFF, on purpose. The panel always passes it, so the
+// default only decides what a caller that forgets it gets, and that should
+// be the behaviour that has been live and proven, never the newer numbers.
+// A caller has to ask for beta by name to reach them.
 export function mapOperation(op, choices = {}) {
+  if (choices.beta !== true) {
+    return mapOperationStable(op, choices);
+  }
   const strategy = op.strategy;
   if (strategy == null) {
     return { status: 'unreadable', reason: 'The add-in could not read the strategy.' };

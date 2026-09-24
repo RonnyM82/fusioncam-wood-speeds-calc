@@ -103,8 +103,11 @@ already counts every cutting edge.
 second entry of the same Vite app. It still uses the vendored copies of the design system,
 and every file it loads keeps its address in the published site: the build copies them into
 `dist/` byte for byte from where they are (`vite.config.ts`, `SITE_FILES`) and fails if any
-address `fusion.html` loads is missing. The `?v=` cache keys are untouched, because Fusion's
-palette browser serves a stale copy of any address whose key did not change.
+address `fusion.html` loads is missing. Every address in `fusion.html` carries
+`?v=<PAGE_BUILD>`, the same string as `PAGE_BUILD` in `js/ui/fusion-panel.js` (a date and a
+letter; test FP15 pins the two equal). Bump both whenever a file the panel loads changes,
+because Fusion's palette browser serves a stale copy of any address whose key did not
+change. Last bumped to `2026-09-24a` for the beta switch.
 
 **The vendored design system is the panel's. Do not edit it.** `tokens/`, `components/`,
 `fonts/` and `icons/` are copies of the vanilla Livetools Design System, and
@@ -118,6 +121,40 @@ on 2026-09-24 (D63), and the rule can go at the next re-vendor.
 `reference/cnc-router-speeds-feeds-reference_4.html` is an archived third-party article kept
 for where its numbers came from. It is exempt in `.conformance-exempt`, must stay
 byte-for-byte what was published, and is copied unchanged to its address in the built site.
+
+## The beta switch
+
+Scott's ruling, 2026-09-24. The ball nose, the bull nose and 3D surfacing (commit bc85559,
+from research session 6) had never been live. They go live behind a beta tick, **off by
+default**, and with it off the page and the panel behave exactly as the live site did at
+commit 1e6c265 for anything ball, bull nose or surfacing.
+
+- **What it gates.** On the page: "Ball nose" in the routing tool list. In the panel: the ball
+  and the bull nose on every strategy, every 3D surfacing strategy, and Flat and Horizontal
+  served as facing work. The engine (`js/core/`) and the data carry the ball nose whatever
+  the tick says; only what reaches them is gated.
+- **Where it is.** The page: "Show beta tools", the design system's Checkbox under the tool
+  list, routing only. The panel: "Use beta tools", an `.lt-check` in Machine and cut.
+- **Remembered** in the browser under one key shared by both, `wood-beta`, `"1"` when on,
+  every read and write in a try/catch so a page with blocked storage opens unticked and still
+  works. Only a person's tick is remembered. A link naming the ball nose (`t=ball`) opens
+  ticked for that visit; the address has no key of its own for the tick. Unticking with the
+  ball nose chosen falls back to the default tool, compression (`DEFAULT_TOOL_TYPE` in
+  `src/form-state.js`).
+- **Beta off is 1e6c265's code, not a copy of its behaviour.** `mapOperation()` hands every
+  call without `beta: true` to `js/fusion/map-operation-stable.js`, which is 1e6c265's
+  `map-operation.js` byte for byte; test FB1 checks its git blob id. `identifyTool()` reads
+  the kinds with `stableToolKind()`, 1e6c265's function, and the panel uses 1e6c265's
+  `STABLE_KIND_NOTE` and refusal sentence. A missing `beta` means off in both, so a caller
+  that forgets it gets the proven behaviour; the panel always passes it.
+  `tests/fusion-beta.test.js` pins the off answers in 1e6c265's own words, and every test in
+  `fusion-map.test.js` runs with `beta: true`. Never edit the stable file.
+- **Not gated**, because the baseline records them and Scott's ruling named only the tool:
+  the 1/16 in and 5/8 in diameters, and the ball-nose sentences in the depth-per-pass and
+  width-of-cut hints, show with the tick off.
+- **Promoting a feature out of beta is Scott's call**, never a session's. When he makes it,
+  the stable mapping, `stableToolKind()`, `STABLE_KIND_NOTE`, `BETA_TOOL_TYPES`, the two
+  ticks and the two baseline entries for them (`beta-hides-ball-nose`, `beta-checkbox`) go.
 
 ## The charts are drawn by the app
 
@@ -144,7 +181,7 @@ emphasis pattern, its mark specs and its rule that every chart has a table twin.
 ```bash
 npm run check          # the whole gate, in this order:
                        #   python conformance.py .   the panel, its CSS, the app CSS
-                       #   node tests/run.js         216 tests: engine, data, form, results, charts
+                       #   node tests/run.js         223 tests: engine, data, form, results, charts
                        #   the lint                  the rules above, over src/
                        #   tsc --noEmit
                        #   vite build                fails if a panel file is missing
@@ -187,7 +224,8 @@ node tools/baseline.mjs --compare                               # legacy.html, s
 Against the React page the comparison applies the differences ruled deliberate, listed with
 their rulings in `tests/baseline/accepted-differences.json`, and is exact about everything
 else; `--no-accepted` turns them off. On 2026-09-24 the React page matched all 52 states
-with those four differences and nothing else. Any other difference, above all any number, is
+with those four differences and nothing else, and again after the beta switch with two more
+(the tick, and the ball nose missing from the list while it is off). Any other difference, above all any number, is
 a regression until explained. Re-capture the baseline only when Scott has ruled a new
 behaviour right, and say so in the commit. `legacy.html` is the old `index.html` renamed with
 not a byte changed; it, `js/ui/app.js` and `styles.css` go when the conversion is done.

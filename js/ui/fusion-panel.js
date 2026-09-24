@@ -32,7 +32,7 @@ import { strategyLabel, pickChips, readFacts, drillChips } from '../fusion/prese
 // fusion.html carries ?v=<PAGE_BUILD>, and FP15 pins the two equal. Bump it
 // on every page change, because the Fusion palette browser serves a stale
 // cached copy otherwise (spike-results-windows.md section 11, item 6).
-const PAGE_BUILD = '2026-09-02d';
+const PAGE_BUILD = '2026-09-24a';
 
 // The Fusion bridge appears AFTER the page scripts run: the palette browser
 // injects window.adsk 20 to 32 ms after the first script, after the load
@@ -146,6 +146,7 @@ const state = {
   rpmError: false,         // the field holds a value it has refused
   firstCut: true,
   drillBank: false,        // the drills run on a fixed-speed boring head
+  beta: false,             // the beta tick: ball and bull nose, 3D surfacing
   materialBySetup: {},     // setupId -> material id
   finishRows: new Set(),   // opIds marked as a finish pass
   tools: new Map(),        // toolKey -> { kind, geometry, drillFamily, confirmed, upcutLengthMm }
@@ -161,6 +162,32 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 const query = new URLSearchParams(location.search);
+
+// THE BETA TICK (Scott's ruling, 2026-09-24). The ball nose, the bull nose and
+// 3D surfacing are served only while it is ticked. Unticked, the panel maps
+// and labels every operation and tool exactly as the live site did at commit
+// 1e6c265 (map-operation.js, the beta switch). It is off by default and
+// remembered in this browser under one key, shared with the calculator page,
+// "1" when on. Storage can throw (blocked site data) or come back empty; the
+// panel then starts unticked and the tick still works for the session.
+const BETA_KEY = 'wood-beta';
+
+function readBeta() {
+  try {
+    return window.localStorage.getItem(BETA_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeBeta(on) {
+  try {
+    if (on) window.localStorage.setItem(BETA_KEY, '1');
+    else window.localStorage.removeItem(BETA_KEY);
+  } catch {
+    // Not remembered, and nothing else lost: the tick holds for this session.
+  }
+}
 
 init();
 
@@ -210,6 +237,7 @@ async function init() {
   state.machineId = (generic ?? state.presets[0]).id;
   state.rpm = state.data.rules.defaults.rpm;
   state.firstCut = state.data.rules.first_cut?.default_on ?? false;
+  state.beta = readBeta();
   versionGate();
 
   // The handler must exist before hello goes out: the add-in may answer at
@@ -445,7 +473,7 @@ function buildTools(job) {
   const seen = new Set();
   for (const setup of job.setups) {
     for (const op of setup.operations) {
-      const id = identifyTool(op.tool, state.data.chiploads);
+      const id = identifyTool(op.tool, state.data.chiploads, { beta: state.beta });
       state.toolKeyByOp.set(op.opId, id.key);
       if (seen.has(id.key)) continue;
       seen.add(id.key);
@@ -468,7 +496,18 @@ function buildTools(job) {
       } else {
         // A record restored from memory carries no kind: the kind is a fact
         // about the tool Fusion sent, never a stored choice (2026-09-01).
-        state.tools.get(id.key).kind = id.kind;
+        const st = state.tools.get(id.key);
+        // The beta tick can change a tool's kind, because beta reads the type
+        // string with the newer kinds (tool-identity.js). A record that holds
+        // no answer of the user's was only the first reading's defaults, so
+        // it is read again as the new kind would first have been; an answer
+        // the user gave is kept whatever the kind.
+        if (st.kind != null && st.kind !== id.kind && !st.geometry && !st.drillFamily) {
+          st.geometry = id.kind === 'router' ? id.guess : null;
+          st.drillFamily = id.kind === 'drill' ? id.guess : null;
+          st.confirmed = id.guessCertain === true;
+        }
+        st.kind = id.kind;
       }
     }
   }
@@ -760,6 +799,13 @@ function renderSettings() {
           <span>The drills run on a drill bank, a fixed-speed boring head with its own drive</span>
         </label>
       </div>` : ''}
+      <div class="lt-field span-all">
+        <label class="lt-check">
+          <input type="checkbox" id="beta" aria-describedby="beta-hint">
+          <span>Use beta tools</span>
+        </label>
+        <span class="lt-field__hint" id="beta-hint">Serves the ball nose and the bull nose, for 3D surfacing and carving. Their numbers are new and less proven than the rest; start conservatively.</span>
+      </div>
     </div>`;
 
   // The preset note left the page flow on 2026-09-01 (Scott, first run inside
@@ -855,6 +901,21 @@ function renderSettings() {
       renderSetups();
     });
   }
+
+  // The beta tick re-reads the tools, whose kinds it can change, and re-maps
+  // every row already shown, as the other choices do. It is this browser's
+  // choice, not the document's, so it is not in persistDoc.
+  const betaBox = $('beta');
+  betaBox.checked = state.beta;
+  betaBox.addEventListener('change', (e) => {
+    state.beta = e.target.checked;
+    writeBeta(state.beta);
+    if (state.job) {
+      buildTools(state.job);
+      renderTools();
+      renderSetups();
+    }
+  });
 }
 
 function jobHasDrill() {
@@ -908,6 +969,31 @@ function buildProfile() {
 // tool type, and a drill or a ball-nose asked for a spiral direction is the
 // wrong question (Scott, 2026-09-01, first run inside Fusion). Their rows
 // refuse in the operation table with the strategy's own reason.
+//
+// Two tables, because the beta tick changes the kinds (tool-identity.js).
+// STABLE_KIND_NOTE is the live site's table at commit 1e6c265, verbatim, for
+// the tick off; KIND_NOTE is the beta table. kindNote() picks.
+const STABLE_KIND_NOTE = {
+  drill: {
+    label: 'Drill',
+    // A drill takes the drill-type question instead (drillToolRow), so
+    // this note never renders for it.
+    note: 'A drill takes no spiral direction.',
+  },
+  ball: {
+    label: 'Ball-nose or form tool',
+    note: 'No published chart covers 3D surfacing yet, so the panel does not serve this tool\'s rows.',
+  },
+  chamfer: {
+    label: 'Chamfer or engraving tool',
+    note: 'No published chart covers this tool, so the panel does not serve its rows.',
+  },
+};
+
+function kindNote(kind) {
+  return (state.beta ? KIND_NOTE : STABLE_KIND_NOTE)[kind];
+}
+
 const KIND_NOTE = {
   drill: {
     label: 'Drill',
@@ -946,7 +1032,7 @@ function renderTools() {
       return drillToolRow(t, st, i);
     }
     if (t.kind !== 'router') {
-      const k = KIND_NOTE[t.kind] ?? KIND_NOTE.chamfer;
+      const k = kindNote(t.kind) ?? kindNote('chamfer');
       return `<div class="tool-row">
         <div class="tool-id">
           <span class="tool-desc">${escapeHtml(toolLabel(t.tool))}</span>
@@ -1273,7 +1359,7 @@ function opCard(op, setup, si, oi) {
   // itself comes from the resolved heights through mapOperation.
   if (op.strategy === 'drill') {
     if (!tool || tool.kind !== 'drill') {
-      const label = KIND_NOTE[tool?.kind]?.label ?? 'router bit';
+      const label = kindNote(tool?.kind)?.label ?? 'router bit';
       return stateCard(op, ids, 'refused',
         `This drilling operation runs a ${label.toLowerCase()}. The drilling charts cover drills only.`, '');
     }
@@ -1286,13 +1372,27 @@ function opCard(op, setup, si, oi) {
   // states the geometry, so mapOperation supplies the tool type itself and
   // the panel has nothing to confirm. It goes down the served path with the
   // router bits, and mapOperation refuses it where no chart covers the cut.
-  const ballNose = tool?.kind === 'ball' || tool?.kind === 'bullnose';
+  // Only with the beta tick on: unticked, a ball is one of the kinds the
+  // panel refuses, as it was live at commit 1e6c265.
+  const ballNose = state.beta && (tool?.kind === 'ball' || tool?.kind === 'bullnose');
   // A form tool, a chamfer tool or a drill on a routing strategy takes no
   // geometry question (2026-09-01) and refuses below with the strategy's own
   // reason, because the charts have no tool type to serve.
   const routerBit = !tool || tool.kind == null || tool.kind === 'router';
   if (routerBit && (!tool || !tool.confirmed || !tool.geometry)) {
     return stateCard(op, ids, 'confirm', 'Confirm the tool geometry first, in the tools section above.', finishToggle);
+  }
+  if (!routerBit && !state.beta) {
+    // The live site's refusal at commit 1e6c265, verbatim, for the tick off:
+    // the mapping hands a ball on a 2D strategy back as mapped, with no tool
+    // type, and the panel composes the sentence from the tool kind.
+    const probe = mapOperation(op, { toolType: null, finishing: false, beta: false });
+    const reason = probe.status === 'mapped'
+      ? `This operation runs a ${(kindNote(tool.kind)?.label ?? 'non-router').toLowerCase()} on a routing strategy. The charts cover router bits only.`
+      : probe.reason;
+    const stateKey = probe.status === 'mapped' ? 'refused' : probe.status;
+    return stateCard(op, ids, stateKey, reason, finishToggle,
+      { facts: stateKey === 'unreadable' ? readFacts(op) : null });
   }
   if (!routerBit && !ballNose) {
     // The mapping now refuses a tool shape no chart covers on every strategy,
@@ -1301,7 +1401,7 @@ function opCard(op, setup, si, oi) {
     // the sentence the panel used to compose from the tool kind, so the probe
     // reason is printed as it stands. The probe passes a null tool type
     // because a non-router tool has no geometry answer to pass.
-    const probe = mapOperation(op, { toolType: null, finishing: false });
+    const probe = mapOperation(op, { toolType: null, finishing: false, beta: true });
     return stateCard(op, ids, probe.status, probe.reason, finishToggle,
       { facts: probe.status === 'unreadable' ? readFacts(op) : null });
   }
@@ -1310,6 +1410,7 @@ function opCard(op, setup, si, oi) {
     toolType: tool.geometry,
     upcutLengthMm: tool.upcutLengthMm ?? undefined,
     finishing: state.finishRows.has(op.opId),
+    beta: state.beta,
   });
   if (mapped.status !== 'mapped') {
     // An unreadable card names what the add-in sent under the reason, so a
@@ -1357,7 +1458,7 @@ function opCard(op, setup, si, oi) {
 // a drill: a drill runs at its published speed, and a 35 mm hinge cutter at
 // a router's 18,000 rpm is a hazard, not a number.
 function drillCard(op, setup, ids, tool) {
-  const mapped = mapOperation(op, {});
+  const mapped = mapOperation(op, { beta: state.beta });
   if (mapped.status !== 'mapped') {
     return stateCard(op, ids, mapped.status, mapped.reason, '',
       { facts: mapped.status === 'unreadable' ? readFacts(op) : null });

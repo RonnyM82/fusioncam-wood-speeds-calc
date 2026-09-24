@@ -19,7 +19,7 @@ import {
   MATERIALS,
   MODES,
   NUMBER_FIELDS,
-  TOOL_TYPES,
+  toolTypesFor,
   aboveWords,
   advKey,
   firstCutLabel,
@@ -108,17 +108,28 @@ export function CalculatorForm({ state, dispatch, presets }: Props) {
         onValueChange={(value) => value !== null && dispatch({ type: "material", value })}
       />
 
-      {/* Keyed by mode: the two modes offer different lists, and a fresh
-          group per list keeps Base UI's roving focus off an option that no
-          longer exists. */}
+      {/* Keyed by mode and the beta tick: each changes the list offered, and
+          a fresh group per list keeps Base UI's roving focus off an option
+          that no longer exists. */}
       <RadioGroup
-        key={`tool-${state.mode}`}
+        key={`tool-${state.mode}-${state.beta ? "beta" : "stable"}`}
         label={drilling ? "Drill type" : "Tool type"}
         layout="cards"
-        items={(drilling ? DRILL_TOOLS : TOOL_TYPES).map((t) => ({ value: t.id, label: t.label, hint: t.hint }))}
+        items={(drilling ? DRILL_TOOLS : toolTypesFor(state.beta)).map((t) => ({ value: t.id, label: t.label, hint: t.hint }))}
         value={drilling ? state.drillTool : state.toolType}
         onValueChange={(value) => dispatch({ type: "tool", value })}
       />
+
+      {/* The beta tick sits under the list it governs (Scott's ruling,
+          2026-09-24). Routing only: no drill is in beta. */}
+      {!drilling && (
+        <Checkbox
+          label="Show beta tools"
+          hint="Adds the ball nose, for 3D surfacing and carving. Its numbers are new and less proven than the rest; start conservatively."
+          checked={state.beta}
+          onCheckedChange={(value) => dispatch({ type: "beta", value })}
+        />
+      )}
 
       <FormGrid>
         <Select
