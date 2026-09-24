@@ -119,6 +119,7 @@ its current behaviour is recorded separately and marked as not a target.
   that checkout after step 6 swaps in the published package, because the package does not
   ship the probe. Either the design system ships it (finding 9 in
   the design system's `docs/consumer-reports/2026-09-24-wood-calculator-conversion.md`) or the Pages workflow in step 6 runs the gate without it.
-  To decide at step 6.
+  Decided 2026-09-24: the Pages workflow runs the gate without the paint step, which stays a
+  local check on Scott's machine, where the design-system checkout sits beside this one.
 - The three 3D surfacing decisions Scott deferred on 2026-09-24 are not part of this work;
   they are in `CLAUDE.md`'s TODO list.
