@@ -12,10 +12,10 @@
         "Down-cut spiral\nPresses chips down. Leaves a clean top face, but clears chips poorly.",
         "Compression\nUp-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts.",
         "Straight\nSimple straight flutes. General purpose, but harder on the faces than a spiral.",
-        "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only."
+        "Ball nose\nRound tip for 3D surfacing and carving. MDF, softwood and hardwood only."
       ],
       "chosen": [
-        "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only."
+        "Ball nose\nRound tip for 3D surfacing and carving. MDF, softwood and hardwood only."
       ]
     },
     "fields": [
@@ -259,17 +259,17 @@
   },
   "results": {
     "present": true,
-    "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it.\nSpindle speed\n18,000 rpm\nSurface speed\n718 m/min\n2,356 SFM\nCutting feedrate\n4,800 mm/min\n189 in/min\nFeed per tooth\n0.133 mm/tooth\n0.0052 in/tooth\nLead-in feedrate\n4,800 mm/min\n189 in/min\nAn arc lead-in enters at reduced engagement, so the full cutting feed is safe there.\nLead-out feedrate\n4,800 mm/min\n189 in/min\nRamp feedrate\n1,600 mm/min\n63 in/min\nRamp and plunge at up to 45° over 50–100 mm at one third of the cutting feed.\nPlunge feedrate\n1,600 mm/min\n63 in/min\nCutting diameter at this depth\n12.70 mm\n0.500 in\nA ball cuts on a smaller circle than its full diameter until the pass reaches half the diameter deep, and the speed falls to zero at the exact tip. Use a larger ball where the surface is flat.\nSurface speed at that diameter\n718 m/min\n2,356 SFM\n\nThe effective chip is 0.133 mm/tooth. This is close to the 0.1 mm minimum.\n\nCutting-force values come from a low-speed test. Expect +15-20% more power at production speed.\n\nNOTES ON THIS CALCULATION\nFirst-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value.\nEvery published chart for this cut\nmm/tooth\nAmana spiral ball nose\n0.203–0.254\n\nThe highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.133 mm/tooth. The other charts are context, and their numbers do not serve.\n\nShow every published chart for this cut as a table\nEvery published chart for this cut\nCHART\tPUBLISHED BAND (MM/TOOTH)\tAGAINST THE EFFECTIVE CHIP\nAMANA SPIRAL BALL NOSE\t0.203–0.254\tSets your numbers. The effective chip 0.133 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down.",
+    "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets this feed.\nSpindle speed\n18,000 rpm\nSurface speed\n718 m/min\n2,356 SFM\nCutting feedrate\n7,400 mm/min\n290 in/min\nFeed per tooth\n0.205 mm/tooth\n0.0081 in/tooth\nLead-in feedrate\n7,400 mm/min\n290 in/min\nAn arc lead-in enters at reduced engagement, so the full cutting feed is safe there.\nLead-out feedrate\n7,400 mm/min\n290 in/min\nRamp feedrate\n2,500 mm/min\n97 in/min\nRamp and plunge at up to 45° over 50–100 mm at one third of the cutting feed.\nPlunge feedrate\n2,500 mm/min\n97 in/min\nCutting diameter at this depth\n12.70 mm\n0.500 in\nA ball cuts on a smaller circle than its full diameter until the pass reaches half the diameter deep, and the speed falls to zero at the exact tip. Use a larger ball where the surface is flat.\nSurface speed at that diameter\n718 m/min\n2,356 SFM\n\nCutting-force values come from a low-speed test. Expect +15-20% more power at production speed.\n\nNOTES ON THIS CALCULATION\nThe first-cut reduction does not apply to a 3D surfacing pass. A surfacing pass is a light finishing cut, and a reduced feed on a light cut rubs.\nEvery published chart for this cut\nmm/tooth\nAmana spiral ball nose\n0.203–0.254\n\nThe highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.205 mm/tooth. The other charts are context, and their numbers do not serve.\n\nShow every published chart for this cut as a table\nEvery published chart for this cut\nCHART\tPUBLISHED BAND (MM/TOOTH)\tAGAINST THE EFFECTIVE CHIP\nAMANA SPIRAL BALL NOSE\t0.203–0.254\tSets your numbers. The effective chip 0.205 sits in this band.",
     "blocks": [
       {
         "role": "banner",
         "variant": "success",
         "icon": "#lt-ic-success",
         "ariaRole": null,
-        "title": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it.",
+        "title": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets this feed.",
         "paragraphs": [],
         "list": [],
-        "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets it, and first-cut mode serves 65% of it."
+        "text": "No limit applies. The cut can take the chart feed. Amana spiral ball nose sets this feed."
       },
       {
         "role": "outputs",
@@ -290,43 +290,43 @@
           },
           {
             "label": "Cutting feedrate",
-            "metric": "4,800 mm/min",
-            "imperial": "189 in/min",
+            "metric": "7,400 mm/min",
+            "imperial": "290 in/min",
             "secondary": false,
             "note": null
           },
           {
             "label": "Feed per tooth",
-            "metric": "0.133 mm/tooth",
-            "imperial": "0.0052 in/tooth",
+            "metric": "0.205 mm/tooth",
+            "imperial": "0.0081 in/tooth",
             "secondary": true,
             "note": null
           },
           {
             "label": "Lead-in feedrate",
-            "metric": "4,800 mm/min",
-            "imperial": "189 in/min",
+            "metric": "7,400 mm/min",
+            "imperial": "290 in/min",
             "secondary": false,
             "note": "An arc lead-in enters at reduced engagement, so the full cutting feed is safe there."
           },
           {
             "label": "Lead-out feedrate",
-            "metric": "4,800 mm/min",
-            "imperial": "189 in/min",
+            "metric": "7,400 mm/min",
+            "imperial": "290 in/min",
             "secondary": false,
             "note": null
           },
           {
             "label": "Ramp feedrate",
-            "metric": "1,600 mm/min",
-            "imperial": "63 in/min",
+            "metric": "2,500 mm/min",
+            "imperial": "97 in/min",
             "secondary": false,
             "note": "Ramp and plunge at up to 45° over 50–100 mm at one third of the cutting feed."
           },
           {
             "label": "Plunge feedrate",
-            "metric": "1,600 mm/min",
-            "imperial": "63 in/min",
+            "metric": "2,500 mm/min",
+            "imperial": "97 in/min",
             "secondary": false,
             "note": null
           },
@@ -353,18 +353,6 @@
         "ariaRole": null,
         "title": null,
         "paragraphs": [
-          "The effective chip is 0.133 mm/tooth. This is close to the 0.1 mm minimum."
-        ],
-        "list": [],
-        "text": "The effective chip is 0.133 mm/tooth. This is close to the 0.1 mm minimum."
-      },
-      {
-        "role": "banner",
-        "variant": "warning",
-        "icon": "#lt-ic-warning",
-        "ariaRole": null,
-        "title": null,
-        "paragraphs": [
           "Cutting-force values come from a low-speed test. Expect +15-20% more power at production speed."
         ],
         "list": [],
@@ -374,7 +362,7 @@
         "role": "notes",
         "title": "NOTES ON THIS CALCULATION",
         "items": [
-          "First-cut mode serves 65% of the chart feed. When the cut proves good, work up toward the chart value."
+          "The first-cut reduction does not apply to a 3D surfacing pass. A surfacing pass is a light finishing cut, and a reduced feed on a light cut rubs."
         ]
       },
       {
@@ -392,13 +380,13 @@
             "value": "0.203–0.254",
             "emphasis": true,
             "serving": true,
-            "barLeft": "57.8",
-            "barWidth": "42.2",
-            "marker": "0.0",
-            "name": "Amana spiral ball nose. 0.203–0.254 mm/tooth. Sets your numbers. The effective chip 0.133 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+            "barLeft": "0",
+            "barWidth": "100.0",
+            "marker": "3.3",
+            "name": "Amana spiral ball nose. 0.203–0.254 mm/tooth. Sets your numbers. The effective chip 0.205 sits in this band."
           }
         ],
-        "legend": "The highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.133 mm/tooth. The other charts are context, and their numbers do not serve.",
+        "legend": "The highlighted chart sets your numbers. The dotted line marks the effective chip this cut delivers, 0.205 mm/tooth. The other charts are context, and their numbers do not serve.",
         "table": {
           "role": "table",
           "summary": "Show every published chart for this cut as a table",
@@ -420,7 +408,7 @@
               },
               {
                 "header": false,
-                "text": "Sets your numbers. The effective chip 0.133 sits below this band. A depth derate, the first-cut reduction or a machine cap holds the feed down."
+                "text": "Sets your numbers. The effective chip 0.205 sits in this band."
               }
             ]
           ]
@@ -430,7 +418,7 @@
   },
   "diagnostics": {
     "present": true,
-    "text": "What is going on in this cut\nChip 0.133 mm, close to the minimum\nDepth 1.4×D gives 90% chip load\nPower 4% of available\nkc 21 N/mm² · mdf\nBand 0.203 to 0.254 mm/tooth · Amana spiral ball nose\nChip load target\n4,800 mm/min\n189 in/min\nMachine feed\n30,000 mm/min\n1,181 in/min\nSpindle power\n125,000 mm/min\n4,921 in/min\nShow what could cap the feed as a table\nWhat could cap the feed\nLIMIT\tFEEDRATE\tDOES IT BIND?\nCHIP LOAD TARGET\t4,800 mm/min (189 in/min)\tThis is the cap that sets the feed.\nMACHINE FEED\t30,000 mm/min (1,181 in/min)\tFar above the served feed, so it cannot bind.\nSPINDLE POWER\t125,000 mm/min (4,921 in/min)\tFar above the served feed, so it cannot bind.",
+    "text": "What is going on in this cut\nChip 0.205 mm, above the minimum\nDepth 1.4×D gives 90% chip load\nPower 6% of available\nkc 21 N/mm² · mdf\nBand 0.203 to 0.254 mm/tooth · Amana spiral ball nose\nChip load target\n7,400 mm/min\n290 in/min\nMachine feed\n30,000 mm/min\n1,181 in/min\nSpindle power\n125,000 mm/min\n4,921 in/min\nShow what could cap the feed as a table\nWhat could cap the feed\nLIMIT\tFEEDRATE\tDOES IT BIND?\nCHIP LOAD TARGET\t7,400 mm/min (290 in/min)\tThis is the cap that sets the feed.\nMACHINE FEED\t30,000 mm/min (1,181 in/min)\tFar above the served feed, so it cannot bind.\nSPINDLE POWER\t125,000 mm/min (4,921 in/min)\tFar above the served feed, so it cannot bind.",
     "blocks": [
       {
         "role": "heading",
@@ -441,9 +429,9 @@
         "role": "badges",
         "badges": [
           {
-            "variant": "warning",
-            "icon": "#lt-ic-warning",
-            "text": "Chip 0.133 mm, close to the minimum"
+            "variant": "success",
+            "icon": "#lt-ic-success",
+            "text": "Chip 0.205 mm, above the minimum"
           },
           {
             "variant": "warning",
@@ -453,7 +441,7 @@
           {
             "variant": "success",
             "icon": "#lt-ic-success",
-            "text": "Power 4% of available"
+            "text": "Power 6% of available"
           },
           {
             "variant": "info",
@@ -476,13 +464,13 @@
         "rows": [
           {
             "label": "Chip load target",
-            "metric": "4,800 mm/min",
-            "imperial": "189 in/min",
+            "metric": "7,400 mm/min",
+            "imperial": "290 in/min",
             "emphasis": true,
             "binds": true,
             "farAbove": false,
-            "fillWidth": "3.831722212500001",
-            "name": "Chip load target. 4,800 mm/min. This is the cap that sets the feed."
+            "fillWidth": "5.894957250000001",
+            "name": "Chip load target. 7,400 mm/min. This is the cap that sets the feed."
           },
           {
             "label": "Machine feed",
@@ -523,7 +511,7 @@
             },
             {
               "header": false,
-              "text": "4,800 mm/min (189 in/min)"
+              "text": "7,400 mm/min (290 in/min)"
             },
             {
               "header": false,

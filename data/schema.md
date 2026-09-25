@@ -381,6 +381,25 @@ while the cut is light-radial. On a bull nose the corner is far smaller than
 the tool, so a stepover that is heavy against the corner is still light against
 the tool, and the light-radial gate hid a real and coarse ridge.
 
+**Three surfacing rulings, added 2026-09-25 (Scott, research session 6).** They
+refine the ball nose surfacing already built above, and do not touch the data.
+
+- **The first-cut reduction is skipped on every ball and bull nose pass.** A 3D
+  surfacing pass is a light finishing cut, and the reduction guards a heavy
+  proving cut, so on a surfacing pass it drove the chip toward the rubbing
+  floor, the same reason the Finishing profile disables it. `calculate()` now
+  gates first-cut on `!ballNose`; routing and drilling keep it. A rendered note
+  states the skip when the box would otherwise be on, as Finishing does. The
+  ball baseline feeds rose by one over the 0.65 factor wherever first-cut was
+  on, and the baseline was re-captured. Pinned by `SC43`.
+- **A surfacing pass with no stated depth serves, with the power and hold-down
+  checks skipped.** This confirmed the decision already built on 2026-09-03
+  (above); nothing changed in code.
+- **The ball tool lists its materials MDF, softwood, hardwood**, the repo
+  order, not Amana's printed order. Display only: the tool hint on the page and
+  in the panel, and the panel's tool-shape refusal. No chip-load number moved
+  and no material was relabelled, so no served number changed.
+
 ## plastics.json, new 2026-09-24: soft and hard plastic
 
 A sixth data file, for the two plastic families, with Scott's approval of the plan that

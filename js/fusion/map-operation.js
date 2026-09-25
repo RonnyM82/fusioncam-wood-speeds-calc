@@ -147,7 +147,7 @@ const FACING_STRATEGIES = new Set(['flat', 'horizontal']);
 // together those two sentences claim a chart IS published for a surfacing
 // pass with the right tool. None is: every ball chart found states one
 // condition, a cut one tool diameter deep (corrected 2026-09-03).
-const TOOL_SHAPE_REASON = 'No published chip load covers this tool shape. The one ball chart covers a full-radius ball nose in softwood, hardwood and MDF, and it is published for a cut one tool diameter deep.';
+const TOOL_SHAPE_REASON = 'No published chip load covers this tool shape. The one ball chart covers a full-radius ball nose in MDF, softwood and hardwood, and it is published for a cut one tool diameter deep.';
 
 // The height modes Fusion resolves from the selected geometry and never
 // into its own resolved-value parameter (spike-results-windows.md section

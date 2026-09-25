@@ -103,7 +103,7 @@
           "now": "Leave empty to cut a full slot, one tool diameter wide. The Finishing profile assumes a 1 mm skim instead."
         }
       ],
-      "option": "Ball nose\nRound tip for 3D surfacing and carving. Softwood, hardwood and MDF only.",
+      "option": "Ball nose\nRound tip for 3D surfacing and carving. MDF, softwood and hardwood only.",
       "rewrite": "Only where the React page's \"Use beta mode\" box is there and unticked: on the old side, the ball nose option is taken out of the tool list after checking it is there exactly once, last, and not the chosen tool; the two sizes in 'diameters' are taken out of TOOL DIAMETER's options after checking each is there once and is not the size shown; and each hint in 'hints' is changed from its 'was' to its 'now' after checking the field is there once holding exactly the 'was'. Listed before beta-checkbox, which removes the box this one reads.",
       "ruling": "Scott's ruling, 2026-09-24: the ball nose, the bull nose and 3D surfacing go live behind a beta switch, off by default, and with it off the page offers what the live site offers. The diameters and the hints joined this entry the same day, under the same ruling, on the coordinator's instruction."
     },

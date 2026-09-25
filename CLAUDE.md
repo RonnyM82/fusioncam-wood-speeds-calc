@@ -291,26 +291,20 @@ conversion is settled, since the baseline compares against `legacy.html`.
 
 ## TODO
 
-- **Three 3D surfacing calls waiting for Scott (from research session 6,
-  deferred by him on 2026-09-24 to when surfacing is next worked on).** Put
-  each to him in plain words with the evidence in
-  `research/research-session-6-ball-surfacing.md`:
-  1. Whether a ball's light surfacing pass should skip the first-cut feed
-     reduction. It is on by default and drives a light pass's chip toward the
-     rubbing floor, which is why the Finishing profile disables it; a ball
-     roughing pass at a 40 per cent stepover is a different case.
-  2. The ball chart's material order: softwood above MDF above hardwood, the
-     reverse of every flat-tool chart in the repo, and nothing on the page
-     says so.
-  3. The single-pass finish row. The research's "Still open" list has it
-     refusing, but the same file records Scott's later decision that a pass
-     with no stated depth serves, with the power and hold-down checks skipped.
-     Check with him that this settled it, then close it in the research file.
-     Found by the conversion's baseline capture on 2026-09-24: the public page
-     never reaches that path. An empty depth box on a ball nose is sent as
-     `undefined`, not `null`, so it is read as the full 18 mm board (a
-     cutting diameter of 12.70 mm and no scallop row); only the Fusion panel
-     sends `null`. Put that to him with this question.
+- **3D surfacing rulings, done 2026-09-25 (Scott's rulings from research
+  session 6).** The ball nose surfacing calculation was already built and live
+  behind the beta tick since 2026-09-03; these three rulings land on it, and
+  the baseline was re-captured for them.
+  1. The first-cut feed reduction is skipped on every ball and bull nose pass,
+     because a surfacing pass is a light finishing cut and a reduced feed there
+     drives the chip toward the rubbing floor. Routing and drilling keep the
+     reduction. In `calculate()`, pinned by SC43. The ball feeds rose by one
+     over the 0.65 factor where first-cut was on, and the baseline holds them.
+  2. A surfacing pass with no stated depth already served, with the power and
+     hold-down checks skipped (2026-09-03). This ruling confirmed that.
+  3. The ball tool lists its materials MDF, softwood, hardwood, the repo order,
+     in the tool hint and the panel's tool-shape refusal. No chip-load number
+     moved and no material was relabelled.
 - **Tool identity in the Fusion panel: use the library GUID before the
   fingerprint (Scott, 2026-09-02).** The panel remembers each confirmed tool
   (geometry, up-cut length, drill type) against a key from

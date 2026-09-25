@@ -1199,14 +1199,38 @@ machine is what sets it.
 ### Still open, for Scott
 
 - **The single-pass finish row in the panel** (point 2 above). It refuses today
-  and says what to change.
+  and says what to change. **Settled 2026-09-25**, see below.
 - **The first-cut reduction on a ball.** It applies, it is on by default, and on
   a light surfacing pass it drives the chip toward the rubbing floor, which is
   the reason the Finishing profile disables it. A ball roughing pass at a 40 per
-  cent stepover is a different case, so one rule does not fit both.
+  cent stepover is a different case, so one rule does not fit both. **Settled
+  2026-09-25**, see below.
 - **The material ordering.** This chart puts softwood above MDF above hardwood,
   which is the reverse of every flat-tool chart in the repo. Nothing in the UI
-  acknowledges it.
+  acknowledges it. **No source found that explains the reversal.** Amana's own
+  flat chart cannot arbitrate it: it prints one combined Wood/Plywood column,
+  not separate softwood and hardwood rows. **Settled 2026-09-25**, see below.
+
+### Decisions, 2026-09-25 (Scott)
+
+- **The first-cut feed reduction is skipped on every 3D surfacing pass.**
+  Scott's ruling, plain: "yes it should skip it." The reduction stays on for
+  routing and drilling; it never applied to those in the first place, so this
+  narrows to surfacing.
+- **The single-pass finish row serves, with the power and hold-down checks
+  skipped**, confirming the decision already recorded above it in this file.
+  Scott's reasoning, 2026-09-25: 3D surfacing is a semi-finishing or finishing
+  toolpath by design, so the depth and width of cut on every pass stay well
+  under a roughing cut. The stock that would load up the tool dangerously is
+  meant to be gone before a surfacing pass ever runs, so the check that
+  protects against that load has nothing to catch.
+- **The ball chart lists its materials in the same order as every flat-tool
+  chart** (MDF, softwood, hardwood), not in Amana's printed order (softwood,
+  MDF, hardwood). This changes the list order only. Every chip-load number
+  stays exactly as Amana printed it, against the material Amana printed it
+  under; no number moves to a different material. Scott's ruling, 2026-09-25,
+  after confirming the plain reading: "only the display order," not a
+  relabelling of which number belongs to which material.
 
 ## Amendment 2026-09-03: the Fusion API, read firsthand
 

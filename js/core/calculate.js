@@ -189,8 +189,12 @@ export function calculate(input, data) {
   }
   // A finish pass follows a proven cut, and the first-cut reduction guards
   // heavy engagement. On a skim it would drive the chip under the rubbing
-  // floor, so the Finishing profile ignores it (research session 4).
-  const firstCut = !finishing && (input.firstCut ?? rules.first_cut?.default_on ?? false);
+  // floor, so the Finishing profile ignores it (research session 4). A 3D
+  // surfacing pass is a light finishing cut by design, so it ignores the
+  // reduction for the same reason (Scott, 2026-09-25). A ball nose is the
+  // engine's surfacing marker, so the skip runs on every ball and bull nose
+  // pass. Routing and drilling keep the reduction, as before.
+  const firstCut = !finishing && !ballNose && (input.firstCut ?? rules.first_cut?.default_on ?? false);
   const fcFactor = firstCut && rules.first_cut ? rules.first_cut.factor : 1;
   const fzTarget = fzBase * derate * fcFactor;
   // The finisher charts publish the chip you PROGRAM on a finish pass, light
@@ -273,6 +277,12 @@ export function calculate(input, data) {
     // calculator does not get to assume that on their behalf.
     if (depthUnstated) {
       notes.push('This toolpath states no depth of cut, so the spindle power and the hold-down checks did not run. The feed comes from the chip load and the stepover, which do not depend on the depth.');
+    }
+    // The first-cut reduction never applies to a ball, so the box does nothing
+    // here. Say so when it would otherwise be on, as the Finishing profile does
+    // (Scott, 2026-09-25).
+    if (input.firstCut ?? rules.first_cut?.default_on) {
+      notes.push('The first-cut reduction does not apply to a 3D surfacing pass. A surfacing pass is a light finishing cut, and a reduced feed on a light cut rubs.');
     }
     if (thinFloored) {
       const pct = Math.round(rules.ball_nose.thinning_stepover_floor_fraction * 100);

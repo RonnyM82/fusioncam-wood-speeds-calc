@@ -26,7 +26,7 @@ const TOOL_TYPES = [
   { id: 'downcut', label: 'Down-cut spiral', hint: 'Presses chips down. Leaves a clean top face, but clears chips poorly.' },
   { id: 'compression', label: 'Compression', hint: 'Up-cut tip, down-cut body. Cuts a clean top and bottom face on through cuts.' },
   { id: 'straight', label: 'Straight', hint: 'Simple straight flutes. General purpose, but harder on the faces than a spiral.' },
-  { id: 'ball', label: 'Ball nose', hint: 'Round tip for 3D surfacing and carving. Softwood, hardwood and MDF only.' },
+  { id: 'ball', label: 'Ball nose', hint: 'Round tip for 3D surfacing and carving. MDF, softwood and hardwood only.' },
 ];
 
 // The ball nose ladder is the chart's own: 1/16 through 3/4 inch. 15.875 is

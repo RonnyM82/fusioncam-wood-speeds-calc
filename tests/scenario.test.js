@@ -691,3 +691,37 @@ test('SC42', 'the chip-thinning compensation is held at the stepover floor and n
   approx(flat.meta.chipThinningFactor, 12.7 / (2 * Math.sqrt(12.7 * 0.02 * (12.7 - 12.7 * 0.02))), { abs: 1e-9 });
   approx(flat.meta.fzPhysical, flat.meta.fzTarget, { rel: 1e-9 });
 });
+
+test('SC43', 'the first-cut reduction is skipped on a ball surfacing pass and kept for routing', () => {
+  // Scott's ruling, 2026-09-25: a 3D surfacing pass is a light finishing cut,
+  // so the first-cut reduction, which guards a heavy proving cut, drives the
+  // chip toward the rubbing floor there. A ball nose is the engine's surfacing
+  // marker, so the skip runs on every ball. Routing keeps the reduction.
+  const factor = data.rules.first_cut.factor;
+  assert(factor > 0 && factor < 1, `the reduction must be a real cut, got ${factor}`);
+
+  const ballOn = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27, firstCut: true });
+  const ballOff = run({ toolType: 'ball', diameterMm: 12.7, apMm: 1.27, aeMm: 1.27, firstCut: false });
+  assert(ballOn.status === 'ok' && ballOff.status === 'ok', 'both ball cuts must serve');
+  // First-cut on or off, a ball serves the same feed: the reduction is skipped.
+  approx(ballOn.outputs.cuttingFeedMmMin, ballOff.outputs.cuttingFeedMmMin, { rel: 1e-9 });
+  assert(ballOn.meta.firstCut.applied === false && ballOn.meta.firstCut.factor === 1,
+    `the reduction must never apply to a ball, got ${JSON.stringify(ballOn.meta.firstCut)}`);
+  // The banner drops the first-cut clause, and a note says the reduction is off.
+  assert(!/first-cut mode serves/.test(ballOn.limit.message), `the ball banner must not credit first-cut: ${ballOn.limit.message}`);
+  assert(ballOn.notes.some((n) => /first-cut reduction does not apply to a 3D surfacing pass/.test(n)),
+    `the skip must be stated on the page: ${ballOn.notes.join(' | ')}`);
+
+  // A bull nose is a surfacing tool too, so it skips the reduction as well.
+  const bull = run({ toolType: 'ball', diameterMm: 12.7, cornerRadiusMm: 3, apMm: 1, aeMm: 1, firstCut: true });
+  assert(bull.status === 'ok' && bull.meta.firstCut.applied === false,
+    `a bull nose must skip the reduction, got ${bull.status} ${JSON.stringify(bull.meta.firstCut)}`);
+
+  // Routing still applies it: a flat tool with first-cut on serves the reduced
+  // feed and says so.
+  const routeOn = run({ toolType: 'upcut', diameterMm: 12.7, apMm: 5, aeMm: 12.7, firstCut: true });
+  const routeOff = run({ toolType: 'upcut', diameterMm: 12.7, apMm: 5, aeMm: 12.7, firstCut: false });
+  approx(routeOn.outputs.cuttingFeedMmMin, routeOff.outputs.cuttingFeedMmMin * factor, { rel: 1e-9 });
+  assert(routeOn.meta.firstCut.applied === true && routeOn.meta.firstCut.factor === factor,
+    `routing must keep the reduction, got ${JSON.stringify(routeOn.meta.firstCut)}`);
+});
